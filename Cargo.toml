@@ -1,0 +1,39 @@
+[package]
+name = "theon"
+description = "Abstraction of Euclidean spaces."
+keywords = ["geometry", "graphics", "math"]
+version = "0.0.0"
+authors = ["Sean Olson <olson.sean.k@gmail.com>"]
+edition = "2018"
+license = "MIT"
+readme = "README.md"
+
+[package.metadata.docs.rs]
+# Enable all features so that trait implementations for types from commonly used
+# crates are shown.
+all-features = true
+# Enable KaTex support.
+rustdoc-args = [
+    "--html-in-header",
+    "doc/katex-header.html",
+]
+
+[badges]
+travis-ci = { repository = "olson-sean-k/theon" }
+
+[features]
+default = ["geometry-nalgebra"]
+geometry-cgmath = ["cgmath"]
+geometry-mint = ["mint"]
+geometry-nalgebra = ["alga", "nalgebra"]
+
+[dependencies]
+arrayvec = "^0.4.0"
+decorum = "^0.1.1"
+num = "^0.2.0"
+typenum = "^1.10.0"
+
+alga = { version = "^0.9.0", optional = true }
+cgmath = { version = "^0.17.0", optional = true }
+mint = { version = "^0.5.0", optional = true }
+nalgebra = { version = "^0.18.0", optional = true }
