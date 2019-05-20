@@ -36,10 +36,9 @@ appropriate geometric traits.
 
 ```rust
 use nalgebra::Point2;
-
-use crate::query::{Aabb, Intersection, Ray, Unit};
-use crate::space::{Basis, EuclideanSpace};
-use crate::Converged;
+use theon::query::{Aabb, Intersection, Ray, Unit};
+use theon::space::{Basis, EuclideanSpace};
+use theon::Converged;
 
 type E2 = Point2<f64>;
 
