@@ -3,8 +3,7 @@ use num::{Bounded, One, Zero};
 use std::ops::Neg;
 
 use crate::ops::{Reduce, ZipMap};
-use crate::space::alias::{Scalar, Vector};
-use crate::space::{Basis, EuclideanSpace, InnerSpace};
+use crate::space::{Basis, EuclideanSpace, InnerSpace, Scalar, Vector};
 use crate::Lattice;
 
 pub trait Intersection<T> {

@@ -6,8 +6,11 @@ use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
 use crate::ops::{Dot, Project};
-use crate::space::alias::{Scalar, Vector};
 use crate::Category;
+
+pub type Dimensions<S> = <<S as EuclideanSpace>::CoordinateSpace as FiniteDimensional>::N;
+pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
+pub type Vector<S> = <S as EuclideanSpace>::CoordinateSpace;
 
 pub trait FiniteDimensional {
     type N: NonZero + Unsigned;
@@ -190,12 +193,4 @@ pub trait EuclideanSpace:
     {
         Self::origin() + Vector::<Self>::from_xyz(x, y, z)
     }
-}
-
-pub mod alias {
-    use crate::space::{EuclideanSpace, FiniteDimensional, VectorSpace};
-
-    pub type Dimensions<S> = <<S as EuclideanSpace>::CoordinateSpace as FiniteDimensional>::N;
-    pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
-    pub type Vector<S> = <S as EuclideanSpace>::CoordinateSpace;
 }
