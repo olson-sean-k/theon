@@ -12,12 +12,11 @@ use num::{Num, NumCast};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::{NonZero, Unsigned};
 
-use crate::convert::{FromObjects, IntoObjects};
 use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
 use crate::space::{
     AffineSpace, Basis, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
-use crate::{Category, Converged};
+use crate::{Category, Converged, FromObjects, IntoObjects};
 
 impl<T, D> Basis for VectorN<T, D>
 where

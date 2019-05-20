@@ -9,10 +9,9 @@ use mint::{Point2, Point3, Vector2, Vector3};
 use num::{Num, NumCast};
 use std::ops::Neg;
 
-use crate::convert::{FromObjects, IntoObjects};
 use crate::ops::{Cross, Dot, Interpolate, Map, Project, Reduce, ZipMap};
 use crate::space::{Basis, FiniteDimensional};
-use crate::{Category, Converged};
+use crate::{Category, Converged, FromObjects, IntoObjects};
 
 impl<T> Cross for Vector3<T>
 where

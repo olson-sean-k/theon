@@ -6,12 +6,11 @@ use decorum::{Real, R64};
 use num::{Num, NumCast};
 use typenum::consts::{U2, U3};
 
-use crate::convert::{FromObjects, IntoObjects};
 use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
 use crate::space::{
     AffineSpace, Basis, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
-use crate::{Category, Converged};
+use crate::{Category, Converged, FromObjects, IntoObjects};
 
 impl<T> Basis for Vector2<T>
 where
