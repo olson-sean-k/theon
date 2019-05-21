@@ -1,6 +1,5 @@
 #![cfg(feature = "geometry-nalgebra")]
 
-use alga::general::Ring;
 use arrayvec::ArrayVec;
 use decorum::{Real, R64};
 use nalgebra::base::allocator::Allocator;
@@ -72,13 +71,17 @@ where
 
 impl<T> Cross for Vector3<T>
 where
-    T: Num + Ring + Scalar,
+    T: Num + Scalar,
     <<T as Mul>::Output as Sub>::Output: Neg<Output = T>,
 {
     type Output = Self;
 
     fn cross(self, other: Self) -> Self::Output {
-        Matrix::cross(&self, &other)
+        Vector3::new(
+            (self.y * other.z) - (self.z * other.y),
+            (self.z * other.x) - (self.x * other.z),
+            (self.x * other.y) - (self.y * other.x),
+        )
     }
 }
 

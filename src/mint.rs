@@ -15,15 +15,15 @@ use crate::{Category, Converged, FromObjects, IntoObjects};
 
 impl<T> Cross for Vector3<T>
 where
-    T: Clone + Neg<Output = T> + Num,
+    T: Copy + Neg<Output = T> + Num,
 {
     type Output = Self;
 
     fn cross(self, other: Self) -> Self::Output {
         Vector3 {
-            x: (self.y.clone() * other.z.clone()) - (self.z.clone() * other.y.clone()),
-            y: -((self.x.clone() * other.z.clone()) - (self.z * other.x.clone())),
-            z: (self.x.clone() * other.y.clone()) - (self.y * other.x),
+            x: (self.y * other.z) - (self.z * other.y),
+            y: (self.z * other.x) - (self.x * other.z),
+            z: (self.x * other.y) - (self.y * other.x),
         }
     }
 }
