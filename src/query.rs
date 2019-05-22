@@ -49,22 +49,20 @@ pub trait Intersection<T> {
 
     fn intersection(&self, _: &T) -> Option<Self::Output>;
 }
+macro_rules! impl_reciprocal_intersection {
+    (target => $t:ident, provider => $u:ident) => {
+        impl<S> Intersection<$t<S>> for $u<S>
+        where
+            S: EuclideanSpace,
+            $t<S>: Intersection<$u<S>>,
+        {
+            type Output = <$t<S> as Intersection<$u<S>>>::Output;
 
-pub trait ReciprocalIntersection<T> {
-    type Output;
-
-    fn intersection(&self, _: &T) -> Option<Self::Output>;
-}
-
-impl<T, U> ReciprocalIntersection<U> for T
-where
-    U: Intersection<T>,
-{
-    type Output = U::Output;
-
-    fn intersection(&self, other: &U) -> Option<Self::Output> {
-        other.intersection(self)
-    }
+            fn intersection(&self, other: &$t<S>) -> Option<Self::Output> {
+                other.intersection(self)
+            }
+        }
+    };
 }
 
 /// Unit vector.
@@ -268,6 +266,7 @@ where
         }
     }
 }
+impl_reciprocal_intersection!(target => Aabb, provider => Ray);
 
 impl<S> Neg for Ray<S>
 where

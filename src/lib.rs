@@ -15,7 +15,7 @@ use decorum::R64;
 use num::{self, Num, NumCast, One, Zero};
 
 pub mod prelude {
-    pub use crate::query::{Intersection as _, ReciprocalIntersection as _};
+    pub use crate::query::Intersection as _;
     pub use crate::Lattice as _;
 }
 
