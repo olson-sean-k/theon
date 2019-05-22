@@ -6,13 +6,11 @@
 
 ## Geometric Traits
 
-Theon provides geometric traits that abstract linear algebra to model [Euclidean
+Theon provides geometric traits that model [Euclidean
 spaces](https://en.wikipedia.org/wiki/euclidean_space). These traits are not
 always mathematically rigorous, but this allows them to be implemented for many
-types.
-
-Most features are limited to two- and three-dimensional Euclidean spaces,
-though traits tend to be generic with respect to dimensionality.
+types. Most features are limited to two- and three-dimensional Euclidean spaces,
+but traits tend to be generic with respect to dimensionality.
 
 Theon uses a _bring-your-own-types_ model, wherein a crate owner can use
 features of Theon by implementing certain traits for their types. Theon also
@@ -30,7 +28,7 @@ enabled using Cargo features.
 
 ## Spatial Queries
 
-Geometric queries can be performed using any types that implement that
+Geometric queries can be performed using any types that implement the
 appropriate geometric traits.
 
 ```rust

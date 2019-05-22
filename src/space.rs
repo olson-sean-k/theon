@@ -1,3 +1,5 @@
+//! Vector and affine spaces.
+
 use decorum::Real;
 use num::{NumCast, One, Zero};
 use std::ops::{Add, Mul, Neg, Sub};
@@ -8,8 +10,13 @@ use typenum::{Greater, NonZero, Unsigned};
 use crate::ops::{Dot, Project};
 use crate::Composite;
 
+/// The dimensionality of a `EuclideanSpace`.
 pub type Dimensions<S> = <<S as EuclideanSpace>::CoordinateSpace as FiniteDimensional>::N;
+
+/// The scalar of a `EuclideanSpace`.
 pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
+
+/// The vector (translation, coordinate space, etc.) of a `EuclideanSpace`.
 pub type Vector<S> = <S as EuclideanSpace>::CoordinateSpace;
 
 pub trait FiniteDimensional {
@@ -20,15 +27,29 @@ pub trait FiniteDimensional {
     }
 }
 
+/// Describes the basis of a vector space.
 pub trait Basis: FiniteDimensional + Sized {
     type Bases: IntoIterator<Item = Self>;
 
+    /// Gets a type that can be converted into an iterator over the _canonical_
+    /// or _standard_ basis vectors of the space.
+    ///
+    /// Such basis vectors must only have one component set to the
+    /// multiplicative identity one and all other components set to zero.
+    /// Moreover, the set of basis vectors must contain ordered and unique
+    /// elements and be of size equal to the dimensionality of the space.
+    ///
+    /// For example, the set of basis vectors for the real coordinate space
+    /// $\Reals^2$ is:
+    ///
+    /// $\\{\begin{bmatrix}1\\\0\end{bmatrix},\begin{bmatrix}0\\\1\end{bmatrix}\\}$
     fn canonical_basis() -> Self::Bases;
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
         Self::canonical_basis().into_iter().nth(index)
     }
 
+    /// Gets the basis vector $\hat{i}$ that describes the $x$ axis.
     fn x() -> Self
     where
         Self::N: Cmp<U0, Output = Greater>,
@@ -36,6 +57,7 @@ pub trait Basis: FiniteDimensional + Sized {
         Self::canonical_basis_component(0).unwrap()
     }
 
+    /// Gets the basis vector $\hat{j}$ that describes the $y$ axis.
     fn y() -> Self
     where
         Self::N: Cmp<U1, Output = Greater>,
@@ -43,6 +65,7 @@ pub trait Basis: FiniteDimensional + Sized {
         Self::canonical_basis_component(1).unwrap()
     }
 
+    /// Gets the basis vector $\hat{k}$ that describes the $z$ axis.
     fn z() -> Self
     where
         Self::N: Cmp<U2, Output = Greater>,

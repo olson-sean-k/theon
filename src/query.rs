@@ -1,3 +1,7 @@
+//! Spatial queries.
+//!
+//! This module provides types and traits for performing spatial queries.
+
 use decorum::{Infinite, Real};
 use num::{Bounded, One, Zero};
 use std::ops::Neg;
@@ -6,6 +10,40 @@ use crate::ops::{Reduce, ZipMap};
 use crate::space::{Basis, EuclideanSpace, InnerSpace, Scalar, Vector};
 use crate::Lattice;
 
+/// Pair-wise intersection.
+///
+/// Determines if two entities intersect and produces data describing the
+/// intersection. Each pairing of entities produces its own intersection
+/// data.
+///
+/// # Examples
+///
+/// Testing for intersecions of an axis-aligned bounding box and a ray:
+///
+/// ```rust
+/// # extern crate nalgebra;
+/// # extern crate theon;
+/// #
+/// use nalgebra::Point2;
+/// use theon::space::{Basis, EuclideanSpace, VectorSpace};
+/// use theon::query::{Aabb, Intersection, Ray, Unit};
+///
+/// type E2 = Point2<f64>;
+///
+/// # fn main() {
+/// let aabb = Aabb::<E2> {
+///     origin: EuclideanSpace::from_xy(1.0, -1.0),
+///     extent: VectorSpace::from_xy(2.0, 2.0),
+/// };
+/// let ray = Ray::<E2> {
+///     origin: EuclideanSpace::origin(),
+///     direction: Unit::try_from_inner(Basis::x()).unwrap(),
+/// };
+/// if let Some((min, max)) = ray.intersection(&aabb) {
+///     // ...
+/// }
+/// # }
+/// ```
 pub trait Intersection<T> {
     type Output;
 
@@ -29,6 +67,9 @@ where
     }
 }
 
+/// Unit vector.
+///
+/// Primarily represents a direction within an `InnerSpace`.
 #[derive(Clone, Copy)]
 pub struct Unit<S>
 where
@@ -45,6 +86,27 @@ where
         Unit { inner }
     }
 
+    /// Creates a `Unit` from a non-zero magnitude vector.
+    ///
+    /// The given vector is normalized. If the vector's magnitude is zero, then
+    /// `None` is returned.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// # extern crate nalgebra;
+    /// # extern crate theon;
+    /// #
+    /// use nalgebra::Vector3;
+    /// use theon::space::Basis;
+    /// use theon::query::Unit;
+    ///
+    /// type R3 = Vector3<f64>;
+    ///
+    /// # fn main() {
+    /// let unit = Unit::<R3>::try_from_inner(Basis::x()).unwrap();
+    /// # }
+    /// ```
     pub fn try_from_inner(inner: S) -> Option<Self> {
         inner.normalize().map(|inner| Unit { inner })
     }
@@ -89,12 +151,20 @@ where
     }
 }
 
+/// Ray or half-line.
+///
+/// Describes a decomposed line with an _origin_ or _initial point_ and a
+/// _direction_. Rays extend infinitely from their origin. The origin $P_0$ and
+/// the point $P_0 + \hat{u}$ (where $\hat{u}$ is the direction of the ray)
+/// form a half-line originating from $P_0$.
 #[derive(Clone)]
 pub struct Ray<S>
 where
     S: EuclideanSpace,
 {
+    /// The origin or initial point of the ray.
     pub origin: S,
+    /// The unit direction in which the ray extends from its origin.
     pub direction: Unit<Vector<S>>,
 }
 
@@ -102,6 +172,10 @@ impl<S> Ray<S>
 where
     S: EuclideanSpace,
 {
+    /// Reverses the direction of the ray.
+    ///
+    /// Reversing a ray yields its _opposite_, with the same origin and the
+    /// opposing half-line.
     pub fn reverse(self) -> Self {
         let Ray { origin, direction } = self;
         Ray {
@@ -138,8 +212,44 @@ where
     Scalar<S>: Bounded + Infinite + Lattice,
     Vector<S>: Reduce<Scalar<S>> + ZipMap<Scalar<S>, Output = Vector<S>>,
 {
+    /// The minimum and maximum _times of impact_ of the intersection.
+    ///
+    /// The times of impact $t_{min}$ and $t_{max}$ describe the distance along
+    /// the half-line from the ray's origin at which the intersection occurs.
     type Output = (Scalar<S>, Scalar<S>);
 
+    /// Determines the minimum and maximum _times of impact_ of a `Ray`
+    /// intersection with an `Aabb`.
+    ///
+    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
+    /// the nearest point of intersection is $P_0 + (t_{min}\hat{u})$.
+    ///
+    /// # Examples
+    ///
+    /// Determine the point of impact between a ray and axis-aligned bounding box:
+    ///
+    /// ```rust
+    /// # extern crate nalgebra;
+    /// # extern crate theon;
+    /// #
+    /// use nalgebra::Point2;
+    /// use theon::space::{Basis, EuclideanSpace, VectorSpace};
+    /// use theon::query::{Aabb, Intersection, Ray, Unit};
+    ///
+    /// type E2 = Point2<f64>;
+    ///
+    /// # fn main() {
+    /// let aabb = Aabb::<E2> {
+    ///     origin: EuclideanSpace::from_xy(1.0, -1.0),
+    ///     extent: VectorSpace::from_xy(2.0, 2.0),
+    /// };
+    /// let ray = Ray::<E2> {
+    ///     origin: EuclideanSpace::origin(),
+    ///     direction: Unit::try_from_inner(Basis::x()).unwrap(),
+    /// };
+    /// let (min, _) = ray.intersection(&aabb).unwrap();
+    /// let point = ray.origin + (ray.direction.get() * min);
+    /// # }
     fn intersection(&self, aabb: &Aabb<S>) -> Option<Self::Output> {
         let direction = self.direction.get().clone();
         let origin = (aabb.origin - self.origin).zip_map(direction, |a, b| a / b);
@@ -170,12 +280,26 @@ where
     }
 }
 
+/// Axis-aligned bounding box.
+///
+/// Represents an $n$-dimensional volume along each basis vector of a Euclidean
+/// space. The bounding box is defined by the region between its _origin_ and
+/// _endpoint_.
 #[derive(Clone)]
 pub struct Aabb<S>
 where
     S: EuclideanSpace,
 {
+    /// The _origin_ of the bounding box.
+    ///
+    /// The origin does **not** necessarily represent the lower or upper bound
+    /// of the `Aabb`. See `lower_bound` and `upper_bound`.
     pub origin: S,
+    /// The _extent_ of the bounding box.
+    ///
+    /// The extent describes the endpoint as a translation from the origin. The
+    /// endpoint $P_E$ is formed by $P_0 + \vec{v}$, where $P_0$ is the origin
+    /// and $\vec{v}$ is the extent.
     pub extent: Vector<S>,
 }
 
@@ -183,6 +307,11 @@ impl<S> Aabb<S>
 where
     S: EuclideanSpace,
 {
+    /// Creates an `Aabb` from a set of points.
+    ///
+    /// The bounding box is formed from the lower and upper bounds of the
+    /// points. If the set of points is empty, then the `Aabb` will sit at the
+    /// origin with zero volume.
     pub fn from_points<I>(points: I) -> Self
     where
         S: ZipMap<Scalar<S>, Output = S>,
@@ -220,7 +349,10 @@ where
             .zip_map(self.endpoint(), |a, b| crate::partial_min(a, b))
     }
 
-    /// Gets the Lebesgue measure (n-dimensional volume) of the `Aabb`.
+    /// Gets the Lebesgue measure ($n$-dimensional volume) of the bounding box.
+    ///
+    /// This value is analogous to _length_, _area_, and _volume_ in one, two,
+    /// and three dimensions, respectively.
     pub fn volume(&self) -> Scalar<S>
     where
         S: Reduce<Scalar<S>> + ZipMap<Scalar<S>, Output = S>,
@@ -287,7 +419,7 @@ mod tests {
     type E3 = Point3<f64>;
 
     #[test]
-    fn aabb_ray_intersection_2() {
+    fn aabb_ray_intersection_e2() {
         let aabb = Aabb::<E2> {
             origin: EuclideanSpace::origin(),
             extent: Converged::converged(1.0),
@@ -301,7 +433,7 @@ mod tests {
     }
 
     #[test]
-    fn aabb_ray_intersection_3() {
+    fn aabb_ray_intersection_e3() {
         let aabb = Aabb::<E3> {
             origin: EuclideanSpace::origin(),
             extent: Converged::converged(1.0),
