@@ -6,11 +6,10 @@
 
 ## Geometric Traits
 
-Theon provides geometric traits that abstract group theory, category theory,
-and linear algebra to model [Euclidean
+Theon provides geometric traits that abstract linear algebra to model [Euclidean
 spaces](https://en.wikipedia.org/wiki/euclidean_space). These traits are not
-always mathematically rigorous, but this allows them to be implemented for
-many types.
+always mathematically rigorous, but this allows them to be implemented for many
+types.
 
 Most features are limited to two- and three-dimensional Euclidean spaces,
 though traits tend to be generic with respect to dimensionality.
@@ -18,16 +17,16 @@ though traits tend to be generic with respect to dimensionality.
 Theon uses a _bring-your-own-types_ model, wherein a crate owner can use
 features of Theon by implementing certain traits for their types. Theon also
 provides optional implementations for commonly used crates in the Rust
-ecosystem, including [cgmath](https://crates.io/crates/cgmath),
-[mint](https://crates.io/crates/mint), and
-[nalgebra](https://crates.io/crates/nalgebra). These implementations can be
+ecosystem, including [`cgmath`](https://crates.io/crates/cgmath),
+[`mint`](https://crates.io/crates/mint), and
+[`nalgebra`](https://crates.io/crates/nalgebra). These implementations can be
 enabled using Cargo features.
 
-| Feature             | Default | Crate    | Support  |
-|---------------------|---------|----------|----------|
-| `geometry-cgmath`   | No      | cgmath   | Complete |
-| `geometry-mint`     | No      | mint     | Partial  |
-| `geometry-nalgebra` | Yes     | nalgebra | Complete |
+| Feature             | Default | Crate      | Support  |
+|---------------------|---------|------------|----------|
+| `geometry-cgmath`   | No      | `cgmath`   | Complete |
+| `geometry-mint`     | No      | `mint`     | Partial  |
+| `geometry-nalgebra` | Yes     | `nalgebra` | Complete |
 
 ## Spatial Queries
 
@@ -55,5 +54,5 @@ assert_eq!(None, ray.reverse().intersection(&aabb));
 ```
 
 In the above example, it is possible to replace the `E2` type definition with
-types from [cgmath](https://crates.io/crates/cgmath) or any other type that
+types from [`cgmath`](https://crates.io/crates/cgmath) or any other type that
 implements `EuclideanSpace` and the necessary operational traits.

@@ -10,7 +10,7 @@ use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
 use crate::space::{
     AffineSpace, Basis, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
-use crate::{Category, Converged, FromObjects, IntoObjects};
+use crate::{Composite, Converged, FromItems, IntoItems};
 
 impl<T> Basis for Vector2<T>
 where
@@ -58,19 +58,19 @@ where
     }
 }
 
-impl<T> Category for Vector2<T> {
-    type Object = T;
+impl<T> Composite for Vector2<T> {
+    type Item = T;
 }
 
-impl<T> Category for Vector3<T> {
-    type Object = T;
+impl<T> Composite for Vector3<T> {
+    type Item = T;
 }
 
 impl<T> Converged for Vector2<T>
 where
     T: Copy,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         Vector2::new(value, value)
     }
 }
@@ -79,7 +79,7 @@ impl<T> Converged for Vector3<T>
 where
     T: Copy,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         Vector3::new(value, value, value)
     }
 }
@@ -125,26 +125,26 @@ impl<T> FiniteDimensional for Vector3<T> {
     type N = U3;
 }
 
-impl<T> FromObjects for Vector2<T> {
-    fn from_objects<I>(objects: I) -> Option<Self>
+impl<T> FromItems for Vector2<T> {
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        let mut objects = objects.into_iter().take(2);
-        match (objects.next(), objects.next()) {
+        let mut items = items.into_iter().take(2);
+        match (items.next(), items.next()) {
             (Some(a), Some(b)) => Some(Vector2::new(a, b)),
             _ => None,
         }
     }
 }
 
-impl<T> FromObjects for Vector3<T> {
-    fn from_objects<I>(objects: I) -> Option<Self>
+impl<T> FromItems for Vector3<T> {
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        let mut objects = objects.into_iter().take(3);
-        match (objects.next(), objects.next(), objects.next()) {
+        let mut items = items.into_iter().take(3);
+        match (items.next(), items.next(), items.next()) {
             (Some(a), Some(b), Some(c)) => Some(Vector3::new(a, b, c)),
             _ => None,
         }
@@ -177,18 +177,18 @@ where
     }
 }
 
-impl<T> IntoObjects for Vector2<T> {
+impl<T> IntoItems for Vector2<T> {
     type Output = ArrayVec<[T; 2]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y])
     }
 }
 
-impl<T> IntoObjects for Vector3<T> {
+impl<T> IntoItems for Vector3<T> {
     type Output = ArrayVec<[T; 3]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y, self.z])
     }
 }
@@ -198,7 +198,7 @@ impl<T, U> Map<U> for Vector2<T> {
 
     fn map<F>(self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         Vector2::new(f(self.x), f(self.y))
     }
@@ -209,19 +209,19 @@ impl<T, U> Map<U> for Vector3<T> {
 
     fn map<F>(self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         Vector3::new(f(self.x), f(self.y), f(self.z))
     }
 }
 
-impl<T> Reduce<T, T> for Vector2<T>
+impl<T, U> Reduce<U> for Vector2<T>
 where
     T: Copy,
 {
-    fn reduce<F>(self, mut seed: T, mut f: F) -> T
+    fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
-        F: FnMut(T, T) -> T,
+        F: FnMut(U, Self::Item) -> U,
     {
         for a in &[self.x, self.y] {
             seed = f(seed, *a);
@@ -230,13 +230,13 @@ where
     }
 }
 
-impl<T> Reduce<T, T> for Vector3<T>
+impl<T, U> Reduce<U> for Vector3<T>
 where
     T: Copy,
 {
-    fn reduce<F>(self, mut seed: T, mut f: F) -> T
+    fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
-        F: FnMut(T, T) -> T,
+        F: FnMut(U, Self::Item) -> U,
     {
         for a in &[self.x, self.y, self.z] {
             seed = f(seed, *a);
@@ -281,7 +281,7 @@ impl<T, U> ZipMap<U> for Vector2<T> {
 
     fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         Vector2::new(f(self.x, other.x), f(self.y, other.y))
     }
@@ -292,7 +292,7 @@ impl<T, U> ZipMap<U> for Vector3<T> {
 
     fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         Vector3::new(f(self.x, other.x), f(self.y, other.y), f(self.z, other.z))
     }
@@ -312,19 +312,19 @@ where
     type Translation = Vector3<T>;
 }
 
-impl<T> Category for Point2<T> {
-    type Object = T;
+impl<T> Composite for Point2<T> {
+    type Item = T;
 }
 
-impl<T> Category for Point3<T> {
-    type Object = T;
+impl<T> Composite for Point3<T> {
+    type Item = T;
 }
 
 impl<T> Converged for Point2<T>
 where
     T: Copy,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         Point2::new(value, value)
     }
 }
@@ -333,7 +333,7 @@ impl<T> Converged for Point3<T>
 where
     T: Copy,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         Point3::new(value, value, value)
     }
 }
@@ -360,26 +360,26 @@ where
     }
 }
 
-impl<T> FromObjects for Point2<T> {
-    fn from_objects<I>(objects: I) -> Option<Self>
+impl<T> FromItems for Point2<T> {
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        let mut objects = objects.into_iter().take(2);
-        match (objects.next(), objects.next()) {
+        let mut items = items.into_iter().take(2);
+        match (items.next(), items.next()) {
             (Some(a), Some(b)) => Some(Point2::new(a, b)),
             _ => None,
         }
     }
 }
 
-impl<T> FromObjects for Point3<T> {
-    fn from_objects<I>(objects: I) -> Option<Self>
+impl<T> FromItems for Point3<T> {
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        let mut objects = objects.into_iter().take(3);
-        match (objects.next(), objects.next(), objects.next()) {
+        let mut items = items.into_iter().take(3);
+        match (items.next(), items.next(), items.next()) {
             (Some(a), Some(b), Some(c)) => Some(Point3::new(a, b, c)),
             _ => None,
         }
@@ -397,18 +397,18 @@ where
     }
 }
 
-impl<T> IntoObjects for Point2<T> {
+impl<T> IntoItems for Point2<T> {
     type Output = ArrayVec<[T; 2]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y])
     }
 }
 
-impl<T> IntoObjects for Point3<T> {
+impl<T> IntoItems for Point3<T> {
     type Output = ArrayVec<[T; 3]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y, self.z])
     }
 }
@@ -429,7 +429,7 @@ impl<T, U> Map<U> for Point2<T> {
 
     fn map<F>(self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         Point2::new(f(self.x), f(self.y))
     }
@@ -440,19 +440,19 @@ impl<T, U> Map<U> for Point3<T> {
 
     fn map<F>(self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         Point3::new(f(self.x), f(self.y), f(self.z))
     }
 }
 
-impl<T> Reduce<T, T> for Point2<T>
+impl<T, U> Reduce<U> for Point2<T>
 where
     T: Copy,
 {
-    fn reduce<F>(self, mut seed: T, mut f: F) -> T
+    fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
-        F: FnMut(T, T) -> T,
+        F: FnMut(U, Self::Item) -> U,
     {
         for a in &[self.x, self.y] {
             seed = f(seed, *a);
@@ -461,13 +461,13 @@ where
     }
 }
 
-impl<T> Reduce<T, T> for Point3<T>
+impl<T, U> Reduce<U> for Point3<T>
 where
     T: Copy,
 {
-    fn reduce<F>(self, mut seed: T, mut f: F) -> T
+    fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
-        F: FnMut(T, T) -> T,
+        F: FnMut(U, Self::Item) -> U,
     {
         for a in &[self.x, self.y, self.z] {
             seed = f(seed, *a);
@@ -481,7 +481,7 @@ impl<T, U> ZipMap<U> for Point2<T> {
 
     fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         Point2::new(f(self.x, other.x), f(self.y, other.y))
     }
@@ -492,7 +492,7 @@ impl<T, U> ZipMap<U> for Point3<T> {
 
     fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         Point3::new(f(self.x, other.x), f(self.y, other.y), f(self.z, other.z))
     }

@@ -11,7 +11,7 @@ use std::ops::Neg;
 
 use crate::ops::{Cross, Dot, Interpolate, Map, Project, Reduce, ZipMap};
 use crate::space::{Basis, FiniteDimensional};
-use crate::{Category, Converged, FromObjects, IntoObjects};
+use crate::{Composite, Converged, FromItems, IntoItems};
 
 impl<T> Cross for Vector3<T>
 where
@@ -28,18 +28,18 @@ where
     }
 }
 
-impl<T> Category for Vector2<T>
+impl<T> Composite for Vector2<T>
 where
     T: Num,
 {
-    type Object = T;
+    type Item = T;
 }
 
-impl<T> Category for Vector3<T>
+impl<T> Composite for Vector3<T>
 where
     T: Num,
 {
-    type Object = T;
+    type Item = T;
 }
 
 impl<T> Dot for Vector2<T>
@@ -93,18 +93,18 @@ where
     }
 }
 
-impl<T> Category for Point2<T>
+impl<T> Composite for Point2<T>
 where
     T: Num,
 {
-    type Object = T;
+    type Item = T;
 }
 
-impl<T> Category for Point3<T>
+impl<T> Composite for Point3<T>
 where
     T: Num,
 {
-    type Object = T;
+    type Item = T;
 }
 
 impl<T> Interpolate for Point2<T>

@@ -6,7 +6,7 @@ use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
 use crate::ops::{Dot, Project};
-use crate::Category;
+use crate::Composite;
 
 pub type Dimensions<S> = <<S as EuclideanSpace>::CoordinateSpace as FiniteDimensional>::N;
 pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
@@ -53,7 +53,7 @@ pub trait Basis: FiniteDimensional + Sized {
 
 pub trait VectorSpace:
     Add<Output = Self>
-    + Category<Object = <Self as VectorSpace>::Scalar>
+    + Composite<Item = <Self as VectorSpace>::Scalar>
     + Copy
     + FiniteDimensional
     + Mul<<Self as VectorSpace>::Scalar, Output = Self>
@@ -139,7 +139,7 @@ where
 
 pub trait AffineSpace:
     Add<<Self as AffineSpace>::Translation, Output = Self>
-    + Category<Object = <<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
+    + Composite<Item = <<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
     + Copy
     + Sub<Output = <Self as AffineSpace>::Translation>
 {

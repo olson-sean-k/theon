@@ -15,7 +15,7 @@ use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
 use crate::space::{
     AffineSpace, Basis, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
-use crate::{Category, Converged, FromObjects, IntoObjects};
+use crate::{Composite, Converged, FromItems, IntoItems};
 
 impl<T, D> Basis for VectorN<T, D>
 where
@@ -49,13 +49,13 @@ where
     }
 }
 
-impl<T, D> Category for VectorN<T, D>
+impl<T, D> Composite for VectorN<T, D>
 where
     T: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
-    type Object = T;
+    type Item = T;
 }
 
 impl<T, D> Converged for VectorN<T, D>
@@ -64,7 +64,7 @@ where
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         VectorN::repeat(value)
     }
 }
@@ -108,17 +108,17 @@ where
     type N = D::Value;
 }
 
-impl<T, D> FromObjects for VectorN<T, D>
+impl<T, D> FromItems for VectorN<T, D>
 where
     T: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
-    fn from_objects<I>(objects: I) -> Option<Self>
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        Some(VectorN::from_iterator(objects))
+        Some(VectorN::from_iterator(items))
     }
 }
 
@@ -145,24 +145,24 @@ where
     }
 }
 
-impl<T> IntoObjects for Vector2<T>
+impl<T> IntoItems for Vector2<T>
 where
     T: Scalar,
 {
     type Output = ArrayVec<[T; 2]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y])
     }
 }
 
-impl<T> IntoObjects for Vector3<T>
+impl<T> IntoItems for Vector3<T>
 where
     T: Scalar,
 {
     type Output = ArrayVec<[T; 3]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y, self.z])
     }
 }
@@ -179,13 +179,13 @@ where
 
     fn map<F>(self, f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         VectorN::<T, D>::map(&self, f)
     }
 }
 
-impl<T, U, D> Reduce<T, U> for VectorN<T, D>
+impl<T, U, D> Reduce<U> for VectorN<T, D>
 where
     T: Num + Scalar,
     D: DimName,
@@ -193,7 +193,7 @@ where
 {
     fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
-        F: FnMut(U, T) -> U,
+        F: FnMut(U, Self::Item) -> U,
     {
         for a in self.iter() {
             seed = f(seed, *a);
@@ -229,7 +229,7 @@ where
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         VectorN::<T, D>::zip_map(&self, &other, f)
     }
@@ -246,13 +246,13 @@ where
     type Translation = VectorN<T, D>;
 }
 
-impl<T, D> Category for Point<T, D>
+impl<T, D> Composite for Point<T, D>
 where
     T: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
-    type Object = T;
+    type Item = T;
 }
 
 impl<T, D> Converged for Point<T, D>
@@ -261,7 +261,7 @@ where
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         Point::from(VectorN::<T, D>::converged(value))
     }
 }
@@ -285,17 +285,17 @@ where
     }
 }
 
-impl<T, D> FromObjects for Point<T, D>
+impl<T, D> FromItems for Point<T, D>
 where
     T: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
-    fn from_objects<I>(objects: I) -> Option<Self>
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        Some(Point::from(VectorN::from_iterator(objects)))
+        Some(Point::from(VectorN::from_iterator(items)))
     }
 }
 
@@ -312,24 +312,24 @@ where
     }
 }
 
-impl<T> IntoObjects for Point2<T>
+impl<T> IntoItems for Point2<T>
 where
     T: Scalar,
 {
     type Output = ArrayVec<[T; 2]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y])
     }
 }
 
-impl<T> IntoObjects for Point3<T>
+impl<T> IntoItems for Point3<T>
 where
     T: Scalar,
 {
     type Output = ArrayVec<[T; 3]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.x, self.y, self.z])
     }
 }
@@ -346,13 +346,13 @@ where
 
     fn map<F>(self, f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         Point::from(self.coords.map(f))
     }
 }
 
-impl<T, U, D> Reduce<T, U> for Point<T, D>
+impl<T, U, D> Reduce<U> for Point<T, D>
 where
     T: Num + Scalar,
     D: DimName,
@@ -360,7 +360,7 @@ where
 {
     fn reduce<F>(self, seed: U, f: F) -> U
     where
-        F: FnMut(U, T) -> U,
+        F: FnMut(U, Self::Item) -> U,
     {
         self.coords.reduce(seed, f)
     }
@@ -378,7 +378,7 @@ where
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         Point::from(self.coords.zip_map(other.coords, f))
     }

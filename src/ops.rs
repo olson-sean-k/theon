@@ -1,6 +1,6 @@
 use decorum::R64;
 
-use crate::Category;
+use crate::Composite;
 
 pub trait Project<T = Self> {
     type Output;
@@ -30,12 +30,12 @@ pub trait Cross<T = Self> {
     fn cross(self, other: T) -> Self::Output;
 }
 
-pub trait Map<T>: Category {
-    type Output: Category<Object = T>;
+pub trait Map<T>: Composite {
+    type Output: Composite<Item = T>;
 
     fn map<F>(self, f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> T;
+        F: FnMut(Self::Item) -> T;
 }
 
 impl<T, U> Map<U> for (T, T) {
@@ -43,7 +43,7 @@ impl<T, U> Map<U> for (T, T) {
 
     fn map<F>(self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         (f(self.0), f(self.1))
     }
@@ -54,18 +54,18 @@ impl<T, U> Map<U> for (T, T, T) {
 
     fn map<F>(self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object) -> U,
+        F: FnMut(Self::Item) -> U,
     {
         (f(self.0), f(self.1), f(self.2))
     }
 }
 
-pub trait ZipMap<T>: Category {
-    type Output: Category<Object = T>;
+pub trait ZipMap<T>: Composite {
+    type Output: Composite<Item = T>;
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> T;
+        F: FnMut(Self::Item, Self::Item) -> T;
 }
 
 impl<T, U> ZipMap<U> for (T, T) {
@@ -73,7 +73,7 @@ impl<T, U> ZipMap<U> for (T, T) {
 
     fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         (f(self.0, other.0), f(self.1, other.1))
     }
@@ -84,22 +84,22 @@ impl<T, U> ZipMap<U> for (T, T, T) {
 
     fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
     where
-        F: FnMut(Self::Object, Self::Object) -> U,
+        F: FnMut(Self::Item, Self::Item) -> U,
     {
         (f(self.0, other.0), f(self.1, other.1), f(self.2, other.2))
     }
 }
 
-pub trait Reduce<T, U = T> {
-    fn reduce<F>(self, seed: U, f: F) -> U
+pub trait Reduce<T>: Composite {
+    fn reduce<F>(self, seed: T, f: F) -> T
     where
-        F: FnMut(U, T) -> U;
+        F: FnMut(T, Self::Item) -> T;
 }
 
-impl<T, U> Reduce<T, U> for (T, T) {
+impl<T, U> Reduce<U> for (T, T) {
     fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
-        F: FnMut(U, T) -> U,
+        F: FnMut(U, Self::Item) -> U,
     {
         seed = f(seed, self.0);
         seed = f(seed, self.1);
@@ -107,10 +107,10 @@ impl<T, U> Reduce<T, U> for (T, T) {
     }
 }
 
-impl<T, U> Reduce<T, U> for (T, T, T) {
+impl<T, U> Reduce<U> for (T, T, T) {
     fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
-        F: FnMut(U, T) -> U,
+        F: FnMut(U, Self::Item) -> U,
     {
         seed = f(seed, self.0);
         seed = f(seed, self.1);

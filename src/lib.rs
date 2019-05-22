@@ -19,81 +19,81 @@ pub mod prelude {
     pub use crate::Lattice as _;
 }
 
-pub trait Category {
-    type Object;
+pub trait Composite {
+    type Item;
 }
 
-impl<T> Category for (T, T) {
-    type Object = T;
+impl<T> Composite for (T, T) {
+    type Item = T;
 }
 
-impl<T> Category for (T, T, T) {
-    type Object = T;
+impl<T> Composite for (T, T, T) {
+    type Item = T;
 }
 
-pub trait IntoObjects: Category {
-    type Output: IntoIterator<Item = Self::Object>;
+pub trait IntoItems: Composite {
+    type Output: IntoIterator<Item = Self::Item>;
 
-    fn into_objects(self) -> Self::Output;
+    fn into_items(self) -> Self::Output;
 }
 
-impl<T> IntoObjects for (T, T) {
+impl<T> IntoItems for (T, T) {
     type Output = ArrayVec<[T; 2]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.0, self.1])
     }
 }
 
-impl<T> IntoObjects for (T, T, T) {
+impl<T> IntoItems for (T, T, T) {
     type Output = ArrayVec<[T; 3]>;
 
-    fn into_objects(self) -> Self::Output {
+    fn into_items(self) -> Self::Output {
         ArrayVec::from([self.0, self.1, self.2])
     }
 }
 
-pub trait FromObjects: Category + Sized {
-    fn from_objects<I>(objects: I) -> Option<Self>
+pub trait FromItems: Composite + Sized {
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>;
+        I: IntoIterator<Item = Self::Item>;
 }
 
-impl<T> FromObjects for (T, T) {
-    fn from_objects<I>(objects: I) -> Option<Self>
+impl<T> FromItems for (T, T) {
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        let mut objects = objects.into_iter().take(2);
-        match (objects.next(), objects.next()) {
+        let mut items = items.into_iter().take(2);
+        match (items.next(), items.next()) {
             (Some(a), Some(b)) => Some((a, b)),
             _ => None,
         }
     }
 }
 
-impl<T> FromObjects for (T, T, T) {
-    fn from_objects<I>(objects: I) -> Option<Self>
+impl<T> FromItems for (T, T, T) {
+    fn from_items<I>(items: I) -> Option<Self>
     where
-        I: IntoIterator<Item = Self::Object>,
+        I: IntoIterator<Item = Self::Item>,
     {
-        let mut objects = objects.into_iter().take(3);
-        match (objects.next(), objects.next(), objects.next()) {
+        let mut items = items.into_iter().take(3);
+        match (items.next(), items.next(), items.next()) {
             (Some(a), Some(b), Some(c)) => Some((a, b, c)),
             _ => None,
         }
     }
 }
 
-pub trait Converged: Category {
-    fn converged(value: Self::Object) -> Self;
+pub trait Converged: Composite {
+    fn converged(value: Self::Item) -> Self;
 }
 
 impl<T> Converged for (T, T)
 where
     T: Clone,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         (value.clone(), value)
     }
 }
@@ -102,7 +102,7 @@ impl<T> Converged for (T, T, T)
 where
     T: Clone,
 {
-    fn converged(value: Self::Object) -> Self {
+    fn converged(value: Self::Item) -> Self {
         (value.clone(), value.clone(), value)
     }
 }
