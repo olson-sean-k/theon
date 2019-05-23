@@ -50,7 +50,7 @@ pub trait Intersection<T> {
     fn intersection(&self, _: &T) -> Option<Self::Output>;
 }
 macro_rules! impl_reciprocal_intersection {
-    (target => $t:ident, provider => $u:ident) => {
+    (provider => $t:ident, target => $u:ident) => {
         impl<S> Intersection<$t<S>> for $u<S>
         where
             S: EuclideanSpace,
@@ -266,7 +266,7 @@ where
         }
     }
 }
-impl_reciprocal_intersection!(target => Aabb, provider => Ray);
+impl_reciprocal_intersection!(provider => Ray, target => Aabb);
 
 impl<S> Neg for Ray<S>
 where
