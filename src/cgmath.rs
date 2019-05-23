@@ -360,6 +360,14 @@ where
     }
 }
 
+impl<T> FiniteDimensional for Point2<T> {
+    type N = U2;
+}
+
+impl<T> FiniteDimensional for Point3<T> {
+    type N = U3;
+}
+
 impl<T> FromItems for Point2<T> {
     fn from_items<I>(items: I) -> Option<Self>
     where

@@ -285,6 +285,16 @@ where
     }
 }
 
+impl<T, D> FiniteDimensional for Point<T, D>
+where
+    T: Scalar,
+    D: DimName,
+    D::Value: NonZero + Unsigned,
+    DefaultAllocator: Allocator<T, D>,
+{
+    type N = D::Value;
+}
+
 impl<T, D> FromItems for Point<T, D>
 where
     T: Scalar,

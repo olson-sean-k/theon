@@ -10,9 +10,6 @@ use typenum::{Greater, NonZero, Unsigned};
 use crate::ops::{Dot, Project, Reduce, ZipMap};
 use crate::Composite;
 
-/// The dimensionality of a `EuclideanSpace`.
-pub type Dimensions<S> = <<S as EuclideanSpace>::CoordinateSpace as FiniteDimensional>::N;
-
 /// The scalar of a `EuclideanSpace`.
 pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
 
@@ -78,7 +75,6 @@ pub trait VectorSpace:
     Add<Output = Self>
     + Composite<Item = <Self as VectorSpace>::Scalar>
     + Copy
-    + FiniteDimensional
     + Mul<<Self as VectorSpace>::Scalar, Output = Self>
     + Neg<Output = Self>
     + Reduce<<Self as VectorSpace>::Scalar>
@@ -182,9 +178,9 @@ pub trait AffineSpace:
 }
 
 pub trait EuclideanSpace:
-    AffineSpace<Translation = <Self as EuclideanSpace>::CoordinateSpace>
+    AffineSpace<Translation = <Self as EuclideanSpace>::CoordinateSpace> + FiniteDimensional
 {
-    type CoordinateSpace: InnerSpace;
+    type CoordinateSpace: Basis + InnerSpace + FiniteDimensional<N = <Self as FiniteDimensional>::N>;
 
     fn origin() -> Self;
 
@@ -202,21 +198,21 @@ pub trait EuclideanSpace:
 
     fn from_x(x: Scalar<Self>) -> Self
     where
-        Self::CoordinateSpace: Basis + FiniteDimensional<N = U1>,
+        Self: FiniteDimensional<N = U1>,
     {
         Self::origin() + Vector::<Self>::from_x(x)
     }
 
     fn from_xy(x: Scalar<Self>, y: Scalar<Self>) -> Self
     where
-        Self::CoordinateSpace: Basis + FiniteDimensional<N = U2>,
+        Self: FiniteDimensional<N = U2>,
     {
         Self::origin() + Vector::<Self>::from_xy(x, y)
     }
 
     fn from_xyz(x: Scalar<Self>, y: Scalar<Self>, z: Scalar<Self>) -> Self
     where
-        Self::CoordinateSpace: Basis + FiniteDimensional<N = U3>,
+        Self: FiniteDimensional<N = U3>,
     {
         Self::origin() + Vector::<Self>::from_xyz(x, y, z)
     }

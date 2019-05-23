@@ -193,7 +193,6 @@ where
 impl<S> Default for Ray<S>
 where
     S: EuclideanSpace,
-    Vector<S>: Basis,
 {
     fn default() -> Self {
         Ray {
