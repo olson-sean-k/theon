@@ -7,7 +7,7 @@ use typenum::consts::{U0, U1, U2, U3};
 use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
-use crate::ops::{Dot, Project};
+use crate::ops::{Dot, Project, Reduce, ZipMap};
 use crate::Composite;
 
 /// The dimensionality of a `EuclideanSpace`.
@@ -81,7 +81,9 @@ pub trait VectorSpace:
     + FiniteDimensional
     + Mul<<Self as VectorSpace>::Scalar, Output = Self>
     + Neg<Output = Self>
+    + Reduce<<Self as VectorSpace>::Scalar>
     + Zero
+    + ZipMap<<Self as VectorSpace>::Scalar, Output = Self>
 {
     type Scalar: Copy + Real;
 
@@ -164,7 +166,9 @@ pub trait AffineSpace:
     Add<<Self as AffineSpace>::Translation, Output = Self>
     + Composite<Item = <<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
     + Copy
+    + Reduce<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
     + Sub<Output = <Self as AffineSpace>::Translation>
+    + ZipMap<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar, Output = Self>
 {
     type Translation: VectorSpace;
 
