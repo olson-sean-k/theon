@@ -30,7 +30,7 @@ pub trait Cross<T = Self> {
     fn cross(self, other: T) -> Self::Output;
 }
 
-pub trait Map<T>: Composite {
+pub trait Map<T = <Self as Composite>::Item>: Composite {
     type Output: Composite<Item = T>;
 
     fn map<F>(self, f: F) -> Self::Output
@@ -60,7 +60,7 @@ impl<T, U> Map<U> for (T, T, T) {
     }
 }
 
-pub trait ZipMap<T>: Composite {
+pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
     type Output: Composite<Item = T>;
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
@@ -90,7 +90,7 @@ impl<T, U> ZipMap<U> for (T, T, T) {
     }
 }
 
-pub trait Reduce<T>: Composite {
+pub trait Reduce<T = <Self as Composite>::Item>: Composite {
     fn reduce<F>(self, seed: T, f: F) -> T
     where
         F: FnMut(T, Self::Item) -> T;

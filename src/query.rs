@@ -208,7 +208,7 @@ impl<S> Intersection<Aabb<S>> for Ray<S>
 where
     S: EuclideanSpace,
     Scalar<S>: Bounded + Infinite + Lattice,
-    Vector<S>: Reduce<Scalar<S>> + ZipMap<Scalar<S>, Output = Vector<S>>,
+    Vector<S>: Reduce + ZipMap<Output = Vector<S>>,
 {
     /// The minimum and maximum _times of impact_ of the intersection.
     ///
@@ -313,7 +313,7 @@ where
     /// origin with zero volume.
     pub fn from_points<I>(points: I) -> Self
     where
-        S: ZipMap<Scalar<S>, Output = S>,
+        S: ZipMap<Output = S>,
         I: IntoIterator<Item = S>,
     {
         let mut min = S::origin();
@@ -334,7 +334,7 @@ where
 
     pub fn upper_bound(&self) -> S
     where
-        S: ZipMap<Scalar<S>, Output = S>,
+        S: ZipMap<Output = S>,
     {
         self.origin
             .zip_map(self.endpoint(), |a, b| crate::partial_max(a, b))
@@ -342,7 +342,7 @@ where
 
     pub fn lower_bound(&self) -> S
     where
-        S: ZipMap<Scalar<S>, Output = S>,
+        S: ZipMap<Output = S>,
     {
         self.origin
             .zip_map(self.endpoint(), |a, b| crate::partial_min(a, b))
@@ -354,7 +354,7 @@ where
     /// and three dimensions, respectively.
     pub fn volume(&self) -> Scalar<S>
     where
-        S: Reduce<Scalar<S>> + ZipMap<Scalar<S>, Output = S>,
+        S: Reduce + ZipMap<Output = S>,
     {
         self.origin
             .zip_map(self.endpoint(), |a, b| (a - b).abs())
@@ -363,7 +363,7 @@ where
 
     pub fn union(&self, aabb: &Self) -> Self
     where
-        S: ZipMap<Scalar<S>, Output = S>,
+        S: ZipMap<Output = S>,
     {
         let origin = self
             .lower_bound()
