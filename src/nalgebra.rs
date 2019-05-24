@@ -4,25 +4,28 @@ use arrayvec::ArrayVec;
 use decorum::{Real, R64};
 use nalgebra::base::allocator::Allocator;
 use nalgebra::base::default_allocator::DefaultAllocator;
-use nalgebra::base::dimension::DimName;
-use nalgebra::core::Matrix;
-use nalgebra::{Point, Point2, Point3, Scalar, Vector2, Vector3, VectorN};
-use num::{Num, NumCast};
+use nalgebra::base::dimension::{DimName, DimNameMax, DimNameMaximum, DimNameMin, U1};
+use nalgebra::{
+    Matrix2, Matrix3, MatrixMN, Point, Point2, Point3, RowVector2, RowVector3, RowVectorN, Scalar,
+    Vector2, Vector3, VectorN,
+};
+use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
-use typenum::{NonZero, Unsigned};
+use typenum::NonZero;
 
-use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
+use crate::ops::{Cross, Dot, Interpolate, Map, MulMN, Reduce, ZipMap};
 use crate::space::{
-    AffineSpace, Basis, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
+    VectorSpace,
 };
 use crate::{Composite, Converged, FromItems, IntoItems};
 
 impl<T, D> Basis for VectorN<T, D>
 where
-    T: Num + Scalar,
+    T: One + Scalar + Zero,
     D: DimName,
-    D::Value: NonZero + Unsigned,
     DefaultAllocator: Allocator<T, D>,
+    Self: FiniteDimensional,
 {
     type Bases = Vec<Self>;
 
@@ -49,23 +52,25 @@ where
     }
 }
 
-impl<T, D> Composite for VectorN<T, D>
+impl<T, R, C> Composite for MatrixMN<T, R, C>
 where
     T: Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     type Item = T;
 }
 
-impl<T, D> Converged for VectorN<T, D>
+impl<T, R, C> Converged for MatrixMN<T, R, C>
 where
     T: Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     fn converged(value: Self::Item) -> Self {
-        VectorN::repeat(value)
+        Self::from_element(value)
     }
 }
 
@@ -94,31 +99,50 @@ where
     type Output = T;
 
     fn dot(self, other: Self) -> Self::Output {
-        Matrix::dot(&self, &other)
+        nalgebra::Matrix::dot(&self, &other)
     }
 }
 
-impl<T, D> FiniteDimensional for VectorN<T, D>
+impl<T, D> DualSpace for RowVectorN<T, D>
 where
-    T: Scalar,
+    T: AddAssign + MulAssign + Real + Scalar,
     D: DimName,
-    D::Value: NonZero + Unsigned,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, D, U1>,
+    DefaultAllocator: Allocator<T, U1, D>,
+    VectorN<T, D>: Copy + FiniteDimensional<N = Self::N>,
+    Self: Copy + FiniteDimensional,
 {
-    type N = D::Value;
+    type Dual = VectorN<T, D>;
+
+    fn transpose(self) -> Self::Dual {
+        nalgebra::Matrix::transpose(&self)
+    }
 }
 
-impl<T, D> FromItems for VectorN<T, D>
+// Implemented for row and column vectors only.
+impl<T, R, C> FiniteDimensional for MatrixMN<T, R, C>
 where
     T: Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    R: DimName + DimNameMax<C> + DimNameMin<C, Output = U1>,
+    <DimNameMaximum<R, C> as DimName>::Value: NonZero,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type N = <DimNameMaximum<R, C> as DimName>::Value;
+}
+
+impl<T, R, C> FromItems for MatrixMN<T, R, C>
+where
+    T: Scalar,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     fn from_items<I>(items: I) -> Option<Self>
     where
         I: IntoIterator<Item = Self::Item>,
     {
-        Some(VectorN::from_iterator(items))
+        Some(Self::from_iterator(items))
     }
 }
 
@@ -126,22 +150,22 @@ impl<T, D> InnerSpace for VectorN<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar,
     D: DimName,
-    D::Value: NonZero + Unsigned,
     DefaultAllocator: Allocator<T, D>,
     Self: Copy,
 {
 }
 
-impl<T, D> Interpolate for VectorN<T, D>
+impl<T, R, C> Interpolate for MatrixMN<T, R, C>
 where
     T: Num + NumCast + Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     type Output = Self;
 
     fn lerp(self, other: Self, f: R64) -> Self::Output {
-        VectorN::<T, D>::zip_map(&self, &other, |a, b| crate::lerp(a, b, f))
+        MatrixMN::<T, R, C>::zip_map(&self, &other, |a, b| crate::lerp(a, b, f))
     }
 }
 
@@ -167,29 +191,120 @@ where
     }
 }
 
-impl<T, U, D> Map<U> for VectorN<T, D>
+impl<T, U, R, C> Map<U> for MatrixMN<T, R, C>
 where
-    T: Num + Scalar,
-    U: Num + Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<U, D>,
+    T: Scalar,
+    U: Scalar,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<U, R, C>,
 {
-    type Output = VectorN<U, D>;
+    type Output = MatrixMN<U, R, C>;
 
     fn map<F>(self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item) -> U,
     {
-        VectorN::<T, D>::map(&self, f)
+        MatrixMN::<T, R, C>::map(&self, f)
     }
 }
 
-impl<T, U, D> Reduce<U> for VectorN<T, D>
+// TODO: Use a (more) generic implementation.
+impl<T> Matrix for Matrix2<T>
 where
-    T: Num + Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    T: AddAssign + MulAssign + Real + Scalar,
+{
+    type Row = RowVector2<T>;
+    type Column = Vector2<T>;
+    type Transpose = Self;
+
+    fn row_count() -> usize {
+        Self::Column::dimensions()
+    }
+
+    fn column_count() -> usize {
+        Self::Row::dimensions()
+    }
+
+    fn row_component(&self, index: usize) -> Option<Self::Row> {
+        if index < <Self as Matrix>::row_count() {
+            Some(nalgebra::Matrix::row(self, index).into_owned())
+        }
+        else {
+            None
+        }
+    }
+
+    fn column_component(&self, index: usize) -> Option<Self::Column> {
+        if index < <Self as Matrix>::column_count() {
+            Some(nalgebra::Matrix::column(self, index).into_owned())
+        }
+        else {
+            None
+        }
+    }
+
+    fn transpose(self) -> Self::Transpose {
+        nalgebra::Matrix::transpose(&self)
+    }
+}
+
+impl<T> Matrix for Matrix3<T>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+{
+    type Row = RowVector3<T>;
+    type Column = Vector3<T>;
+    type Transpose = Self;
+
+    fn row_count() -> usize {
+        Self::Column::dimensions()
+    }
+
+    fn column_count() -> usize {
+        Self::Row::dimensions()
+    }
+
+    fn row_component(&self, index: usize) -> Option<Self::Row> {
+        if index < <Self as Matrix>::row_count() {
+            Some(nalgebra::Matrix::row(self, index).into_owned())
+        }
+        else {
+            None
+        }
+    }
+
+    fn column_component(&self, index: usize) -> Option<Self::Column> {
+        if index < <Self as Matrix>::column_count() {
+            Some(nalgebra::Matrix::column(self, index).into_owned())
+        }
+        else {
+            None
+        }
+    }
+
+    fn transpose(self) -> Self::Transpose {
+        nalgebra::Matrix::transpose(&self)
+    }
+}
+
+// TODO: Use a (more) generic implementation.
+impl<T> MulMN<Matrix2<T>> for Matrix2<T>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+{
+    type Output = Matrix2<T>;
+
+    // TODO: Proxy to the `Mul` implementation, which should be much faster.
+}
+
+impl<T, U, R, C> Reduce<U> for MatrixMN<T, R, C>
+where
+    T: Scalar,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
 {
     fn reduce<F>(self, mut seed: U, mut f: F) -> U
     where
@@ -202,12 +317,12 @@ where
     }
 }
 
-impl<T, D> VectorSpace for VectorN<T, D>
+impl<T, R, C> VectorSpace for MatrixMN<T, R, C>
 where
     T: AddAssign + MulAssign + Real + Scalar,
-    D: DimName,
-    D::Value: NonZero + Unsigned,
-    DefaultAllocator: Allocator<T, D>,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
     Self: Copy,
 {
     type Scalar = T;
@@ -215,23 +330,28 @@ where
     fn scalar_component(&self, index: usize) -> Option<&Self::Scalar> {
         self.get(index)
     }
+
+    fn multiplicative_identity() -> Self {
+        Self::identity()
+    }
 }
 
-impl<T, U, D> ZipMap<U> for VectorN<T, D>
+impl<T, U, R, C> ZipMap<U> for MatrixMN<T, R, C>
 where
-    T: Num + Scalar,
-    U: Num + Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<U, D>,
+    T: Scalar,
+    U: Scalar,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<U, R, C>,
 {
-    type Output = VectorN<U, D>;
+    type Output = MatrixMN<U, R, C>;
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item, Self::Item) -> U,
     {
-        VectorN::<T, D>::zip_map(&self, &other, f)
+        MatrixMN::<T, R, C>::zip_map(&self, &other, f)
     }
 }
 
@@ -239,7 +359,6 @@ impl<T, D> AffineSpace for Point<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar + SubAssign,
     D: DimName,
-    D::Value: NonZero + Unsigned,
     DefaultAllocator: Allocator<T, D>,
     <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
 {
@@ -270,9 +389,10 @@ impl<T, D> EuclideanSpace for Point<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar + SubAssign,
     D: DimName,
-    D::Value: NonZero + Unsigned,
+    D::Value: NonZero,
     DefaultAllocator: Allocator<T, D>,
     <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
+    VectorN<T, D>: FiniteDimensional<N = Self::N>,
 {
     type CoordinateSpace = VectorN<T, D>;
 
@@ -289,7 +409,7 @@ impl<T, D> FiniteDimensional for Point<T, D>
 where
     T: Scalar,
     D: DimName,
-    D::Value: NonZero + Unsigned,
+    D::Value: NonZero,
     DefaultAllocator: Allocator<T, D>,
 {
     type N = D::Value;
@@ -346,8 +466,8 @@ where
 
 impl<T, U, D> Map<U> for Point<T, D>
 where
-    T: Num + Scalar,
-    U: Num + Scalar,
+    T: Scalar,
+    U: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
     DefaultAllocator: Allocator<U, D>,
@@ -364,7 +484,7 @@ where
 
 impl<T, U, D> Reduce<U> for Point<T, D>
 where
-    T: Num + Scalar,
+    T: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
@@ -378,8 +498,8 @@ where
 
 impl<T, U, D> ZipMap<U> for Point<T, D>
 where
-    T: Num + Scalar,
-    U: Num + Scalar,
+    T: Scalar,
+    U: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
     DefaultAllocator: Allocator<U, D>,

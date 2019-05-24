@@ -1,6 +1,9 @@
 use decorum::R64;
+use itertools::iproduct;
+use num::Zero;
 
-use crate::Composite;
+use crate::space::{DualSpace, FiniteDimensional, Matrix, VectorSpace};
+use crate::{Composite, FromItems};
 
 pub trait Project<T = Self> {
     type Output;
@@ -28,6 +31,34 @@ pub trait Cross<T = Self> {
     type Output;
 
     fn cross(self, other: T) -> Self::Output;
+}
+
+pub trait MulMN<T = Self>: Matrix
+where
+    T: Matrix<Scalar = Self::Scalar>,
+    // The `VectorSpace<Scalar = Self::Scalar>` and `FiniteDimensional` bounds
+    // are redundant, but are needed by the compiler.
+    <T as Matrix>::Column: VectorSpace<Scalar = Self::Scalar>,
+    Self::Row: DualSpace<Dual = <T as Matrix>::Column>
+        + FiniteDimensional<N = <T::Column as FiniteDimensional>::N>,
+{
+    // TODO: This implementation requires `FromItems`, which could be
+    //       cumbersome to implement.
+    type Output: FromItems + Matrix<Scalar = Self::Scalar>;
+
+    fn mul_mn(self, other: T) -> <Self as MulMN<T>>::Output {
+        FromItems::from_items(
+            iproduct!(
+                (0..Self::row_count()).map(|index| self.row_component(index).unwrap().transpose()),
+                (0..T::column_count()).map(|index| other.column_component(index).unwrap())
+            )
+            .map(|(row, column)| {
+                row.zip_map(column, |a, b| a * b)
+                    .reduce(Zero::zero(), |sum, a| sum + a)
+            }),
+        )
+        .unwrap()
+    }
 }
 
 pub trait Map<T = <Self as Composite>::Item>: Composite {
@@ -116,5 +147,20 @@ impl<T, U> Reduce<U> for (T, T, T) {
         seed = f(seed, self.1);
         seed = f(seed, self.2);
         seed
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use nalgebra::Matrix2;
+
+    use crate::ops::MulMN;
+
+    // TODO: Remove this test once the default implementation is overridden.
+    #[test]
+    fn matrix_multiply() {
+        let a = Matrix2::<f64>::identity();
+        let b = Matrix2::<f64>::identity();
+        assert_eq!(a * b, a.mul_mn(b));
     }
 }

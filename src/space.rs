@@ -85,6 +85,8 @@ pub trait VectorSpace:
 
     fn scalar_component(&self, index: usize) -> Option<&Self::Scalar>;
 
+    fn multiplicative_identity() -> Self;
+
     fn from_x(x: Self::Scalar) -> Self
     where
         Self: Basis + FiniteDimensional<N = U1>,
@@ -156,6 +158,40 @@ where
         let d = self.dot(self);
         self * (n / d)
     }
+}
+
+pub trait DualSpace: FiniteDimensional + VectorSpace {
+    type Dual: FiniteDimensional<N = Self::N> + VectorSpace<Scalar = Self::Scalar>;
+
+    fn transpose(self) -> Self::Dual;
+}
+
+pub trait Matrix:
+    Mul<<Self as Matrix>::Column, Output = <Self as Matrix>::Column> + VectorSpace
+{
+    type Row: FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
+    type Column: FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
+    type Transpose: Matrix<Scalar = Self::Scalar>;
+
+    fn row_count() -> usize {
+        Self::Column::dimensions()
+    }
+
+    fn column_count() -> usize {
+        Self::Row::dimensions()
+    }
+
+    fn row_component(&self, index: usize) -> Option<Self::Row>;
+
+    fn column_component(&self, index: usize) -> Option<Self::Column>;
+
+    fn transpose(self) -> Self::Transpose;
+}
+
+pub trait SquareMatrix: Matrix + Mul<Output = Self>
+where
+    Self::Row: FiniteDimensional<N = <Self::Column as FiniteDimensional>::N>,
+{
 }
 
 pub trait AffineSpace:
