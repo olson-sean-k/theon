@@ -3,7 +3,7 @@
 //! This module provides types and traits for performing spatial queries.
 
 use decorum::{Infinite, Real};
-use num::{Bounded, One, Zero};
+use num::{Bounded, Zero};
 use std::ops::Neg;
 
 use crate::ops::{Reduce, ZipMap};
@@ -250,12 +250,8 @@ where
         let direction = self.direction.get().clone();
         let origin = (aabb.origin - self.origin).zip_map(direction, |a, b| a / b);
         let endpoint = ((aabb.endpoint()) - self.origin).zip_map(direction, |a, b| a / b);
-        let min = origin
-            .zip_map(endpoint, |a, b| crate::partial_min(a, b))
-            .reduce(Bounded::min_value(), |max, a| crate::partial_max(max, a));
-        let max = origin
-            .zip_map(endpoint, |a, b| crate::partial_max(a, b))
-            .reduce(Bounded::max_value(), |min, a| crate::partial_min(min, a));
+        let min = origin.zip_map_partial_min(endpoint).partial_max();
+        let max = origin.zip_map_partial_max(endpoint).partial_min();
         if max < Zero::zero() || min > max {
             None
         }
@@ -316,8 +312,8 @@ where
         let mut min = S::origin();
         let mut max = S::origin();
         for point in points {
-            min = min.zip_map(point, |a, b| crate::partial_min(a, b));
-            max = max.zip_map(point, |a, b| crate::partial_max(a, b));
+            min = min.zip_map_partial_min(point);
+            max = max.zip_map_partial_max(point);
         }
         Aabb {
             origin: min,
@@ -330,13 +326,11 @@ where
     }
 
     pub fn upper_bound(&self) -> S {
-        self.origin
-            .zip_map(self.endpoint(), |a, b| crate::partial_max(a, b))
+        self.origin.zip_map_partial_max(self.endpoint())
     }
 
     pub fn lower_bound(&self) -> S {
-        self.origin
-            .zip_map(self.endpoint(), |a, b| crate::partial_min(a, b))
+        self.origin.zip_map_partial_min(self.endpoint())
     }
 
     /// Gets the Lebesgue measure ($n$-dimensional volume) of the bounding box.
@@ -346,17 +340,12 @@ where
     pub fn volume(&self) -> Scalar<S> {
         self.origin
             .zip_map(self.endpoint(), |a, b| (a - b).abs())
-            .reduce(One::one(), |product, a| product * a)
+            .product()
     }
 
     pub fn union(&self, aabb: &Self) -> Self {
-        let origin = self
-            .lower_bound()
-            .zip_map(aabb.lower_bound(), |a, b| crate::partial_min(a, b));
-        let extent = self
-            .upper_bound()
-            .zip_map(aabb.upper_bound(), |a, b| crate::partial_max(a, b))
-            - origin;
+        let origin = self.lower_bound().zip_map_partial_min(aabb.lower_bound());
+        let extent = self.upper_bound().zip_map_partial_max(aabb.upper_bound()) - origin;
         Aabb { origin, extent }
     }
 }

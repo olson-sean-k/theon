@@ -1,9 +1,10 @@
 use decorum::R64;
 use itertools::iproduct;
-use num::Zero;
+use num::{Bounded, One, Zero};
+use std::ops::{Add, Mul};
 
 use crate::space::{DualSpace, FiniteDimensional, Matrix, VectorSpace};
-use crate::{Composite, FromItems};
+use crate::{Composite, FromItems, Lattice};
 
 pub trait Project<T = Self> {
     type Output;
@@ -97,6 +98,22 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item, Self::Item) -> T;
+
+    fn zip_map_partial_min(self, other: Self) -> Self::Output
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Copy + Lattice,
+    {
+        self.zip_map(other, |a, b| crate::partial_min(a, b))
+    }
+
+    fn zip_map_partial_max(self, other: Self) -> Self::Output
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Copy + Lattice,
+    {
+        self.zip_map(other, |a, b| crate::partial_max(a, b))
+    }
 }
 
 impl<T, U> ZipMap<U> for (T, T) {
@@ -125,6 +142,38 @@ pub trait Reduce<T = <Self as Composite>::Item>: Composite {
     fn reduce<F>(self, seed: T, f: F) -> T
     where
         F: FnMut(T, Self::Item) -> T;
+
+    fn sum(self) -> T
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Add<Output = T> + Zero,
+    {
+        self.reduce(Zero::zero(), |sum, n| sum + n)
+    }
+
+    fn product(self) -> T
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Mul<Output = T> + One,
+    {
+        self.reduce(One::one(), |product, n| product * n)
+    }
+
+    fn partial_min(self) -> T
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Bounded + Copy + Lattice,
+    {
+        self.reduce(Bounded::max_value(), |min, n| crate::partial_min(min, n))
+    }
+
+    fn partial_max(self) -> T
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Bounded + Copy + Lattice,
+    {
+        self.reduce(Bounded::min_value(), |max, n| crate::partial_max(max, n))
+    }
 }
 
 impl<T, U> Reduce<U> for (T, T) {
