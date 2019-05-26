@@ -250,8 +250,8 @@ where
         let direction = self.direction.get().clone();
         let origin = (aabb.origin - self.origin).zip_map(direction, |a, b| a / b);
         let endpoint = ((aabb.endpoint()) - self.origin).zip_map(direction, |a, b| a / b);
-        let min = origin.zip_map_partial_min(endpoint).partial_max();
-        let max = origin.zip_map_partial_max(endpoint).partial_min();
+        let min = origin.per_item_partial_min(endpoint).partial_max();
+        let max = origin.per_item_partial_max(endpoint).partial_min();
         if max < Zero::zero() || min > max {
             None
         }
@@ -312,8 +312,8 @@ where
         let mut min = S::origin();
         let mut max = S::origin();
         for point in points {
-            min = min.zip_map_partial_min(point);
-            max = max.zip_map_partial_max(point);
+            min = min.per_item_partial_min(point);
+            max = max.per_item_partial_max(point);
         }
         Aabb {
             origin: min,
@@ -326,11 +326,11 @@ where
     }
 
     pub fn upper_bound(&self) -> S {
-        self.origin.zip_map_partial_max(self.endpoint())
+        self.origin.per_item_partial_max(self.endpoint())
     }
 
     pub fn lower_bound(&self) -> S {
-        self.origin.zip_map_partial_min(self.endpoint())
+        self.origin.per_item_partial_min(self.endpoint())
     }
 
     /// Gets the Lebesgue measure ($n$-dimensional volume) of the bounding box.
@@ -344,8 +344,8 @@ where
     }
 
     pub fn union(&self, aabb: &Self) -> Self {
-        let origin = self.lower_bound().zip_map_partial_min(aabb.lower_bound());
-        let extent = self.upper_bound().zip_map_partial_max(aabb.upper_bound()) - origin;
+        let origin = self.lower_bound().per_item_partial_min(aabb.lower_bound());
+        let extent = self.upper_bound().per_item_partial_max(aabb.upper_bound()) - origin;
         Aabb { origin, extent }
     }
 }

@@ -99,7 +99,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
     where
         F: FnMut(Self::Item, Self::Item) -> T;
 
-    fn zip_map_partial_min(self, other: Self) -> Self::Output
+    fn per_item_partial_min(self, other: Self) -> Self::Output
     where
         Self: Composite<Item = T> + Sized,
         T: Copy + Lattice,
@@ -107,7 +107,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
         self.zip_map(other, |a, b| crate::partial_min(a, b))
     }
 
-    fn zip_map_partial_max(self, other: Self) -> Self::Output
+    fn per_item_partial_max(self, other: Self) -> Self::Output
     where
         Self: Composite<Item = T> + Sized,
         T: Copy + Lattice,
