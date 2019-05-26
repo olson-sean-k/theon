@@ -3,11 +3,13 @@
 //! This module provides types and traits for performing spatial queries.
 
 use decorum::{Infinite, Real};
-use num::{Bounded, Zero};
+use num::{Bounded, Signed, Zero};
 use std::ops::Neg;
+use typenum::type_operators::Cmp;
+use typenum::{Greater, U2};
 
-use crate::ops::{Reduce, ZipMap};
-use crate::space::{Basis, EuclideanSpace, InnerSpace, Scalar, Vector};
+use crate::ops::{Dot, Reduce, ZipMap};
+use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
 use crate::Lattice;
 
 /// Pair-wise intersection.
@@ -262,6 +264,36 @@ where
 }
 impl_reciprocal_intersection!(provider => Ray, target => Aabb);
 
+impl<S> Intersection<Plane<S>> for Ray<S>
+where
+    S: EuclideanSpace + FiniteDimensional,
+    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    Scalar<S>: Signed,
+{
+    type Output = Scalar<S>;
+
+    // TODO: Detect rays that lie within the plane.
+    fn intersection(&self, plane: &Plane<S>) -> Option<Self::Output> {
+        let direction = self.direction.get().clone();
+        let normal = plane.normal.get().clone();
+        let product = direction.dot(normal);
+        if product != Zero::zero() {
+            let t = (plane.origin - self.origin).dot(normal) / product;
+            if t.is_positive() {
+                Some(t)
+            }
+            else {
+                None
+            }
+        }
+        else {
+            None
+        }
+    }
+}
+// TODO: Accept additional type bounds.
+//impl_reciprocal_intersection!(provider => Ray, target => Plane);
+
 impl<S> Neg for Ray<S>
 where
     S: EuclideanSpace,
@@ -380,11 +412,29 @@ where
     }
 }
 
+#[derive(Clone)]
+pub struct Plane<S>
+where
+    S: EuclideanSpace + FiniteDimensional,
+    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+{
+    pub origin: S,
+    pub normal: Unit<Vector<S>>,
+}
+
+impl<S> Copy for Plane<S>
+where
+    S: EuclideanSpace + FiniteDimensional,
+    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    Vector<S>: Copy,
+{
+}
+
 #[cfg(test)]
 mod tests {
     use nalgebra::{Point2, Point3};
 
-    use crate::query::{Aabb, Intersection, Ray, Unit};
+    use crate::query::{Aabb, Intersection, Plane, Ray, Unit};
     use crate::space::{Basis, EuclideanSpace};
     use crate::Converged;
 
@@ -417,5 +467,19 @@ mod tests {
         };
         assert_eq!(Some((1.0, 2.0)), ray.intersection(&aabb));
         assert_eq!(None, ray.reverse().intersection(&aabb));
+    }
+
+    #[test]
+    fn plane_ray_intersection_e3() {
+        let plane = Plane::<E3> {
+            origin: EuclideanSpace::from_xyz(0.0, 0.0, 1.0),
+            normal: Unit::try_from_inner(Basis::z()).unwrap(),
+        };
+        let ray = Ray::<E3> {
+            origin: EuclideanSpace::origin(),
+            direction: Unit::try_from_inner(Basis::z()).unwrap(),
+        };
+        assert_eq!(Some(1.0), ray.intersection(&plane));
+        assert_eq!(None, ray.reverse().intersection(&plane));
     }
 }
