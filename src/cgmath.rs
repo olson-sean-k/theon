@@ -3,7 +3,7 @@
 use arrayvec::ArrayVec;
 use cgmath::{self, BaseFloat, BaseNum, Point2, Point3, Vector2, Vector3};
 use decorum::{Real, R64};
-use num::{Num, NumCast};
+use num::{Num, NumCast, One, Zero};
 use typenum::consts::{U2, U3};
 
 use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
@@ -14,7 +14,7 @@ use crate::{Composite, Converged, FromItems, IntoItems};
 
 impl<T> Basis for Vector2<T>
 where
-    T: Num,
+    T: One + Zero,
 {
     type Bases = ArrayVec<[Self; 2]>;
 
@@ -36,7 +36,7 @@ where
 
 impl<T> Basis for Vector3<T>
 where
-    T: Num,
+    T: One + Zero,
 {
     type Bases = ArrayVec<[Self; 3]>;
 
@@ -258,6 +258,10 @@ where
             _ => None,
         }
     }
+
+    fn multiplicative_identity() -> Self {
+        Vector2::new(One::one(), Zero::zero())
+    }
 }
 
 impl<T> VectorSpace for Vector3<T>
@@ -273,6 +277,11 @@ where
             2 => Some(&self.z),
             _ => None,
         }
+    }
+
+    fn multiplicative_identity() -> Self {
+        let zero = Zero::zero();
+        Vector3::new(One::one(), zero, zero)
     }
 }
 
@@ -300,14 +309,14 @@ impl<T, U> ZipMap<U> for Vector3<T> {
 
 impl<T> AffineSpace for Point2<T>
 where
-    T: BaseFloat + BaseNum + Real,
+    T: BaseNum + Real,
 {
     type Translation = Vector2<T>;
 }
 
 impl<T> AffineSpace for Point3<T>
 where
-    T: BaseFloat + BaseNum + Real,
+    T: BaseNum + Real,
 {
     type Translation = Vector3<T>;
 }
@@ -340,7 +349,7 @@ where
 
 impl<T> EuclideanSpace for Point2<T>
 where
-    T: BaseFloat + BaseNum + Real,
+    T: BaseFloat + Real,
 {
     type CoordinateSpace = Vector2<T>;
 
@@ -351,7 +360,7 @@ where
 
 impl<T> EuclideanSpace for Point3<T>
 where
-    T: BaseFloat + BaseNum + Real,
+    T: BaseFloat + Real,
 {
     type CoordinateSpace = Vector3<T>;
 
