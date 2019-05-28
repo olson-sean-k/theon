@@ -258,10 +258,6 @@ where
             _ => None,
         }
     }
-
-    fn multiplicative_identity() -> Self {
-        Vector2::new(One::one(), Zero::zero())
-    }
 }
 
 impl<T> VectorSpace for Vector3<T>
@@ -277,11 +273,6 @@ where
             2 => Some(&self.z),
             _ => None,
         }
-    }
-
-    fn multiplicative_identity() -> Self {
-        let zero = Zero::zero();
-        Vector3::new(One::one(), zero, zero)
     }
 }
 

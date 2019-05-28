@@ -330,10 +330,6 @@ where
     fn scalar_component(&self, index: usize) -> Option<&Self::Scalar> {
         self.get(index)
     }
-
-    fn multiplicative_identity() -> Self {
-        Self::identity()
-    }
 }
 
 impl<T, U, R, C> ZipMap<U> for MatrixMN<T, R, C>

@@ -85,8 +85,6 @@ pub trait VectorSpace:
 
     fn scalar_component(&self, index: usize) -> Option<&Self::Scalar>;
 
-    fn multiplicative_identity() -> Self;
-
     fn from_x(x: Self::Scalar) -> Self
     where
         Self: Basis + FiniteDimensional<N = U1>,
@@ -192,6 +190,7 @@ pub trait SquareMatrix: Matrix + Mul<Output = Self>
 where
     Self::Row: FiniteDimensional<N = <Self::Column as FiniteDimensional>::N>,
 {
+    fn multiplicative_identity() -> Self;
 }
 
 pub trait AffineSpace:
