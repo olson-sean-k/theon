@@ -155,6 +155,92 @@ where
     }
 }
 
+/// Line.
+///
+/// Describes a line containing an _origin_ point and a _direction_. Lines
+/// extend infinitely from their origin along their direction $\hat{u}$. Unlike
+/// `Ray`, the direction component of `Line` extends in both the positive and
+/// negative.
+///
+/// This representation is typically known as the _vector form_ $P_0 +
+/// t\hat{u}$ where $t$ is some non-zero _time of impact_.
+#[derive(Clone)]
+pub struct Line<S>
+where
+    S: EuclideanSpace,
+{
+    /// The origin or contained point of the line.
+    pub origin: S,
+    /// The unit direction(s) in which the line extends from its origin.
+    pub direction: Unit<Vector<S>>,
+}
+
+impl<S> Line<S>
+where
+    S: EuclideanSpace,
+{
+    pub fn into_ray(self) -> Ray<S> {
+        let Line { origin, direction } = self;
+        Ray { origin, direction }
+    }
+}
+
+impl<S> Copy for Line<S>
+where
+    S: EuclideanSpace,
+    Vector<S>: Copy,
+{
+}
+
+impl<S> Default for Line<S>
+where
+    S: EuclideanSpace,
+{
+    fn default() -> Self {
+        Line {
+            origin: S::origin(),
+            direction: Unit::default(),
+        }
+    }
+}
+
+impl<S> Intersection<Line<S>> for Plane<S>
+where
+    S: EuclideanSpace + FiniteDimensional,
+    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    Scalar<S>: Signed,
+{
+    /// The _time of impact_ of the intersection.
+    ///
+    /// The time of impact $t$ describes the distance from the line's origin
+    /// point at which the intersection occurs.
+    type Output = Scalar<S>;
+
+    // TODO: Detect lines that lie within the plane.
+    /// Determines the _time of impact_ of a `Plane` intersection with a
+    /// `Line`.
+    ///
+    /// Given a line formed from an origin $P_0$ and a unit direction
+    /// $\hat{u}$, the point of intersection with the plane is $P_0 +
+    /// (t\hat{u})$.
+    fn intersection(&self, line: &Line<S>) -> Option<Self::Output> {
+        let direction = line.direction.get().clone();
+        let normal = self.normal.get().clone();
+        let product = direction.dot(normal);
+        if product != Zero::zero() {
+            Some((self.origin - line.origin).dot(normal) / product)
+        }
+        else {
+            None
+        }
+    }
+}
+impl_reciprocal_intersection!(
+    provider => Plane,
+    target => Line,
+    bounds => ((S, FiniteDimensional),(S::N, Cmp<U2, Output = Greater>))
+);
+
 /// Ray or half-line.
 ///
 /// Describes a decomposed line with an _origin_ or _initial point_ and a
@@ -176,6 +262,11 @@ impl<S> Ray<S>
 where
     S: EuclideanSpace,
 {
+    pub fn into_line(self) -> Line<S> {
+        let Ray { origin, direction } = self;
+        Line { origin, direction }
+    }
+
     /// Reverses the direction of the ray.
     ///
     /// Reversing a ray yields its _opposite_, with the same origin and the
@@ -274,25 +365,26 @@ where
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
     Scalar<S>: Signed,
 {
+    /// The _time of impact_ of the intersection.
+    ///
+    /// The time of impact $t$ describes the distance along the half-line from
+    /// the ray's origin at which the intersection occurs.
     type Output = Scalar<S>;
 
     // TODO: Detect rays that lie within the plane.
+    /// Determines the _time of impact_ of a `Ray` intersection with a `Plane`.
+    ///
+    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
+    /// the point of intersection with the plane is $P_0 + (t\hat{u})$.
     fn intersection(&self, plane: &Plane<S>) -> Option<Self::Output> {
-        let direction = self.direction.get().clone();
-        let normal = plane.normal.get().clone();
-        let product = direction.dot(normal);
-        if product != Zero::zero() {
-            let t = (plane.origin - self.origin).dot(normal) / product;
+        self.into_line().intersection(plane).and_then(|t| {
             if t.is_positive() {
                 Some(t)
             }
             else {
                 None
             }
-        }
-        else {
-            None
-        }
+        })
     }
 }
 impl_reciprocal_intersection!(
