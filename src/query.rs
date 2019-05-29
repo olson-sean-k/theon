@@ -53,10 +53,14 @@ pub trait Intersection<T> {
 }
 macro_rules! impl_reciprocal_intersection {
     (provider => $t:ident, target => $u:ident) => {
+        impl_reciprocal_intersection!(provider => $t, target => $u, bounds => ());
+    };
+    (provider => $t:ident, target => $u:ident, bounds => ($(($bt:path, $bb:path)),*$(,)?)) => {
         impl<S> Intersection<$t<S>> for $u<S>
         where
             S: EuclideanSpace,
             $t<S>: Intersection<$u<S>>,
+            $($bt: $bb),*
         {
             type Output = <$t<S> as Intersection<$u<S>>>::Output;
 
@@ -291,8 +295,11 @@ where
         }
     }
 }
-// TODO: Accept additional type bounds.
-//impl_reciprocal_intersection!(provider => Ray, target => Plane);
+impl_reciprocal_intersection!(
+    provider => Ray,
+    target => Plane,
+    bounds => ((S, FiniteDimensional),(S::N, Cmp<U2, Output = Greater>))
+);
 
 impl<S> Neg for Ray<S>
 where
