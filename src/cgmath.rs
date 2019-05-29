@@ -8,7 +8,7 @@ use typenum::consts::{U2, U3};
 
 use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
 use crate::space::{
-    AffineSpace, Basis, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
 use crate::{Composite, Converged, FromItems, IntoItems};
 
@@ -114,6 +114,28 @@ where
 
     fn dot(self, other: Self) -> Self::Output {
         <Self as cgmath::InnerSpace>::dot(self, other)
+    }
+}
+
+impl<T> DualSpace for Vector2<T>
+where
+    T: BaseNum + Real,
+{
+    type Dual = Self;
+
+    fn transpose(self) -> Self::Dual {
+        self
+    }
+}
+
+impl<T> DualSpace for Vector3<T>
+where
+    T: BaseNum + Real,
+{
+    type Dual = Self;
+
+    fn transpose(self) -> Self::Dual {
+        self
     }
 }
 

@@ -6,8 +6,8 @@ use nalgebra::base::allocator::Allocator;
 use nalgebra::base::default_allocator::DefaultAllocator;
 use nalgebra::base::dimension::{DimName, DimNameMax, DimNameMaximum, DimNameMin, U1};
 use nalgebra::{
-    Matrix2, Matrix3, MatrixMN, Point, Point2, Point3, RowVector2, RowVector3, RowVectorN, Scalar,
-    Vector2, Vector3, VectorN,
+    Matrix2, Matrix3, MatrixMN, Point, Point2, Point3, RowVector2, RowVector3, Scalar, Vector2,
+    Vector3, VectorN,
 };
 use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -103,23 +103,23 @@ where
     }
 }
 
-impl<T, D> DualSpace for RowVectorN<T, D>
+impl<T, R, C> DualSpace for MatrixMN<T, R, C>
 where
     T: AddAssign + MulAssign + Real + Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D, U1>,
-    DefaultAllocator: Allocator<T, U1, D>,
-    VectorN<T, D>: Copy + FiniteDimensional<N = Self::N>,
+    R: DimName + DimNameMin<C, Output = U1>,
+    C: DimName + DimNameMin<R, Output = U1>,
+    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<T, C, R>,
+    MatrixMN<T, C, R>: Copy + FiniteDimensional<N = <Self as FiniteDimensional>::N>,
     Self: Copy + FiniteDimensional,
 {
-    type Dual = VectorN<T, D>;
+    type Dual = MatrixMN<T, C, R>;
 
     fn transpose(self) -> Self::Dual {
         nalgebra::Matrix::transpose(&self)
     }
 }
 
-// Implemented for row and column vectors only.
 impl<T, R, C> FiniteDimensional for MatrixMN<T, R, C>
 where
     T: Scalar,

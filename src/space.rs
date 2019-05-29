@@ -159,7 +159,7 @@ where
 }
 
 pub trait DualSpace: FiniteDimensional + VectorSpace {
-    type Dual: FiniteDimensional<N = Self::N> + VectorSpace<Scalar = Self::Scalar>;
+    type Dual: DualSpace + FiniteDimensional<N = Self::N> + VectorSpace<Scalar = Self::Scalar>;
 
     fn transpose(self) -> Self::Dual;
 }
@@ -167,9 +167,13 @@ pub trait DualSpace: FiniteDimensional + VectorSpace {
 pub trait Matrix:
     Mul<<Self as Matrix>::Column, Output = <Self as Matrix>::Column> + VectorSpace
 {
-    type Row: FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
-    type Column: FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
-    type Transpose: Matrix<Scalar = Self::Scalar>;
+    type Row: DualSpace + FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
+    type Column: DualSpace + FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
+    type Transpose: Matrix<
+        Scalar = Self::Scalar,
+        Row = <Self::Column as DualSpace>::Dual,
+        Column = <Self::Row as DualSpace>::Dual,
+    >;
 
     fn row_count() -> usize {
         Self::Column::dimensions()
@@ -179,6 +183,10 @@ pub trait Matrix:
         Self::Row::dimensions()
     }
 
+    fn scalar_component(&self, row: usize, column: usize) -> Option<&Self::Scalar> {
+        <Self as VectorSpace>::scalar_component(self, row + (column * Self::row_count()))
+    }
+
     fn row_component(&self, index: usize) -> Option<Self::Row>;
 
     fn column_component(&self, index: usize) -> Option<Self::Column>;
@@ -186,7 +194,8 @@ pub trait Matrix:
     fn transpose(self) -> Self::Transpose;
 }
 
-pub trait SquareMatrix: Matrix + Mul<Output = Self>
+pub trait SquareMatrix:
+    Matrix<Row = <<Self as Matrix>::Column as DualSpace>::Dual> + Mul<Output = Self>
 where
     Self::Row: FiniteDimensional<N = <Self::Column as FiniteDimensional>::N>,
 {
