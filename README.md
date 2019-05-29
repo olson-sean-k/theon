@@ -54,3 +54,15 @@ assert_eq!(None, ray.reverse().intersection(&aabb));
 In the above example, it is possible to replace the `E2` type definition with
 types from [`cgmath`](https://crates.io/crates/cgmath) or any other type that
 implements `EuclideanSpace` and the necessary operational traits.
+
+## LAPACK
+
+Some queries require solving linear systems of arbitrary and non-trivial size.
+To support these queries, the `array` feature depends on
+[`ndarray`](https://crates.io/crates/ndarray) and
+[LAPACK](https://en.wikipedia.org/wiki/lapack). For example,
+`Plane::from_points` is enabled by the `array` feature and computes a best-fit
+plane using a singular value decomposition.
+
+These operations are exposed in terms of geometric traits and the implementing
+types that are being used.

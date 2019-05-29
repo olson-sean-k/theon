@@ -1,9 +1,9 @@
-#[macro_use]
 pub mod ops;
 pub mod query;
 pub mod space;
 
-// Feature modules. These are empty unless `geometry-*` features are enabled.
+// Feature modules. These are empty unless certain features are enabled.
+mod array;
 mod cgmath;
 mod mint;
 mod nalgebra;
