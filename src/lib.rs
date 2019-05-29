@@ -1,9 +1,10 @@
+pub mod array;
 pub mod ops;
 pub mod query;
 pub mod space;
 
-// Feature modules. These are empty unless certain features are enabled.
-mod array;
+// Foreign implementation modules. These are empty unless the corresponding
+// geometry features are enabled.
 mod cgmath;
 mod mint;
 mod nalgebra;

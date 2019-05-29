@@ -1,15 +1,17 @@
 #![cfg(feature = "array")]
 
 use ndarray::OwnedRepr;
+use ndarray_linalg::convert;
 use ndarray_linalg::layout::MatrixLayout;
 use ndarray_linalg::svd::SVDInto;
-use ndarray_linalg::{convert, types};
 use typenum::type_operators::Cmp;
 use typenum::{Greater, Unsigned, U2, U3};
 
 use crate::query::{Plane, Unit};
 use crate::space::{EuclideanSpace, FiniteDimensional, Scalar, Vector};
 use crate::{FromItems, IntoItems};
+
+pub use ndarray_linalg::types::Scalar as ArrayScalar;
 
 impl<S> Plane<S>
 where
@@ -19,7 +21,7 @@ where
     pub fn from_points<I>(points: I) -> Option<Self>
     where
         S: FiniteDimensional<N = U3>,
-        Scalar<S>: types::Scalar,
+        Scalar<S>: ArrayScalar,
         Vector<S>: FromItems + IntoItems,
         I: AsRef<[S]> + Clone + IntoIterator<Item = S>,
     {
@@ -28,10 +30,10 @@ where
 }
 
 // TODO: Handle edge cases and improve error handling.
-pub fn svd_ev_plane<S, I>(points: I) -> Option<Plane<S>>
+fn svd_ev_plane<S, I>(points: I) -> Option<Plane<S>>
 where
     S: EuclideanSpace + FiniteDimensional<N = U3>,
-    Scalar<S>: types::Scalar,
+    Scalar<S>: ArrayScalar,
     Vector<S>: FromItems + IntoItems,
     I: AsRef<[S]> + Clone + IntoIterator<Item = S>,
 {
