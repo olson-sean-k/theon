@@ -164,9 +164,7 @@ pub trait DualSpace: FiniteDimensional + VectorSpace {
     fn transpose(self) -> Self::Dual;
 }
 
-pub trait Matrix:
-    Mul<<Self as Matrix>::Column, Output = <Self as Matrix>::Column> + VectorSpace
-{
+pub trait Matrix: VectorSpace {
     type Row: DualSpace + FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
     type Column: DualSpace + FiniteDimensional + VectorSpace<Scalar = Self::Scalar>;
     type Transpose: Matrix<
@@ -195,7 +193,9 @@ pub trait Matrix:
 }
 
 pub trait SquareMatrix:
-    Matrix<Row = <<Self as Matrix>::Column as DualSpace>::Dual> + Mul<Output = Self>
+    Matrix<Row = <<Self as Matrix>::Column as DualSpace>::Dual>
+    + Mul<Output = Self>
+    + Mul<<Self as Matrix>::Column, Output = <Self as Matrix>::Column>
 where
     Self::Row: FiniteDimensional<N = <Self::Column as FiniteDimensional>::N>,
 {

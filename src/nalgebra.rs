@@ -16,7 +16,7 @@ use typenum::NonZero;
 use crate::ops::{Cross, Dot, Interpolate, Map, MulMN, Reduce, ZipMap};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
-    VectorSpace,
+    SquareMatrix, VectorSpace,
 };
 use crate::{Composite, Converged, FromItems, IntoItems};
 
@@ -219,14 +219,6 @@ where
     type Column = Vector2<T>;
     type Transpose = Self;
 
-    fn row_count() -> usize {
-        Self::Column::dimensions()
-    }
-
-    fn column_count() -> usize {
-        Self::Row::dimensions()
-    }
-
     fn row_component(&self, index: usize) -> Option<Self::Row> {
         if index < <Self as Matrix>::row_count() {
             Some(nalgebra::Matrix::row(self, index).into_owned())
@@ -257,14 +249,6 @@ where
     type Row = RowVector3<T>;
     type Column = Vector3<T>;
     type Transpose = Self;
-
-    fn row_count() -> usize {
-        Self::Column::dimensions()
-    }
-
-    fn column_count() -> usize {
-        Self::Row::dimensions()
-    }
 
     fn row_component(&self, index: usize) -> Option<Self::Row> {
         if index < <Self as Matrix>::row_count() {
@@ -314,6 +298,24 @@ where
             seed = f(seed, *a);
         }
         seed
+    }
+}
+
+impl<T> SquareMatrix for Matrix2<T>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+{
+    fn multiplicative_identity() -> Self {
+        nalgebra::Matrix2::<T>::identity()
+    }
+}
+
+impl<T> SquareMatrix for Matrix3<T>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+{
+    fn multiplicative_identity() -> Self {
+        nalgebra::Matrix3::<T>::identity()
     }
 }
 
