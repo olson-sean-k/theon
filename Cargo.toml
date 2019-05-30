@@ -7,6 +7,7 @@ authors = ["Sean Olson <olson.sean.k@gmail.com>"]
 edition = "2018"
 license = "MIT"
 readme = "README.md"
+repository = "https://github.com/olson-sean-k/theon"
 
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
