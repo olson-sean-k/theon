@@ -198,18 +198,3 @@ impl<T, U> Reduce<U> for (T, T, T) {
         seed
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use nalgebra::Matrix2;
-
-    use crate::ops::MulMN;
-
-    // TODO: Remove this test once the default implementation is overridden.
-    #[test]
-    fn matrix_multiply() {
-        let a = Matrix2::<f64>::identity();
-        let b = Matrix2::<f64>::identity();
-        assert_eq!(a * b, a.mul_mn(b));
-    }
-}

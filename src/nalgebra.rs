@@ -280,7 +280,20 @@ where
 {
     type Output = Matrix2<T>;
 
-    // TODO: Proxy to the `Mul` implementation, which should be much faster.
+    fn mul_mn(self, other: Matrix2<T>) -> <Self as MulMN<Matrix2<T>>>::Output {
+        self * other
+    }
+}
+
+impl<T> MulMN<Matrix3<T>> for Matrix3<T>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+{
+    type Output = Matrix3<T>;
+
+    fn mul_mn(self, other: Matrix3<T>) -> <Self as MulMN<Matrix3<T>>>::Output {
+        self * other
+    }
 }
 
 impl<T, U, R, C> Reduce<U> for MatrixMN<T, R, C>
