@@ -5,7 +5,7 @@ use ndarray_linalg::convert;
 use ndarray_linalg::layout::MatrixLayout;
 use ndarray_linalg::svd::SVDInto;
 use typenum::type_operators::Cmp;
-use typenum::{Greater, Unsigned, U2, U3};
+use typenum::{Greater, Unsigned, U2};
 
 use crate::query::{Plane, Unit};
 use crate::space::{EuclideanSpace, FiniteDimensional, Scalar, Vector};
