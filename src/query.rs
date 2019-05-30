@@ -208,7 +208,6 @@ impl<S> Intersection<Line<S>> for Plane<S>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: Signed,
 {
     /// The _time of impact_ of the intersection.
     ///
