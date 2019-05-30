@@ -1,4 +1,4 @@
-#![cfg(feature = "array")]
+#![cfg(all(feature = "array", target_os = "linux"))]
 
 use ndarray::OwnedRepr;
 use ndarray_linalg::convert;
@@ -81,14 +81,27 @@ mod tests {
     type E3 = Point3<f64>;
 
     #[test]
-    fn svd_ev_plane_e3() {
-        // Form a determined plane from a triangle.
+    fn determined_svd_ev_plane_e3() {
         let plane = Plane::<E3>::from_points(vec![
             EuclideanSpace::from_xyz(1.0, 0.0, 0.0),
             EuclideanSpace::from_xyz(0.5, 0.5, 0.0),
             EuclideanSpace::from_xyz(0.0, 1.0, 0.0),
         ])
         .unwrap();
+        assert_eq!(Vector::<E3>::z(), plane.normal.get().clone());
+    }
+
+    #[test]
+    fn overdetermined_svd_ev_plane_e3() {
+        let plane = Plane::<E3>::from_points(vec![
+            EuclideanSpace::from_xyz(1.0, 1.0, 0.0),
+            EuclideanSpace::from_xyz(2.0, 1.0, 0.0),
+            EuclideanSpace::from_xyz(3.0, 1.0, 0.0),
+            EuclideanSpace::from_xyz(2.0, 1.0, 0.0),
+            EuclideanSpace::from_xyz(2.0, 2.0, 0.0),
+            EuclideanSpace::from_xyz(2.0, 3.0, 0.0),
+        ])
+            .unwrap();
         assert_eq!(Vector::<E3>::z(), plane.normal.get().clone());
     }
 }

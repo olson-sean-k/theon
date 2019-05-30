@@ -66,3 +66,5 @@ plane using a singular value decomposition.
 
 These operations are exposed in terms of geometric traits and the implementing
 types that are being used.
+
+The `array` feature only supports Linux at this time.
