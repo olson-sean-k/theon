@@ -20,7 +20,6 @@ where
 {
     pub fn from_points<I>(points: I) -> Option<Self>
     where
-        S: FiniteDimensional<N = U3>,
         Scalar<S>: ArrayScalar,
         Vector<S>: FromItems + IntoItems,
         I: AsRef<[S]> + Clone + IntoIterator<Item = S>,
@@ -32,7 +31,8 @@ where
 // TODO: Handle edge cases and improve error handling.
 fn svd_ev_plane<S, I>(points: I) -> Option<Plane<S>>
 where
-    S: EuclideanSpace + FiniteDimensional<N = U3>,
+    S: EuclideanSpace + FiniteDimensional,
+    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
     Scalar<S>: ArrayScalar,
     Vector<S>: FromItems + IntoItems,
     I: AsRef<[S]> + Clone + IntoIterator<Item = S>,
@@ -101,7 +101,7 @@ mod tests {
             EuclideanSpace::from_xyz(2.0, 2.0, 0.0),
             EuclideanSpace::from_xyz(2.0, 3.0, 0.0),
         ])
-            .unwrap();
+        .unwrap();
         assert_eq!(Vector::<E3>::z(), plane.normal.get().clone());
     }
 }
