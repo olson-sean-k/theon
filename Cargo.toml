@@ -2,7 +2,7 @@
 name = "theon"
 description = "Abstraction of Euclidean spaces."
 keywords = ["geometry", "graphics", "math"]
-version = "0.0.0"
+version = "0.0.1"
 authors = ["Sean Olson <olson.sean.k@gmail.com>"]
 edition = "2018"
 license = "MIT"
