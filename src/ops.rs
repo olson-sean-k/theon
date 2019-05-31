@@ -53,10 +53,7 @@ where
                 (0..Self::row_count()).map(|index| self.row_component(index).unwrap().transpose()),
                 (0..T::column_count()).map(|index| other.column_component(index).unwrap())
             )
-            .map(|(row, column)| {
-                row.zip_map(column, |a, b| a * b)
-                    .reduce(Zero::zero(), |sum, a| sum + a)
-            }),
+            .map(|(row, column)| row.per_item_product(column).sum()),
         )
         .unwrap()
     }
@@ -98,6 +95,22 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item, Self::Item) -> T;
+
+    fn per_item_sum(self, other: Self) -> Self::Output
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Add<Output = T>,
+    {
+        self.zip_map(other, |a, b| a + b)
+    }
+
+    fn per_item_product(self, other: Self) -> Self::Output
+    where
+        Self: Composite<Item = T> + Sized,
+        T: Mul<Output = T>,
+    {
+        self.zip_map(other, |a, b| a * b)
+    }
 
     fn per_item_partial_min(self, other: Self) -> Self::Output
     where
