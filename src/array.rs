@@ -1,6 +1,6 @@
 #![cfg(all(feature = "array", target_os = "linux"))]
 
-use ndarray::OwnedRepr;
+use ndarray::{Array, Ix2};
 use ndarray_linalg::convert;
 use ndarray_linalg::layout::MatrixLayout;
 use ndarray_linalg::svd::SVDInto;
@@ -28,7 +28,33 @@ where
     }
 }
 
+/// Maps columnar data into a two-dimensional array.
+///
+/// Produces a two-dimensional array that forms a matrix from each input
+/// column.
+fn map_into_array<I, T, F>(columns: I, f: F) -> Option<Array<T::Item, Ix2>>
+where
+    I: AsRef<[<I as IntoIterator>::Item]> + IntoIterator,
+    T: FiniteDimensional + IntoItems,
+    T::Item: ArrayScalar,
+    F: Fn(I::Item) -> T,
+{
+    let n = columns.as_ref().len();
+    convert::into_matrix(
+        MatrixLayout::F((n as i32, <T as FiniteDimensional>::N::USIZE as i32)),
+        columns
+            .into_iter()
+            .map(f)
+            .flat_map(|column| column.into_items())
+            .collect(),
+    )
+    .ok()
+}
+
 // TODO: Handle edge cases and improve error handling.
+/// Computes a best-fit plane from a set of points.
+///
+/// The plane is fit using least squares via a singular value decomposition.
 fn svd_ev_plane<S, I>(points: I) -> Option<Plane<S>>
 where
     S: EuclideanSpace + FiniteDimensional,
@@ -37,17 +63,8 @@ where
     Vector<S>: FromItems + IntoItems,
     I: AsRef<[S]> + Clone + IntoIterator<Item = S>,
 {
-    let n = points.as_ref().len();
     let centroid = EuclideanSpace::centroid(points.clone())?;
-    let m = convert::into_matrix::<_, OwnedRepr<_>>(
-        MatrixLayout::F((n as i32, <S as FiniteDimensional>::N::USIZE as i32)),
-        points
-            .into_iter()
-            .map(|point| point - centroid)
-            .flat_map(|vector| vector.into_items())
-            .collect(),
-    )
-    .ok()?;
+    let m = map_into_array(points, |point| point - centroid)?;
     // TODO: Fails at runtime if `V^T` is not requested.
     if let Ok((Some(u), sigma, _)) = m.svd_into(true, true) {
         let i = sigma
