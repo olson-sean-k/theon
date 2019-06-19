@@ -8,7 +8,7 @@ use std::ops::Neg;
 use typenum::type_operators::Cmp;
 use typenum::{Greater, U2};
 
-use crate::ops::{Dot, Reduce, ZipMap};
+use crate::ops::{Dot, Fold, ZipMap};
 use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
 use crate::Lattice;
 

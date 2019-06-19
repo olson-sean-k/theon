@@ -13,7 +13,7 @@ use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
 
-use crate::ops::{Cross, Dot, Interpolate, Map, MulMN, Reduce, ZipMap};
+use crate::ops::{Cross, Dot, Fold, Interpolate, Map, MulMN, ZipMap};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
     SquareMatrix, VectorSpace,
@@ -129,6 +129,24 @@ where
     DefaultAllocator: Allocator<T, R, C>,
 {
     type N = <DimNameMaximum<R, C> as DimName>::Value;
+}
+
+impl<T, U, R, C> Fold<U> for MatrixMN<T, R, C>
+where
+    T: Scalar,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in self.iter() {
+            seed = f(seed, *a);
+        }
+        seed
+    }
 }
 
 impl<T, R, C> FromItems for MatrixMN<T, R, C>
@@ -296,24 +314,6 @@ where
     }
 }
 
-impl<T, U, R, C> Reduce<U> for MatrixMN<T, R, C>
-where
-    T: Scalar,
-    R: DimName,
-    C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
-{
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        for a in self.iter() {
-            seed = f(seed, *a);
-        }
-        seed
-    }
-}
-
 impl<T> SquareMatrix for Matrix2<T>
 where
     T: AddAssign + MulAssign + Real + Scalar,
@@ -426,6 +426,20 @@ where
     type N = D::Value;
 }
 
+impl<T, U, D> Fold<U> for Point<T, D>
+where
+    T: Scalar,
+    D: DimName,
+    DefaultAllocator: Allocator<T, D>,
+{
+    fn fold<F>(self, seed: U, f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        self.coords.fold(seed, f)
+    }
+}
+
 impl<T, D> FromItems for Point<T, D>
 where
     T: Scalar,
@@ -490,20 +504,6 @@ where
         F: FnMut(Self::Item) -> U,
     {
         Point::from(self.coords.map(f))
-    }
-}
-
-impl<T, U, D> Reduce<U> for Point<T, D>
-where
-    T: Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
-{
-    fn reduce<F>(self, seed: U, f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        self.coords.reduce(seed, f)
     }
 }
 

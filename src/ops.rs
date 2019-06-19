@@ -151,8 +151,8 @@ impl<T, U> ZipMap<U> for (T, T, T) {
     }
 }
 
-pub trait Reduce<T = <Self as Composite>::Item>: Composite {
-    fn reduce<F>(self, seed: T, f: F) -> T
+pub trait Fold<T = <Self as Composite>::Item>: Composite {
+    fn fold<F>(self, seed: T, f: F) -> T
     where
         F: FnMut(T, Self::Item) -> T;
 
@@ -161,7 +161,7 @@ pub trait Reduce<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Add<Output = T> + Zero,
     {
-        self.reduce(Zero::zero(), |sum, n| sum + n)
+        self.fold(Zero::zero(), |sum, n| sum + n)
     }
 
     fn product(self) -> T
@@ -169,7 +169,7 @@ pub trait Reduce<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Mul<Output = T> + One,
     {
-        self.reduce(One::one(), |product, n| product * n)
+        self.fold(One::one(), |product, n| product * n)
     }
 
     fn partial_min(self) -> T
@@ -177,7 +177,7 @@ pub trait Reduce<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Bounded + Copy + Lattice,
     {
-        self.reduce(Bounded::max_value(), |min, n| crate::partial_min(min, n))
+        self.fold(Bounded::max_value(), |min, n| crate::partial_min(min, n))
     }
 
     fn partial_max(self) -> T
@@ -185,12 +185,12 @@ pub trait Reduce<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Bounded + Copy + Lattice,
     {
-        self.reduce(Bounded::min_value(), |max, n| crate::partial_max(max, n))
+        self.fold(Bounded::min_value(), |max, n| crate::partial_max(max, n))
     }
 }
 
-impl<T, U> Reduce<U> for (T, T) {
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
+impl<T, U> Fold<U> for (T, T) {
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
@@ -200,8 +200,8 @@ impl<T, U> Reduce<U> for (T, T) {
     }
 }
 
-impl<T, U> Reduce<U> for (T, T, T) {
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
+impl<T, U> Fold<U> for (T, T, T) {
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {

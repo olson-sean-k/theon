@@ -6,7 +6,7 @@ use decorum::{Real, R64};
 use num::{Num, NumCast, One, Zero};
 use typenum::consts::{U2, U3};
 
-use crate::ops::{Cross, Dot, Interpolate, Map, Reduce, ZipMap};
+use crate::ops::{Cross, Dot, Fold, Interpolate, Map, ZipMap};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
@@ -147,6 +147,36 @@ impl<T> FiniteDimensional for Vector3<T> {
     type N = U3;
 }
 
+impl<T, U> Fold<U> for Vector2<T>
+where
+    T: Copy,
+{
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in &[self.x, self.y] {
+            seed = f(seed, *a);
+        }
+        seed
+    }
+}
+
+impl<T, U> Fold<U> for Vector3<T>
+where
+    T: Copy,
+{
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in &[self.x, self.y, self.z] {
+            seed = f(seed, *a);
+        }
+        seed
+    }
+}
+
 impl<T> FromItems for Vector2<T> {
     fn from_items<I>(items: I) -> Option<Self>
     where
@@ -234,36 +264,6 @@ impl<T, U> Map<U> for Vector3<T> {
         F: FnMut(Self::Item) -> U,
     {
         Vector3::new(f(self.x), f(self.y), f(self.z))
-    }
-}
-
-impl<T, U> Reduce<U> for Vector2<T>
-where
-    T: Copy,
-{
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        for a in &[self.x, self.y] {
-            seed = f(seed, *a);
-        }
-        seed
-    }
-}
-
-impl<T, U> Reduce<U> for Vector3<T>
-where
-    T: Copy,
-{
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        for a in &[self.x, self.y, self.z] {
-            seed = f(seed, *a);
-        }
-        seed
     }
 }
 
@@ -390,6 +390,36 @@ impl<T> FiniteDimensional for Point3<T> {
     type N = U3;
 }
 
+impl<T, U> Fold<U> for Point2<T>
+where
+    T: Copy,
+{
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in &[self.x, self.y] {
+            seed = f(seed, *a);
+        }
+        seed
+    }
+}
+
+impl<T, U> Fold<U> for Point3<T>
+where
+    T: Copy,
+{
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in &[self.x, self.y, self.z] {
+            seed = f(seed, *a);
+        }
+        seed
+    }
+}
+
 impl<T> FromItems for Point2<T> {
     fn from_items<I>(items: I) -> Option<Self>
     where
@@ -473,36 +503,6 @@ impl<T, U> Map<U> for Point3<T> {
         F: FnMut(Self::Item) -> U,
     {
         Point3::new(f(self.x), f(self.y), f(self.z))
-    }
-}
-
-impl<T, U> Reduce<U> for Point2<T>
-where
-    T: Copy,
-{
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        for a in &[self.x, self.y] {
-            seed = f(seed, *a);
-        }
-        seed
-    }
-}
-
-impl<T, U> Reduce<U> for Point3<T>
-where
-    T: Copy,
-{
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        for a in &[self.x, self.y, self.z] {
-            seed = f(seed, *a);
-        }
-        seed
     }
 }
 

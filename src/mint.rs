@@ -11,7 +11,7 @@ use num::{Num, NumCast, One, Zero};
 use std::ops::Neg;
 use typenum::{U2, U3};
 
-use crate::ops::{Cross, Dot, Interpolate, Map, Project, Reduce, ZipMap};
+use crate::ops::{Cross, Dot, Fold, Interpolate, Map, Project, ZipMap};
 use crate::space::{Basis, FiniteDimensional};
 use crate::{Composite, Converged, FromItems, IntoItems};
 
@@ -225,6 +225,36 @@ impl<T> IntoItems for Vector3<T> {
     }
 }
 
+impl<T, U> Fold<U> for Vector2<T>
+where
+    T: Copy,
+{
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in &[self.x, self.y] {
+            seed = f(seed, *a);
+        }
+        seed
+    }
+}
+
+impl<T, U> Fold<U> for Vector3<T>
+where
+    T: Copy,
+{
+    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in &[self.x, self.y, self.z] {
+            seed = f(seed, *a);
+        }
+        seed
+    }
+}
+
 impl<T, U> Map<U> for Vector2<T> {
     type Output = Vector2<U>;
 
@@ -277,36 +307,6 @@ where
         let n = other.dot(self);
         let d = self.dot(self);
         self.map(|a| a * (n / d))
-    }
-}
-
-impl<T, U> Reduce<U> for Vector2<T>
-where
-    T: Copy,
-{
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        for a in &[self.x, self.y] {
-            seed = f(seed, *a);
-        }
-        seed
-    }
-}
-
-impl<T, U> Reduce<U> for Vector3<T>
-where
-    T: Copy,
-{
-    fn reduce<F>(self, mut seed: U, mut f: F) -> U
-    where
-        F: FnMut(U, Self::Item) -> U,
-    {
-        for a in &[self.x, self.y, self.z] {
-            seed = f(seed, *a);
-        }
-        seed
     }
 }
 
