@@ -1,5 +1,6 @@
 pub mod array;
 pub mod ops;
+pub mod partition;
 pub mod query;
 pub mod space;
 
@@ -18,6 +19,19 @@ use num::{self, Num, NumCast, One, Zero};
 pub mod prelude {
     pub use crate::query::Intersection as _;
     pub use crate::Lattice as _;
+}
+
+trait Half {
+    fn half(self) -> Self;
+}
+
+impl<T> Half for T
+where
+    T: Num + One,
+{
+    fn half(self) -> Self {
+        self / (Self::one() + Self::one())
+    }
 }
 
 pub trait Composite {
@@ -169,6 +183,17 @@ where
         }
     }
 }
+
+pub trait IteratorExt: Iterator + Sized {
+    fn compose<T>(self) -> Option<T>
+    where
+        T: Composite<Item = Self::Item> + FromItems,
+    {
+        T::from_items(self)
+    }
+}
+
+impl<I> IteratorExt for I where I: Iterator + Sized {}
 
 pub fn lerp<T>(a: T, b: T, f: R64) -> T
 where

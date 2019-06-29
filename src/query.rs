@@ -3,14 +3,14 @@
 //! This module provides types and traits for performing spatial queries.
 
 use decorum::{Infinite, Real};
-use num::{Bounded, Signed, Zero};
+use num::{Bounded, One, Signed, Zero};
 use std::ops::Neg;
 use typenum::type_operators::Cmp;
 use typenum::{Greater, U2};
 
 use crate::ops::{Dot, Fold, ZipMap};
 use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
-use crate::Lattice;
+use crate::{Half, IntoItems, Lattice};
 
 /// Pair-wise intersection.
 ///
@@ -463,6 +463,13 @@ where
         self.origin.per_item_partial_min(self.endpoint())
     }
 
+    pub fn centroid(&self) -> S
+    where
+        Scalar<S>: One,
+    {
+        self.origin + (self.extent * Scalar::<S>::one().half())
+    }
+
     /// Gets the Lebesgue measure ($n$-dimensional volume) of the bounding box.
     ///
     /// This value is analogous to _length_, _area_, and _volume_ in one, two,
@@ -496,6 +503,46 @@ where
             origin: S::origin(),
             extent: Vector::<S>::zero(),
         }
+    }
+}
+
+impl<S> Intersection<S> for Aabb<S>
+where
+    S: EuclideanSpace + IntoItems,
+{
+    type Output = Vector<S>;
+
+    fn intersection(&self, point: &S) -> Option<Self::Output> {
+        let lower = self
+            .lower_bound()
+            .into_items()
+            .into_iter()
+            .zip(point.into_items())
+            .all(|(bound, x)| x >= bound);
+        let upper = self
+            .upper_bound()
+            .into_items()
+            .into_iter()
+            .zip(point.into_items())
+            .all(|(bound, x)| x < bound);
+        if lower && upper {
+            Some(point.clone() - self.origin)
+        }
+        else {
+            None
+        }
+    }
+}
+
+// TODO: `impl_reciprocal_intersection` does not support this.
+impl<S> Intersection<Aabb<S>> for S
+where
+    S: EuclideanSpace + IntoItems,
+{
+    type Output = <Aabb<S> as Intersection<S>>::Output;
+
+    fn intersection(&self, aabb: &Aabb<S>) -> Option<Self::Output> {
+        aabb.intersection(self)
     }
 }
 
