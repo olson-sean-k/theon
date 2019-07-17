@@ -18,6 +18,8 @@ where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
 {
+    // TODO: This API is a bit restrictive and requires copying. Is there an
+    //       alternative?
     pub fn from_points<I>(points: I) -> Option<Self>
     where
         Scalar<S>: ArrayScalar,
