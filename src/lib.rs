@@ -10,15 +10,41 @@ mod cgmath;
 mod mint;
 mod nalgebra;
 
-use std::cmp::Ordering;
-
 use arrayvec::ArrayVec;
 use decorum::R64;
 use num::{self, Num, NumCast, One, Zero};
+use std::cmp::Ordering;
+
+use crate::space::EuclideanSpace;
 
 pub mod prelude {
     pub use crate::query::Intersection as _;
     pub use crate::Lattice as _;
+}
+
+pub type Position<T> = <T as AsPosition>::Position;
+
+pub trait AsPosition {
+    type Position: EuclideanSpace;
+
+    fn as_position(&self) -> &Self::Position;
+
+    fn as_position_mut(&mut self) -> &mut Self::Position;
+}
+
+impl<S> AsPosition for S
+where
+    S: EuclideanSpace,
+{
+    type Position = Self;
+
+    fn as_position(&self) -> &Self::Position {
+        self
+    }
+
+    fn as_position_mut(&mut self) -> &mut Self::Position {
+        self
+    }
 }
 
 pub trait Composite {
