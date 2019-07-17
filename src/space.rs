@@ -261,3 +261,14 @@ pub trait EuclideanSpace:
         Self::origin() + Vector::<Self>::from_xyz(x, y, z)
     }
 }
+
+pub trait EmbeddingSpace: EuclideanSpace + FiniteDimensional
+where
+    Self::CoordinateSpace: VectorSpace<Scalar = Scalar<Self::Embedding>>,
+    U1: Add<Self::N>,
+    <U1 as Add<Self::N>>::Output: NonZero + Unsigned,
+{
+    type Embedding: EuclideanSpace + FiniteDimensional<N = <U1 as Add<Self::N>>::Output>;
+
+    fn embed(self, w: Scalar<Self>) -> Self::Embedding;
+}

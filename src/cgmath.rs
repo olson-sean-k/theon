@@ -8,7 +8,8 @@ use typenum::consts::{U2, U3};
 
 use crate::ops::{Cross, Dot, Fold, Interpolate, Map, ZipMap};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
+    AffineSpace, Basis, DualSpace, EmbeddingSpace, EuclideanSpace, FiniteDimensional, InnerSpace,
+    VectorSpace,
 };
 use crate::{Composite, Converged, FromItems, IntoItems};
 
@@ -357,6 +358,17 @@ where
 {
     fn converged(value: Self::Item) -> Self {
         Point3::new(value, value, value)
+    }
+}
+
+impl<T> EmbeddingSpace for Point2<T>
+where
+    T: BaseFloat + Real,
+{
+    type Embedding = Point3<T>;
+
+    fn embed(self, z: T) -> Self::Embedding {
+        Point3::new(self.x, self.y, z)
     }
 }
 

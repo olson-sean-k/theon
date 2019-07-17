@@ -30,6 +30,13 @@ pub trait AsPosition {
     fn as_position(&self) -> &Self::Position;
 
     fn as_position_mut(&mut self) -> &mut Self::Position;
+
+    fn transform<F>(&mut self, mut f: F)
+    where
+        F: FnMut(&Self::Position) -> Self::Position,
+    {
+        *self.as_position_mut() = f(self.as_position());
+    }
 }
 
 impl<S> AsPosition for S

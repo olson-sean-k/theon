@@ -15,8 +15,8 @@ use typenum::NonZero;
 
 use crate::ops::{Cross, Dot, Fold, Interpolate, Map, MulMN, ZipMap};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
-    SquareMatrix, VectorSpace,
+    AffineSpace, Basis, DualSpace, EmbeddingSpace, EuclideanSpace, FiniteDimensional, InnerSpace,
+    Matrix, SquareMatrix, VectorSpace,
 };
 use crate::{Composite, Converged, FromItems, IntoItems};
 
@@ -393,6 +393,18 @@ where
 {
     fn converged(value: Self::Item) -> Self {
         Point::from(VectorN::<T, D>::converged(value))
+    }
+}
+
+// TODO: Provide a more generic implementation.
+impl<T> EmbeddingSpace for Point2<T>
+where
+    T: AddAssign + MulAssign + Real + Scalar + SubAssign,
+{
+    type Embedding = Point3<T>;
+
+    fn embed(self, z: T) -> Self::Embedding {
+        Point3::new(self.x, self.y, z)
     }
 }
 

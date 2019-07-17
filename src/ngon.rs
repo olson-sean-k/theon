@@ -1,55 +1,200 @@
 use arrayvec::{Array, ArrayVec};
 use itertools::izip;
 use num::Integer;
+use smallvec::SmallVec;
 use std::ops::{Index, IndexMut};
 use std::slice;
-use typenum::U3;
+use typenum::type_operators::Cmp;
+use typenum::{Greater, U2, U3};
 
-use crate::array::ArrayScalar;
-use crate::ops::{Fold, Map, Zip, ZipMap};
-use crate::query::{Intersection, Line, Plane};
-use crate::space::{EuclideanSpace, FiniteDimensional, Scalar, Vector};
-use crate::{Composite, Converged, FromItems, IntoItems};
+use crate::ops::{Cross, Fold, Map, Zip, ZipMap};
+use crate::query::{Intersection, Line, Plane, Unit};
+use crate::space::{
+    EmbeddingSpace, EuclideanSpace, FiniteDimensional, Scalar, Vector, VectorSpace,
+};
+use crate::{AsPosition, Composite, Converged, FromItems, IntoItems, Position};
+
+pub trait Topological: Composite<Item = <Self as Topological>::Vertex> {
+    type Vertex;
+
+    fn arity(&self) -> usize;
+}
+
+pub trait NGon:
+    AsMut<[<Self as Topological>::Vertex]>
+    + AsRef<[<Self as Topological>::Vertex]>
+    + IntoIterator<Item = <Self as Topological>::Vertex>
+    + Sized
+    + Topological
+{
+    /// Embeds an $n$-gon from $\Reals^2$ into $\Reals^3$.
+    ///
+    /// The scalar for the additional basis is normalized to the given value.
+    ///
+    /// # Examples
+    ///
+    /// Embedding a triangle into the $xy$ plane at $z=1$:
+    ///
+    /// ```rust
+    /// # extern crate nalgebra;
+    /// # extern crate theon;
+    /// #
+    /// use nalgebra::Point2;
+    /// use theon::ngon::{NGon, Trigon};
+    /// use theon::space::EuclideanSpace;
+    ///
+    /// type E2 = Point2<f64>;
+    ///
+    /// let trigon = Trigon::embed_into_xy(
+    ///     Trigon::from([
+    ///         E2::from_xy(-1.0, 0.0),
+    ///         E2::from_xy(0.0, 1.0),
+    ///         E2::from_xy(1.0, 0.0)
+    ///     ]),
+    ///     1.0,
+    /// );
+    /// ```
+    fn embed_into_xy<P>(ngon: P, z: Scalar<Self::Vertex>) -> Self
+    where
+        Self::Vertex: EuclideanSpace + FiniteDimensional<N = U3>,
+        P: Map<Self::Vertex, Output = Self> + NGon,
+        P::Vertex: EmbeddingSpace<Embedding = Self::Vertex> + FiniteDimensional<N = U2>,
+        Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Self::Vertex>>,
+    {
+        Self::embed_into_xy_with(ngon, z, |position| position)
+    }
+
+    fn embed_into_xy_with<P, F>(ngon: P, z: Scalar<Position<Self::Vertex>>, mut f: F) -> Self
+    where
+        Self::Vertex: AsPosition,
+        Position<Self::Vertex>: EuclideanSpace + FiniteDimensional<N = U3>,
+        P: Map<Self::Vertex, Output = Self> + NGon,
+        P::Vertex: EmbeddingSpace<Embedding = Position<Self::Vertex>> + FiniteDimensional<N = U2>,
+        Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Position<Self::Vertex>>>,
+        F: FnMut(Position<Self::Vertex>) -> Self::Vertex,
+    {
+        ngon.map(move |position| f(position.embed(z)))
+    }
+
+    /// Embeds an $n$-gon from $\Reals^2$ into $\Reals^3$.
+    ///
+    /// The $n$-gon is rotated into the given plane about the origin.
+    ///
+    /// # Examples
+    ///
+    /// Embedding a triangle into the $xy$ plane at $z=0$:
+    ///
+    /// ```rust,no_run
+    /// # extern crate nalgebra;
+    /// # extern crate theon;
+    /// #
+    /// use nalgebra::{Point2, Point3};
+    /// use theon::ngon::{NGon, Trigon};
+    /// use theon::query::{Plane, Unit};
+    /// use theon::space::{Basis, EuclideanSpace};
+    ///
+    /// type E2 = Point2<f64>;
+    /// type E3 = Point3<f64>;
+    ///
+    /// let trigon = Trigon::embed_into_plane(
+    ///     Trigon::from([
+    ///         E2::from_xy(-1.0, 0.0),
+    ///         E2::from_xy(0.0, 1.0),
+    ///         E2::from_xy(1.0, 0.0)
+    ///     ]),
+    ///     Plane::<E3> {
+    ///         origin: EuclideanSpace::origin(),
+    ///         normal: Unit::try_from_inner(Basis::z()).expect("non-zero"),
+    ///     },
+    /// );
+    /// ```
+    fn embed_into_plane<P>(ngon: P, plane: Plane<Self::Vertex>) -> Self
+    where
+        Self::Vertex: EuclideanSpace + FiniteDimensional<N = U3>,
+        P: Map<Self::Vertex, Output = Self> + NGon,
+        P::Vertex: EmbeddingSpace<Embedding = Self::Vertex> + FiniteDimensional<N = U2>,
+        Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Self::Vertex>>,
+    {
+        Self::embed_into_plane_with(ngon, plane, |position| position)
+    }
+
+    fn embed_into_plane_with<P, F>(ngon: P, plane: Plane<Position<Self::Vertex>>, mut f: F) -> Self
+    where
+        Self::Vertex: AsPosition,
+        Position<Self::Vertex>: EuclideanSpace + FiniteDimensional<N = U3>,
+        P: Map<Self::Vertex, Output = Self> + NGon,
+        P::Vertex: EmbeddingSpace<Embedding = Position<Self::Vertex>> + FiniteDimensional<N = U2>,
+        Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Position<Self::Vertex>>>,
+        F: FnMut(Position<Self::Vertex>) -> Self::Vertex,
+    {
+        // TODO: Rotate the embedded n-gon into the plane about the origin.
+        let _ = (ngon, plane, f);
+        unimplemented!()
+    }
+
+    /// Projects an $n$-gon into a plane.
+    ///
+    /// The positions in each vertex of the $n$-gon are translated along the
+    /// normal of the plane.
+    fn project_into_plane(mut self, plane: Plane<Position<Self::Vertex>>) -> Self
+    where
+        Self::Vertex: AsPosition,
+        Position<Self::Vertex>: EuclideanSpace + FiniteDimensional,
+        <Position<Self::Vertex> as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    {
+        for vertex in self.as_mut() {
+            let line = Line::<Position<Self::Vertex>> {
+                origin: *vertex.as_position(),
+                direction: plane.normal,
+            };
+            if let Some(distance) = plane.intersection(&line) {
+                let translation = *line.direction.get() * distance;
+                vertex.transform(|position| *position + translation);
+            }
+        }
+        self
+    }
+}
 
 pub trait Arity {
     const ARITY: usize = 1;
 }
 
-// TODO: It should be possible to implement this for all `NGon`s, but that
-//       implementation would likely be inefficient.
 pub trait Rotate {
     fn rotate(self, n: isize) -> Self;
 }
 
-pub trait Flatten: Sized {
-    fn flatten(self) -> Option<Self>;
-}
+#[derive(Clone, Debug)]
+pub struct DynamicNGon<T>(SmallVec<[T; 4]>);
 
 /// Statically sized $n$-gon.
 ///
-/// `NGon` represents a polygonal structure as an array. Each array element
-/// represents vertex data in order, with neighboring elements being connected
-/// by an implicit undirected edge. For example, an `NGon` with three vertices
-/// (`NGon<[T; 3]>`) would represent a triangle (trigon). Generally these
-/// elements are labeled $A$, $B$, $C$, etc.
+/// `StaticNGon` represents a polygonal structure as an array. Each array
+/// element represents vertex data in order with neighboring elements being
+/// connected by an implicit undirected edge. For example, an `StaticNGon` with
+/// three vertices (`StaticNGon<[T; 3]>`) would represent a triangle (trigon).
+/// Generally these elements are labeled $A$, $B$, $C$, etc.
 ///
-/// **`NGon`s with less than three vertices are a degenerate case.** An `NGon`
-/// with two vertices (`NGon<[T; 2]>`) is considered a _monogon_ despite common
-/// definitions specifying a single vertex. Such an `NGon` is not considered a
-/// _digon_, as it represents a single undirected edge rather than two distinct
-/// (but collapsed) edges. Single-vertex `NGon`s are unsupported. See the
-/// `Edge` type definition.
+/// **`StaticNGon`s with less than three vertices are a degenerate case.** An
+/// `StaticNGon` with two vertices (`StaticNGon<[T; 2]>`) is considered a
+/// _monogon_ despite common definitions specifying a single vertex. Such an
+/// `StaticNGon` is not considered a _digon_, as it represents a single
+/// undirected edge rather than two distinct (but collapsed) edges.
+/// Single-vertex `StaticNGon`s are unsupported. See the `Edge` type
+/// definition.
 ///
-/// Monogons and digons are not generally considered polygons, and `NGon` does
-/// not implement the `Polygonal` trait in these cases.
-///
-/// See the `Edge`, `Trigon`, and `Tetragon` type aliases.
+/// Polygons are defined in $\Reals^2$, but `StaticNGon` supports arbitrary
+/// vertex data. This includes positional data in Euclidean spaces of arbitrary
+/// dimension. As such, `StaticNGon` does not represent a "pure polygon", but
+/// instead a superset defined by its topology. `StaticNGon`s in $\Reals^3$ are
+/// useful for representing polygons embedded into three-dimensional space, but
+/// **there are no restrictions on the geometry of vertices**.
 #[derive(Clone, Copy, Debug)]
-pub struct NGon<A>(pub A)
+pub struct StaticNGon<A>(pub A)
 where
     A: Array;
 
-impl<A> NGon<A>
+impl<A> StaticNGon<A>
 where
     A: Array,
 {
@@ -60,22 +205,11 @@ where
     fn into_array_vec(self) -> ArrayVec<A> {
         ArrayVec::from(self.into_array())
     }
-
-    #[cfg(all(feature = "array", target_os = "linux"))]
-    pub fn into_plane(self) -> Option<Plane<A::Item>>
-    where
-        Self: Composite<Item = A::Item>,
-        A::Item: EuclideanSpace + FiniteDimensional<N = U3>,
-        Scalar<A::Item>: ArrayScalar,
-        Vector<A::Item>: FromItems + IntoItems,
-    {
-        Plane::from_points(self.into_array_vec())
-    }
 }
 
-/// Gets a slice over the data in an `NGon`.
+/// Gets a slice over the data in an `StaticNGon`.
 ///
-/// Slicing an `NGon` can be used to iterate over references to its data:
+/// Slicing an `StaticNGon` can be used to iterate over references to its data:
 ///
 /// ```rust
 /// use theon::ngon::Trigon;
@@ -86,7 +220,7 @@ where
 ///     // ...
 /// }
 /// ```
-impl<A> AsRef<[<A as Array>::Item]> for NGon<A>
+impl<A> AsRef<[<A as Array>::Item]> for StaticNGon<A>
 where
     A: Array,
 {
@@ -95,9 +229,9 @@ where
     }
 }
 
-/// Gets a mutable slice over the data in an `NGon`.
+/// Gets a mutable slice over the data in an `StaticNGon`.
 ///
-/// Slicing an `NGon` can be used to iterate over references to its data:
+/// Slicing an `StaticNGon` can be used to iterate over references to its data:
 ///
 /// ```rust
 /// use theon::ngon::Tetragon;
@@ -108,7 +242,7 @@ where
 ///     *vertex = 0;
 /// }
 /// ```
-impl<A> AsMut<[<A as Array>::Item]> for NGon<A>
+impl<A> AsMut<[<A as Array>::Item]> for StaticNGon<A>
 where
     A: Array,
 {
@@ -117,14 +251,14 @@ where
     }
 }
 
-impl<A> Composite for NGon<A>
+impl<A> Composite for StaticNGon<A>
 where
     A: Array,
 {
     type Item = A::Item;
 }
 
-impl<A, U> Fold<U> for NGon<A>
+impl<A, U> Fold<U> for StaticNGon<A>
 where
     Self: IntoItems,
     A: Array,
@@ -140,16 +274,16 @@ where
     }
 }
 
-impl<A> From<A> for NGon<A>
+impl<A> From<A> for StaticNGon<A>
 where
     A: Array,
 {
     fn from(array: A) -> Self {
-        NGon(array)
+        StaticNGon(array)
     }
 }
 
-impl<A> FromItems for NGon<A>
+impl<A> FromItems for StaticNGon<A>
 where
     A: Array,
 {
@@ -162,11 +296,11 @@ where
             .collect::<ArrayVec<A>>()
             .into_inner()
             .ok()
-            .map(|array| NGon(array))
+            .map(|array| StaticNGon(array))
     }
 }
 
-impl<A> Index<usize> for NGon<A>
+impl<A> Index<usize> for StaticNGon<A>
 where
     A: Array + AsRef<[<A as Array>::Item]>,
 {
@@ -177,7 +311,7 @@ where
     }
 }
 
-impl<A> IndexMut<usize> for NGon<A>
+impl<A> IndexMut<usize> for StaticNGon<A>
 where
     A: Array + AsRef<[<A as Array>::Item]> + AsMut<[<A as Array>::Item]>,
 {
@@ -186,7 +320,7 @@ where
     }
 }
 
-impl<A> IntoItems for NGon<A>
+impl<A> IntoItems for StaticNGon<A>
 where
     A: Array,
 {
@@ -197,7 +331,7 @@ where
     }
 }
 
-impl<A> IntoIterator for NGon<A>
+impl<A> IntoIterator for StaticNGon<A>
 where
     A: Array,
 {
@@ -209,13 +343,42 @@ where
     }
 }
 
-macro_rules! impl_zip_ngon {
+impl<A> NGon for StaticNGon<A> where A: Array {}
+
+impl<A> Topological for StaticNGon<A>
+where
+    A: Array,
+{
+    type Vertex = A::Item;
+
+    fn arity(&self) -> usize {
+        A::capacity()
+    }
+}
+
+macro_rules! impl_arity_static_ngon {
+    (length => $n:expr) => (
+        impl<T> Arity for StaticNGon<[T; $n]> {
+            const ARITY: usize = $n;
+        }
+    );
+    (lengths => $($n:expr),*$(,)?) => (
+        impl<T> Arity for StaticNGon<[T; 2]> {
+            const ARITY: usize = 1;
+        }
+
+        $(impl_arity_static_ngon!(length => $n);)*
+    );
+}
+impl_arity_static_ngon!(lengths => 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+
+macro_rules! impl_zip_static_ngon {
     (composite => $c:ident, length => $n:expr) => (
-        impl_zip_ngon!(composite => $c, length => $n, items => (A, B));
-        impl_zip_ngon!(composite => $c, length => $n, items => (A, B, C));
-        impl_zip_ngon!(composite => $c, length => $n, items => (A, B, C, D));
-        impl_zip_ngon!(composite => $c, length => $n, items => (A, B, C, D, E));
-        impl_zip_ngon!(composite => $c, length => $n, items => (A, B, C, D, E, F));
+        impl_zip_static_ngon!(composite => $c, length => $n, items => (A, B));
+        impl_zip_static_ngon!(composite => $c, length => $n, items => (A, B, C));
+        impl_zip_static_ngon!(composite => $c, length => $n, items => (A, B, C, D));
+        impl_zip_static_ngon!(composite => $c, length => $n, items => (A, B, C, D, E));
+        impl_zip_static_ngon!(composite => $c, length => $n, items => (A, B, C, D, E, F));
     );
     (composite => $c:ident, length => $n:expr, items => ($($i:ident),*)) => (
         #[allow(non_snake_case)]
@@ -230,19 +393,51 @@ macro_rules! impl_zip_ngon {
     );
 }
 
-macro_rules! impl_ngon {
+// TODO: Some inherent functions are not documented to avoid bloat.
+macro_rules! impl_static_ngon {
     (length => $n:expr) => (
-        impl<T> Converged for NGon<[T; $n]>
+        impl<T> StaticNGon<[T; $n]> {
+            #[doc(hidden)]
+            pub fn positions(&self) -> StaticNGon<[&Position<T>; $n]>
+            where
+                T: AsPosition,
+            {
+                if let Ok(array) = self
+                    .as_ref()
+                    .iter()
+                    .map(|vertex| vertex.as_position())
+                    .collect::<ArrayVec<[_; $n]>>()
+                    .into_inner()
+                {
+                    array.into()
+                }
+                else {
+                    panic!()
+                }
+            }
+        }
+
+        impl<'a, T> StaticNGon<[&'a T; $n]> {
+            #[doc(hidden)]
+            pub fn cloned(self) -> StaticNGon<[T; $n]>
+            where
+                T: Clone,
+            {
+                self.map(|vertex| vertex.clone())
+            }
+        }
+
+        impl<T> Converged for StaticNGon<[T; $n]>
         where
             T: Copy,
         {
             fn converged(item: T) -> Self {
-                NGon([item; $n])
+                StaticNGon([item; $n])
             }
         }
 
-        impl<T, U> Map<U> for NGon<[T; $n]> {
-            type Output = NGon<[U; $n]>;
+        impl<T, U> Map<U> for StaticNGon<[T; $n]> {
+            type Output = StaticNGon<[U; $n]>;
 
             fn map<F>(self, f: F) -> Self::Output
             where
@@ -252,10 +447,10 @@ macro_rules! impl_ngon {
             }
         }
 
-        impl_zip_ngon!(composite => NGon, length => $n);
+        impl_zip_static_ngon!(composite => StaticNGon, length => $n);
 
-        impl<T, U> ZipMap<U> for NGon<[T; $n]> {
-            type Output = NGon<[U; $n]>;
+        impl<T, U> ZipMap<U> for StaticNGon<[T; $n]> {
+            type Output = StaticNGon<[U; $n]>;
 
             fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
             where
@@ -266,83 +461,16 @@ macro_rules! impl_ngon {
         }
     );
     (lengths => $($n:expr),*$(,)?) => (
-        $(impl_ngon!(length => $n);)*
+        $(impl_static_ngon!(length => $n);)*
     );
 }
-impl_ngon!(lengths => 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
+impl_static_ngon!(lengths => 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
 
-macro_rules! impl_arity_ngon {
-    (length => $n:expr) => (
-        impl<T> Arity for NGon<[T; $n]> {
-            const ARITY: usize = $n;
-        }
-    );
-    (lengths => $($n:expr),*$(,)?) => (
-        impl<T> Arity for NGon<[T; 2]> {
-            const ARITY: usize = 1;
-        }
-
-        $(impl_arity_ngon!(length => $n);)*
-    );
-}
-impl_arity_ngon!(lengths => 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
-
-macro_rules! impl_flatten_ngon {
-    (length => $n:expr) => (
-        impl<S> Flatten for NGon<[S; $n]>
-        where
-            S: EuclideanSpace + FiniteDimensional<N = U3>,
-            Scalar<S>: ArrayScalar,
-            Vector<S>: FromItems + IntoItems,
-        {
-            fn flatten(self) -> Option<Self> {
-                let mut flat = self;
-                self.into_plane().map(move |plane| {
-                    for position in flat.as_mut() {
-                        let line = Line::<S> {
-                            origin: *position,
-                            direction: plane.normal,
-                        };
-                        if let Some(distance) = plane.intersection(&line) {
-                            let translation = *line.direction.get() * distance;
-                            *position = *position + translation;
-                        }
-                    }
-                    flat
-                })
-            }
-        }
-    );
-    (lengths => $($n:expr),*$(,)?) => (
-        impl<S> Flatten for NGon<[S; 2]>
-        where
-            S: EuclideanSpace + FiniteDimensional<N = U3>,
-        {
-            fn flatten(self) -> Option<Self> {
-                Some(self)
-            }
-        }
-
-        impl<S> Flatten for NGon<[S; 3]>
-        where
-            S: EuclideanSpace + FiniteDimensional<N = U3>,
-        {
-            fn flatten(self) -> Option<Self> {
-                Some(self)
-            }
-        }
-
-        $(impl_flatten_ngon!(length => $n);)*
-    );
-}
-#[cfg(all(feature = "array", target_os = "linux"))]
-impl_flatten_ngon!(lengths => 4, 5, 6, 7, 8, 9, 10, 11, 12);
-
-pub type Edge<T> = NGon<[T; 2]>;
+pub type Edge<T> = StaticNGon<[T; 2]>;
 
 impl<T> Edge<T> {
     pub fn new(a: T, b: T) -> Self {
-        NGon([a, b])
+        StaticNGon([a, b])
     }
 }
 
@@ -358,11 +486,24 @@ impl<T> Rotate for Edge<T> {
     }
 }
 
-pub type Trigon<T> = NGon<[T; 3]>;
+pub type Trigon<T> = StaticNGon<[T; 3]>;
 
 impl<T> Trigon<T> {
     pub fn new(a: T, b: T, c: T) -> Self {
-        NGon([a, b, c])
+        StaticNGon([a, b, c])
+    }
+
+    pub fn plane(&self) -> Option<Plane<Position<T>>>
+    where
+        T: AsPosition,
+        Position<T>: EuclideanSpace + FiniteDimensional<N = U3>,
+        Vector<Position<T>>: Cross<Output = Vector<Position<T>>>,
+    {
+        let [a, b, c] = self.positions().cloned().into_array();
+        let v = a - b;
+        let u = a - c;
+        Unit::try_from_inner(v.cross(u))
+            .map(move |normal| Plane::<Position<T>> { origin: a, normal })
     }
 }
 
@@ -383,11 +524,11 @@ impl<T> Rotate for Trigon<T> {
     }
 }
 
-pub type Tetragon<T> = NGon<[T; 4]>;
+pub type Tetragon<T> = StaticNGon<[T; 4]>;
 
 impl<T> Tetragon<T> {
     pub fn new(a: T, b: T, c: T, d: T) -> Self {
-        NGon([a, b, c, d])
+        StaticNGon([a, b, c, d])
     }
 }
 
