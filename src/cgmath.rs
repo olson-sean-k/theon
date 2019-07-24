@@ -6,10 +6,9 @@ use decorum::{Real, R64};
 use num::{Num, NumCast, One, Zero};
 use typenum::consts::{U2, U3};
 
-use crate::ops::{Cross, Dot, Fold, Interpolate, Map, ZipMap};
+use crate::ops::{Cross, Dot, Fold, Interpolate, Map, Pop, Push, ZipMap};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EmbeddingSpace, EuclideanSpace, FiniteDimensional, InnerSpace,
-    VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
 use crate::{Composite, Converged, FromItems, IntoItems};
 
@@ -268,6 +267,28 @@ impl<T, U> Map<U> for Vector3<T> {
     }
 }
 
+impl<T> Pop for Vector3<T>
+where
+    T: BaseNum,
+{
+    type Output = Vector2<T>;
+
+    fn pop(self) -> (Self::Output, T) {
+        (self.truncate(), self.z)
+    }
+}
+
+impl<T> Push for Vector2<T>
+where
+    T: BaseNum,
+{
+    type Output = Vector3<T>;
+
+    fn push(self, z: T) -> Self::Output {
+        self.extend(z)
+    }
+}
+
 impl<T> VectorSpace for Vector2<T>
 where
     T: BaseNum + Real,
@@ -358,17 +379,6 @@ where
 {
     fn converged(value: Self::Item) -> Self {
         Point3::new(value, value, value)
-    }
-}
-
-impl<T> EmbeddingSpace for Point2<T>
-where
-    T: BaseFloat + Real,
-{
-    type Embedding = Point3<T>;
-
-    fn embed(self, z: T) -> Self::Embedding {
-        Point3::new(self.x, self.y, z)
     }
 }
 
@@ -515,6 +525,24 @@ impl<T, U> Map<U> for Point3<T> {
         F: FnMut(Self::Item) -> U,
     {
         Point3::new(f(self.x), f(self.y), f(self.z))
+    }
+}
+
+impl<T> Pop for Point3<T> {
+    type Output = Point2<T>;
+
+    fn pop(self) -> (Self::Output, T) {
+        let Point3 { x, y, z } = self;
+        (Point2::new(x, y), z)
+    }
+}
+
+impl<T> Push for Point2<T> {
+    type Output = Point3<T>;
+
+    fn push(self, z: T) -> Self::Output {
+        let Point2 { x, y } = self;
+        Point3::new(x, y, z)
     }
 }
 

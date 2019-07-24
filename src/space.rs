@@ -106,6 +106,28 @@ pub trait VectorSpace:
         (Self::x() * x) + (Self::y() * y) + (Self::z() * z)
     }
 
+    fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
+    where
+        Self: Homogeneous,
+        Self::ProjectiveSpace: Pop<Output = Self> + VectorSpace<Scalar = Self::Scalar>,
+    {
+        let (vector, factor) = vector.pop();
+        if factor.is_zero() {
+            Some(vector)
+        }
+        else {
+            None
+        }
+    }
+
+    fn into_homogeneous(self) -> Self::ProjectiveSpace
+    where
+        Self: Homogeneous + Push<Output = <Self as Homogeneous>::ProjectiveSpace>,
+        Self::ProjectiveSpace: VectorSpace<Scalar = Self::Scalar>,
+    {
+        self.push(Zero::zero())
+    }
+
     fn mean<I>(vectors: I) -> Option<Self>
     where
         I: IntoIterator<Item = Self>,
@@ -122,28 +144,6 @@ pub trait VectorSpace:
         else {
             None
         }
-    }
-
-    fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
-    where
-        Self: Homogeneous,
-        Self::ProjectiveSpace: Pop<Output = Self> + VectorSpace<Scalar = Self::Scalar>,
-    {
-        let (u, factor) = vector.pop();
-        if factor.is_zero() {
-            Some(u)
-        }
-        else {
-            None
-        }
-    }
-
-    fn into_homogeneous(self) -> Self::ProjectiveSpace
-    where
-        Self: Homogeneous + Push<Output = <Self as Homogeneous>::ProjectiveSpace>,
-        Self::ProjectiveSpace: VectorSpace<Scalar = Self::Scalar>,
-    {
-        self.push(Zero::zero())
     }
 }
 
@@ -258,33 +258,25 @@ pub trait EuclideanSpace:
         self - Self::origin()
     }
 
-    fn centroid<I>(points: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self>,
-    {
-        VectorSpace::mean(points.into_iter().map(|point| point.into_coordinates()))
-            .map(|mean| Self::origin() + mean)
-    }
-
     fn from_x(x: Scalar<Self>) -> Self
     where
         Self: FiniteDimensional<N = U1>,
     {
-        Self::origin() + Vector::<Self>::from_x(x)
+        Self::from_coordinates(Vector::<Self>::from_x(x))
     }
 
     fn from_xy(x: Scalar<Self>, y: Scalar<Self>) -> Self
     where
         Self: FiniteDimensional<N = U2>,
     {
-        Self::origin() + Vector::<Self>::from_xy(x, y)
+        Self::from_coordinates(Vector::<Self>::from_xy(x, y))
     }
 
     fn from_xyz(x: Scalar<Self>, y: Scalar<Self>, z: Scalar<Self>) -> Self
     where
         Self: FiniteDimensional<N = U3>,
     {
-        Self::origin() + Vector::<Self>::from_xyz(x, y, z)
+        Self::from_coordinates(Vector::<Self>::from_xyz(x, y, z))
     }
 
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
@@ -293,12 +285,12 @@ pub trait EuclideanSpace:
         Self::ProjectiveSpace:
             Pop<Output = Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
     {
-        let (u, factor) = vector.pop();
+        let (vector, factor) = vector.pop();
         if factor.is_zero() {
             None
         }
         else {
-            Some(Self::from_coordinates(u * factor.recip()))
+            Some(Self::from_coordinates(vector * factor.recip()))
         }
     }
 
@@ -309,6 +301,14 @@ pub trait EuclideanSpace:
         Self::ProjectiveSpace: VectorSpace<Scalar = Scalar<Self>>,
     {
         self.into_coordinates().push(One::one())
+    }
+
+    fn centroid<I>(points: I) -> Option<Self>
+    where
+        I: IntoIterator<Item = Self>,
+    {
+        VectorSpace::mean(points.into_iter().map(|point| point.into_coordinates()))
+            .map(|mean| Self::origin() + mean)
     }
 }
 
@@ -325,15 +325,4 @@ pub trait EuclideanSpace:
 //   }
 pub trait Homogeneous: FiniteDimensional {
     type ProjectiveSpace: FiniteDimensional;
-}
-
-pub trait EmbeddingSpace: EuclideanSpace + FiniteDimensional
-where
-    Self::CoordinateSpace: VectorSpace<Scalar = Scalar<Self::Embedding>>,
-    U1: Add<Self::N>,
-    <U1 as Add<Self::N>>::Output: NonZero + Unsigned,
-{
-    type Embedding: EuclideanSpace + FiniteDimensional<N = <U1 as Add<Self::N>>::Output>;
-
-    fn embed(self, w: Scalar<Self>) -> Self::Embedding;
 }

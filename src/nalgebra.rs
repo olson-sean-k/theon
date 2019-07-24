@@ -4,7 +4,10 @@ use arrayvec::ArrayVec;
 use decorum::{Real, R64};
 use nalgebra::base::allocator::Allocator;
 use nalgebra::base::default_allocator::DefaultAllocator;
-use nalgebra::base::dimension::{DimName, DimNameMax, DimNameMaximum, DimNameMin, U1};
+use nalgebra::base::dimension::{
+    DimName, DimNameAdd, DimNameDiff, DimNameMax, DimNameMaximum, DimNameMin, DimNameSub,
+    DimNameSum, U1,
+};
 use nalgebra::{
     Matrix2, Matrix3, MatrixMN, Point, Point2, Point3, RowVector2, RowVector3, Scalar, Vector2,
     Vector3, VectorN,
@@ -13,10 +16,10 @@ use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
 
-use crate::ops::{Cross, Dot, Fold, Interpolate, Map, MulMN, ZipMap};
+use crate::ops::{Cross, Dot, Fold, Interpolate, Map, MulMN, Pop, Push, ZipMap};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EmbeddingSpace, EuclideanSpace, FiniteDimensional, InnerSpace,
-    Matrix, SquareMatrix, VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
+    SquareMatrix, VectorSpace,
 };
 use crate::{Composite, Converged, FromItems, IntoItems};
 
@@ -314,6 +317,75 @@ where
     }
 }
 
+// TODO: It is possible to implement `Pop` for both column and row vectors.
+//       However, this is not possible for `Push`, because it may be ambiguous
+//       if a push should proceed down a row or column.  Moreover, the type
+//       bounds to constrain such an implementation would be very complex.
+//
+//  impl<T, R, C> Pop for MatrixMN<T, R, C>
+//  where
+//      T: AddAssign + MulAssign + Real + Scalar,
+//      R: DimName + DimNameMin<C, Output = U1> + DimNameSub<U1>,
+//      C: DimName + DimNameMin<R, Output = U1> + DimNameSub<U1>,
+//      DimNameDiff<R, U1>: DimNameMax<U1>,
+//      DimNameDiff<C, U1>: DimNameMax<U1>,
+//      DefaultAllocator: Allocator<T, R, C>,
+//      DefaultAllocator: Allocator<
+//          T,
+//          DimNameMaximum<DimNameDiff<R, U1>, U1>,
+//          DimNameMaximum<DimNameDiff<C, U1>, U1>,
+//      >,
+//  {
+//      type Output =
+//          MatrixMN<T, DimNameMaximum<DimNameDiff<R, U1>, U1>, DimNameMaximum<DimNameDiff<C, U1>, U1>>;
+//
+//      fn pop(self) -> (Self::Output, T) {
+//          let n = self.len();
+//          let x = *self.get(n - 1).unwrap();
+//          (
+//              MatrixMN::<
+//                  T,
+//                  DimNameMaximum<DimNameDiff<R, U1>, U1>,
+//                  DimNameMaximum<DimNameDiff<C, U1>, U1>,
+//              >::from_iterator(self.into_iter().take(n - 1).cloned()),
+//              x,
+//          )
+//      }
+//  }
+
+impl<T, D> Pop for VectorN<T, D>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+    D: DimName + DimNameSub<U1>,
+    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, DimNameDiff<D, U1>>,
+{
+    type Output = VectorN<T, DimNameDiff<D, U1>>;
+
+    fn pop(self) -> (Self::Output, T) {
+        let n = self.len();
+        let x = self.get(n - 1).unwrap().clone();
+        (
+            VectorN::<_, DimNameDiff<D, _>>::from_iterator(self.into_iter().take(n - 1).cloned()),
+            x,
+        )
+    }
+}
+
+impl<T, D> Push for VectorN<T, D>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+    D: DimName + DimNameAdd<U1>,
+    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, DimNameSum<D, U1>>,
+{
+    type Output = VectorN<T, DimNameSum<D, U1>>;
+
+    fn push(self, x: T) -> Self::Output {
+        VectorN::<_, DimNameSum<D, _>>::from_iterator(self.into_iter().cloned().chain(Some(x)))
+    }
+}
+
 impl<T> SquareMatrix for Matrix2<T>
 where
     T: AddAssign + MulAssign + Real + Scalar,
@@ -393,18 +465,6 @@ where
 {
     fn converged(value: Self::Item) -> Self {
         Point::from(VectorN::<T, D>::converged(value))
-    }
-}
-
-// TODO: Provide a more generic implementation.
-impl<T> EmbeddingSpace for Point2<T>
-where
-    T: AddAssign + MulAssign + Real + Scalar + SubAssign,
-{
-    type Embedding = Point3<T>;
-
-    fn embed(self, z: T) -> Self::Embedding {
-        Point3::new(self.x, self.y, z)
     }
 }
 
@@ -516,6 +576,37 @@ where
         F: FnMut(Self::Item) -> U,
     {
         Point::from(self.coords.map(f))
+    }
+}
+
+impl<T, D> Pop for Point<T, D>
+where
+    T: Scalar,
+    D: DimName + DimNameSub<U1>,
+    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, DimNameDiff<D, U1>>,
+    VectorN<T, D>: Composite<Item = T> + Pop<Output = VectorN<T, DimNameDiff<D, U1>>>,
+{
+    type Output = Point<T, DimNameDiff<D, U1>>;
+
+    fn pop(self) -> (Self::Output, T) {
+        let (vector, x) = self.coords.pop();
+        (vector.into(), x)
+    }
+}
+
+impl<T, D> Push for Point<T, D>
+where
+    T: Scalar,
+    D: DimName + DimNameAdd<U1>,
+    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<T, DimNameSum<D, U1>>,
+    VectorN<T, D>: Composite<Item = T> + Push<Output = VectorN<T, DimNameSum<D, U1>>>,
+{
+    type Output = Point<T, DimNameSum<D, U1>>;
+
+    fn push(self, x: T) -> Self::Output {
+        self.coords.push(x).into()
     }
 }
 

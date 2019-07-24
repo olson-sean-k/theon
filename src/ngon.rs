@@ -7,11 +7,9 @@ use std::slice;
 use typenum::type_operators::Cmp;
 use typenum::{Greater, U2, U3};
 
-use crate::ops::{Cross, Fold, Map, Zip, ZipMap};
+use crate::ops::{Cross, Fold, Map, Push, Zip, ZipMap};
 use crate::query::{Intersection, Line, Plane, Unit};
-use crate::space::{
-    EmbeddingSpace, EuclideanSpace, FiniteDimensional, Scalar, Vector, VectorSpace,
-};
+use crate::space::{EuclideanSpace, FiniteDimensional, Scalar, Vector, VectorSpace};
 use crate::{AsPosition, Composite, Converged, FromItems, IntoItems, Position};
 
 pub trait Topological: Composite<Item = <Self as Topological>::Vertex> {
@@ -58,7 +56,7 @@ pub trait NGon:
     where
         Self::Vertex: EuclideanSpace + FiniteDimensional<N = U3>,
         P: Map<Self::Vertex, Output = Self> + NGon,
-        P::Vertex: EmbeddingSpace<Embedding = Self::Vertex> + FiniteDimensional<N = U2>,
+        P::Vertex: EuclideanSpace + FiniteDimensional<N = U2> + Push<Output = Self::Vertex>,
         Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Self::Vertex>>,
     {
         Self::embed_into_xy_with(ngon, z, |position| position)
@@ -69,11 +67,12 @@ pub trait NGon:
         Self::Vertex: AsPosition,
         Position<Self::Vertex>: EuclideanSpace + FiniteDimensional<N = U3>,
         P: Map<Self::Vertex, Output = Self> + NGon,
-        P::Vertex: EmbeddingSpace<Embedding = Position<Self::Vertex>> + FiniteDimensional<N = U2>,
+        P::Vertex:
+            EuclideanSpace + FiniteDimensional<N = U2> + Push<Output = Position<Self::Vertex>>,
         Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Position<Self::Vertex>>>,
         F: FnMut(Position<Self::Vertex>) -> Self::Vertex,
     {
-        ngon.map(move |position| f(position.embed(z)))
+        ngon.map(move |position| f(position.push(z)))
     }
 
     /// Embeds an $n$-gon from $\Reals^2$ into $\Reals^3$.
@@ -112,7 +111,7 @@ pub trait NGon:
     where
         Self::Vertex: EuclideanSpace + FiniteDimensional<N = U3>,
         P: Map<Self::Vertex, Output = Self> + NGon,
-        P::Vertex: EmbeddingSpace<Embedding = Self::Vertex> + FiniteDimensional<N = U2>,
+        P::Vertex: EuclideanSpace + FiniteDimensional<N = U2> + Push<Output = Self::Vertex>,
         Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Self::Vertex>>,
     {
         Self::embed_into_plane_with(ngon, plane, |position| position)
@@ -123,7 +122,8 @@ pub trait NGon:
         Self::Vertex: AsPosition,
         Position<Self::Vertex>: EuclideanSpace + FiniteDimensional<N = U3>,
         P: Map<Self::Vertex, Output = Self> + NGon,
-        P::Vertex: EmbeddingSpace<Embedding = Position<Self::Vertex>> + FiniteDimensional<N = U2>,
+        P::Vertex:
+            EuclideanSpace + FiniteDimensional<N = U2> + Push<Output = Position<Self::Vertex>>,
         Vector<P::Vertex>: VectorSpace<Scalar = Scalar<Position<Self::Vertex>>>,
         F: FnMut(Position<Self::Vertex>) -> Self::Vertex,
     {
