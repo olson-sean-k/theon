@@ -6,7 +6,7 @@ use decorum::{Infinite, Real};
 use num::{Bounded, Signed, Zero};
 use std::ops::Neg;
 use typenum::type_operators::Cmp;
-use typenum::{Greater, U2};
+use typenum::{Greater, U0, U1, U2};
 
 use crate::ops::{Dot, Fold, ZipMap};
 use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
@@ -117,6 +117,30 @@ where
 
     pub fn into_inner(self) -> S {
         self.inner
+    }
+
+    pub fn x() -> Self
+    where
+        S: Basis + FiniteDimensional,
+        S::N: Cmp<U0, Output = Greater>,
+    {
+        Self::try_from_inner(Basis::x()).expect("zero-vector")
+    }
+
+    pub fn y() -> Self
+    where
+        S: Basis + FiniteDimensional,
+        S::N: Cmp<U1, Output = Greater>,
+    {
+        Self::try_from_inner(Basis::y()).expect("zero-vector")
+    }
+
+    pub fn z() -> Self
+    where
+        S: Basis + FiniteDimensional,
+        S::N: Cmp<U2, Output = Greater>,
+    {
+        Self::try_from_inner(Basis::z()).expect("zero-vector")
     }
 
     pub fn get(&self) -> &S {
