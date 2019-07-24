@@ -423,8 +423,8 @@ where
         Point::<T, D>::origin()
     }
 
-    fn coordinates(&self) -> Self::CoordinateSpace {
-        self.coords.clone()
+    fn into_coordinates(self) -> Self::CoordinateSpace {
+        self.coords
     }
 }
 

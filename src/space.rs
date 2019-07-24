@@ -7,7 +7,7 @@ use typenum::consts::{U0, U1, U2, U3};
 use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
-use crate::ops::{Dot, Fold, Project, ZipMap};
+use crate::ops::{Dot, Fold, Pop, Project, Push, ZipMap};
 use crate::Composite;
 
 /// The scalar of a `EuclideanSpace`.
@@ -123,6 +123,28 @@ pub trait VectorSpace:
             None
         }
     }
+
+    fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
+    where
+        Self: Homogeneous,
+        Self::ProjectiveSpace: Pop<Output = Self> + VectorSpace<Scalar = Self::Scalar>,
+    {
+        let (u, factor) = vector.pop();
+        if factor.is_zero() {
+            Some(u)
+        }
+        else {
+            None
+        }
+    }
+
+    fn into_homogeneous(self) -> Self::ProjectiveSpace
+    where
+        Self: Homogeneous + Push<Output = <Self as Homogeneous>::ProjectiveSpace>,
+        Self::ProjectiveSpace: VectorSpace<Scalar = Self::Scalar>,
+    {
+        self.push(Zero::zero())
+    }
 }
 
 pub trait InnerSpace: Dot<Output = <Self as VectorSpace>::Scalar> + VectorSpace {
@@ -228,15 +250,19 @@ pub trait EuclideanSpace:
 
     fn origin() -> Self;
 
-    fn coordinates(&self) -> Self::CoordinateSpace {
-        self.clone() - Self::origin()
+    fn from_coordinates(coordinates: Self::CoordinateSpace) -> Self {
+        Self::origin() + coordinates
+    }
+
+    fn into_coordinates(self) -> Self::CoordinateSpace {
+        self - Self::origin()
     }
 
     fn centroid<I>(points: I) -> Option<Self>
     where
         I: IntoIterator<Item = Self>,
     {
-        VectorSpace::mean(points.into_iter().map(|point| point.coordinates()))
+        VectorSpace::mean(points.into_iter().map(|point| point.into_coordinates()))
             .map(|mean| Self::origin() + mean)
     }
 
@@ -260,6 +286,45 @@ pub trait EuclideanSpace:
     {
         Self::origin() + Vector::<Self>::from_xyz(x, y, z)
     }
+
+    fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
+    where
+        Self: Homogeneous,
+        Self::ProjectiveSpace:
+            Pop<Output = Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
+    {
+        let (u, factor) = vector.pop();
+        if factor.is_zero() {
+            None
+        }
+        else {
+            Some(Self::from_coordinates(u * factor.recip()))
+        }
+    }
+
+    fn into_homogeneous(self) -> Self::ProjectiveSpace
+    where
+        Self: Homogeneous,
+        Self::CoordinateSpace: Push<Output = Self::ProjectiveSpace>,
+        Self::ProjectiveSpace: VectorSpace<Scalar = Scalar<Self>>,
+    {
+        self.into_coordinates().push(One::one())
+    }
+}
+
+// TODO: Constrain the dimensionality of the projective space. This introduces
+//       noisy type bounds, but ensures that the projective space has exactly
+//       one additional dimension (the line at infinity).
+//
+//   pub trait Homogeneous: FiniteDimensional
+//   where
+//       Self::N: Add<U1>,
+//       <Self::N as Add<U1>>::Output: NonZero + Unsigned,
+//   {
+//       type ProjectiveSpace: FiniteDimensional<N = <Self::N as Add<U1>>::Output>;
+//   }
+pub trait Homogeneous: FiniteDimensional {
+    type ProjectiveSpace: FiniteDimensional;
 }
 
 pub trait EmbeddingSpace: EuclideanSpace + FiniteDimensional

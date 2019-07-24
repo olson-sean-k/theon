@@ -33,7 +33,7 @@ pub trait NGon:
     ///
     /// # Examples
     ///
-    /// Embedding a triangle into the $xy$ plane at $z=1$:
+    /// Embedding a triangle into the $xy$-plane at $z=1$:
     ///
     /// ```rust
     /// # extern crate nalgebra;
@@ -82,7 +82,7 @@ pub trait NGon:
     ///
     /// # Examples
     ///
-    /// Embedding a triangle into the $xy$ plane at $z=0$:
+    /// Embedding a triangle into the $xy$-plane at $z=0$:
     ///
     /// ```rust,no_run
     /// # extern crate nalgebra;

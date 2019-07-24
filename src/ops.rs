@@ -89,6 +89,36 @@ impl<T, U> Map<U> for (T, T, T) {
     }
 }
 
+pub trait Pop: Composite {
+    type Output: Composite<Item = Self::Item>;
+
+    fn pop(self) -> (Self::Output, Self::Item);
+}
+
+impl<T> Pop for (T, T, T) {
+    type Output = (T, T);
+
+    fn pop(self) -> (Self::Output, Self::Item) {
+        let (a, b, c) = self;
+        ((a, b), c)
+    }
+}
+
+pub trait Push: Composite {
+    type Output: Composite<Item = Self::Item>;
+
+    fn push(self, item: Self::Item) -> Self::Output;
+}
+
+impl<T> Push for (T, T) {
+    type Output = (T, T, T);
+
+    fn push(self, item: Self::Item) -> Self::Output {
+        let (a, b) = self;
+        (a, b, item)
+    }
+}
+
 pub trait Zip {
     type Output: Composite + FromItems;
 
