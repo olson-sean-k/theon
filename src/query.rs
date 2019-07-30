@@ -157,6 +157,13 @@ where
             None
         }
     }
+
+    pub fn reverse(self) -> Self {
+        // TODO: This assumes that the `Neg` implementation does not affect
+        //       magnitude.
+        let Unit { inner, .. } = self;
+        Self::from_inner_unchecked(-inner)
+    }
 }
 
 impl<S> AsRef<S> for Unit<S>
@@ -176,6 +183,17 @@ where
         Unit {
             inner: S::canonical_basis_component(0).unwrap(),
         }
+    }
+}
+
+impl<S> Neg for Unit<S>
+where
+    S: InnerSpace,
+{
+    type Output = Self;
+
+    fn neg(self) -> Self::Output {
+        self.reverse()
     }
 }
 
