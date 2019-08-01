@@ -119,12 +119,6 @@ impl<T> Push for (T, T) {
     }
 }
 
-pub trait Zip {
-    type Output: Composite + FromItems;
-
-    fn zip(self) -> Self::Output;
-}
-
 pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
     type Output: Composite<Item = T>;
 

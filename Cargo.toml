@@ -35,7 +35,6 @@ arrayvec = "^0.4.0"
 decorum = "^0.1.1"
 itertools = "^0.8.0"
 num = "^0.2.0"
-smallvec = "^0.6.10"
 typenum = "^1.10.0"
 
 cgmath = { version = "^0.17.0", optional = true }
