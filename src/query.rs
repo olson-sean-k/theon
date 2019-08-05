@@ -265,8 +265,8 @@ where
     /// $\hat{u}$, the point of intersection with the plane is $P_0 +
     /// (t\hat{u})$.
     fn intersection(&self, line: &Line<S>) -> Option<Self::Output> {
-        let direction = line.direction.get().clone();
-        let normal = self.normal.get().clone();
+        let direction = *line.direction.get();
+        let normal = *self.normal.get();
         let product = direction.dot(normal);
         if product != Zero::zero() {
             Some((self.origin - line.origin).dot(normal) / product)
@@ -385,7 +385,7 @@ where
     /// let point = ray.origin + (ray.direction.get() * min);
     /// # }
     fn intersection(&self, aabb: &Aabb<S>) -> Option<Self::Output> {
-        let direction = self.direction.get().clone();
+        let direction = *self.direction.get();
         let origin = (aabb.origin - self.origin).zip_map(direction, |a, b| a / b);
         let endpoint = ((aabb.endpoint()) - self.origin).zip_map(direction, |a, b| a / b);
         let min = origin.per_item_partial_min(endpoint).partial_max();

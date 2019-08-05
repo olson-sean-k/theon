@@ -34,7 +34,6 @@ where
 
     fn canonical_basis() -> Self::Bases {
         (0..D::dim())
-            .into_iter()
             .map(|dimension| {
                 let mut basis = Self::zeros();
                 *basis.get_mut(dimension).unwrap() = T::one();
@@ -364,7 +363,7 @@ where
 
     fn pop(self) -> (Self::Output, T) {
         let n = self.len();
-        let x = self.get(n - 1).unwrap().clone();
+        let x = *self.get(n - 1).unwrap();
         (
             VectorN::<_, DimNameDiff<D, _>>::from_iterator(self.into_iter().take(n - 1).cloned()),
             x,

@@ -147,7 +147,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Copy + Lattice,
     {
-        self.zip_map(other, |a, b| crate::partial_min(a, b))
+        self.zip_map(other, crate::partial_min)
     }
 
     fn per_item_partial_max(self, other: Self) -> Self::Output
@@ -155,7 +155,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Copy + Lattice,
     {
-        self.zip_map(other, |a, b| crate::partial_max(a, b))
+        self.zip_map(other, crate::partial_max)
     }
 }
 
@@ -207,7 +207,7 @@ pub trait Fold<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Bounded + Copy + Lattice,
     {
-        self.fold(Bounded::max_value(), |min, n| crate::partial_min(min, n))
+        self.fold(Bounded::max_value(), crate::partial_min)
     }
 
     fn partial_max(self) -> T
@@ -215,7 +215,7 @@ pub trait Fold<T = <Self as Composite>::Item>: Composite {
         Self: Composite<Item = T> + Sized,
         T: Bounded + Copy + Lattice,
     {
-        self.fold(Bounded::min_value(), |max, n| crate::partial_max(max, n))
+        self.fold(Bounded::min_value(), crate::partial_max)
     }
 }
 
