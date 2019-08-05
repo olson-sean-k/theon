@@ -106,6 +106,25 @@ pub trait VectorSpace:
         (Self::x() * x) + (Self::y() * y) + (Self::z() * z)
     }
 
+    fn into_x(self) -> Self::Scalar {
+        *self.scalar_component(0).unwrap()
+    }
+
+    fn into_xy(self) -> (Self::Scalar, Self::Scalar) {
+        (
+            *self.scalar_component(0).unwrap(),
+            *self.scalar_component(1).unwrap(),
+        )
+    }
+
+    fn into_xyz(self) -> (Self::Scalar, Self::Scalar, Self::Scalar) {
+        (
+            *self.scalar_component(0).unwrap(),
+            *self.scalar_component(1).unwrap(),
+            *self.scalar_component(2).unwrap(),
+        )
+    }
+
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
     where
         Self: Homogeneous,
@@ -277,6 +296,27 @@ pub trait EuclideanSpace:
         Self: FiniteDimensional<N = U3>,
     {
         Self::from_coordinates(Vector::<Self>::from_xyz(x, y, z))
+    }
+
+    fn into_x(self) -> Scalar<Self>
+    where
+        Self: FiniteDimensional<N = U1>,
+    {
+        self.into_coordinates().into_x()
+    }
+
+    fn into_xy(self) -> (Scalar<Self>, Scalar<Self>)
+    where
+        Self: FiniteDimensional<N = U2>,
+    {
+        self.into_coordinates().into_xy()
+    }
+
+    fn into_xyz(self) -> (Scalar<Self>, Scalar<Self>, Scalar<Self>)
+    where
+        Self: FiniteDimensional<N = U3>,
+    {
+        self.into_coordinates().into_xyz()
     }
 
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>

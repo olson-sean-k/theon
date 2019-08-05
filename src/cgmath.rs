@@ -302,6 +302,10 @@ where
             _ => None,
         }
     }
+
+    fn into_xy(self) -> (Self::Scalar, Self::Scalar) {
+        (self.x, self.y)
+    }
 }
 
 impl<T> VectorSpace for Vector3<T>
@@ -317,6 +321,10 @@ where
             2 => Some(&self.z),
             _ => None,
         }
+    }
+
+    fn into_xyz(self) -> (Self::Scalar, Self::Scalar, Self::Scalar) {
+        (self.x, self.y, self.z)
     }
 }
 
