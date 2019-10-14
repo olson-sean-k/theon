@@ -27,8 +27,8 @@ use crate::Lattice;
 /// # extern crate theon;
 /// #
 /// use nalgebra::Point2;
-/// use theon::space::{Basis, EuclideanSpace, VectorSpace};
 /// use theon::query::{Aabb, Intersection, Ray, Unit};
+/// use theon::space::{Basis, EuclideanSpace, VectorSpace};
 ///
 /// type E2 = Point2<f64>;
 ///
@@ -102,8 +102,8 @@ where
     /// # extern crate theon;
     /// #
     /// use nalgebra::Vector3;
-    /// use theon::space::Basis;
     /// use theon::query::Unit;
+    /// use theon::space::Basis;
     ///
     /// type R3 = Vector3<f64>;
     ///
