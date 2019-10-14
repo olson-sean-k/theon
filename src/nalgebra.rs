@@ -110,8 +110,7 @@ where
     T: AddAssign + MulAssign + Real + Scalar,
     R: DimName + DimNameMin<C, Output = U1>,
     C: DimName + DimNameMin<R, Output = U1>,
-    DefaultAllocator: Allocator<T, R, C>,
-    DefaultAllocator: Allocator<T, C, R>,
+    DefaultAllocator: Allocator<T, R, C> + Allocator<T, C, R>,
     MatrixMN<T, C, R>: Copy + FiniteDimensional<N = <Self as FiniteDimensional>::N>,
     Self: Copy + FiniteDimensional,
 {
@@ -217,8 +216,7 @@ where
     U: Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
-    DefaultAllocator: Allocator<U, R, C>,
+    DefaultAllocator: Allocator<T, R, C> + Allocator<U, R, C>,
 {
     type Output = MatrixMN<U, R, C>;
 
@@ -356,8 +354,7 @@ impl<T, D> Pop for VectorN<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar,
     D: DimName + DimNameSub<U1>,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<T, DimNameDiff<D, U1>>,
+    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
 {
     type Output = VectorN<T, DimNameDiff<D, U1>>;
 
@@ -375,8 +372,7 @@ impl<T, D> Push for VectorN<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar,
     D: DimName + DimNameAdd<U1>,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<T, DimNameSum<D, U1>>,
+    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
 {
     type Output = VectorN<T, DimNameSum<D, U1>>;
 
@@ -424,8 +420,7 @@ where
     U: Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
-    DefaultAllocator: Allocator<U, R, C>,
+    DefaultAllocator: Allocator<T, R, C> + Allocator<U, R, C>,
 {
     type Output = MatrixMN<U, R, C>;
 
@@ -565,8 +560,7 @@ where
     T: Scalar,
     U: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<U, D>,
+    DefaultAllocator: Allocator<T, D> + Allocator<U, D>,
 {
     type Output = Point<U, D>;
 
@@ -582,8 +576,7 @@ impl<T, D> Pop for Point<T, D>
 where
     T: Scalar,
     D: DimName + DimNameSub<U1>,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<T, DimNameDiff<D, U1>>,
+    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
     VectorN<T, D>: Composite<Item = T> + Pop<Output = VectorN<T, DimNameDiff<D, U1>>>,
 {
     type Output = Point<T, DimNameDiff<D, U1>>;
@@ -598,8 +591,7 @@ impl<T, D> Push for Point<T, D>
 where
     T: Scalar,
     D: DimName + DimNameAdd<U1>,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<T, DimNameSum<D, U1>>,
+    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
     VectorN<T, D>: Composite<Item = T> + Push<Output = VectorN<T, DimNameSum<D, U1>>>,
 {
     type Output = Point<T, DimNameSum<D, U1>>;
@@ -614,8 +606,7 @@ where
     T: Scalar,
     U: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
-    DefaultAllocator: Allocator<U, D>,
+    DefaultAllocator: Allocator<T, D> + Allocator<U, D>,
 {
     type Output = Point<U, D>;
 
