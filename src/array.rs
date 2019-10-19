@@ -18,13 +18,11 @@ where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
 {
-    // TODO: This API is a bit restrictive and requires copying. Is there an
-    //       alternative?
     pub fn from_points<I>(points: I) -> Option<Self>
     where
         Scalar<S>: ArrayScalar,
         Vector<S>: FromItems + IntoItems,
-        I: AsRef<[S]> + Clone + IntoIterator<Item = S>,
+        I: AsRef<[S]>,
     {
         svd_ev_plane(points)
     }
@@ -34,18 +32,19 @@ where
 ///
 /// Produces a two-dimensional array that forms a matrix from each input
 /// column.
-fn map_into_array<I, T, F>(columns: I, f: F) -> Option<Array<T::Item, Ix2>>
+fn map_into_array<I, T, U, F>(columns: I, f: F) -> Option<Array<U::Item, Ix2>>
 where
-    I: AsRef<[<I as IntoIterator>::Item]> + IntoIterator,
-    T: FiniteDimensional + IntoItems,
-    T::Item: ArrayScalar,
-    F: Fn(I::Item) -> T,
+    I: AsRef<[T]>,
+    U: FiniteDimensional + IntoItems,
+    U::Item: ArrayScalar,
+    F: Fn(&T) -> U,
 {
-    let n = columns.as_ref().len();
+    let columns = columns.as_ref();
+    let n = columns.len();
     convert::into_matrix(
-        MatrixLayout::F((n as i32, <T as FiniteDimensional>::N::USIZE as i32)),
+        MatrixLayout::F((n as i32, <U as FiniteDimensional>::N::USIZE as i32)),
         columns
-            .into_iter()
+            .iter()
             .map(f)
             .flat_map(|column| column.into_items())
             .collect(),
@@ -63,10 +62,11 @@ where
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
     Scalar<S>: ArrayScalar,
     Vector<S>: FromItems + IntoItems,
-    I: AsRef<[S]> + Clone + IntoIterator<Item = S>,
+    I: AsRef<[S]>,
 {
-    let centroid = EuclideanSpace::centroid(points.clone())?;
-    let m = map_into_array(points, |point| point - centroid)?;
+    let points = points.as_ref();
+    let centroid = EuclideanSpace::centroid(points.iter().cloned())?;
+    let m = map_into_array(points, |point| *point - centroid)?;
     // TODO: Fails at runtime if `V^T` is not requested.
     if let Ok((Some(u), sigma, _)) = m.svd_into(true, true) {
         let i = sigma

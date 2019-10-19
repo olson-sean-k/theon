@@ -46,7 +46,7 @@ pub trait Basis: FiniteDimensional + Sized {
         Self::canonical_basis().into_iter().nth(index)
     }
 
-    /// Gets the basis vector $\hat{i}$ that describes the $x$ axis.
+    /// Gets the canonical basis vector $\hat{i}$ that describes the $x$ axis.
     fn x() -> Self
     where
         Self::N: Cmp<U0, Output = Greater>,
@@ -54,7 +54,7 @@ pub trait Basis: FiniteDimensional + Sized {
         Self::canonical_basis_component(0).unwrap()
     }
 
-    /// Gets the basis vector $\hat{j}$ that describes the $y$ axis.
+    /// Gets the canonical basis vector $\hat{j}$ that describes the $y$ axis.
     fn y() -> Self
     where
         Self::N: Cmp<U1, Output = Greater>,
@@ -62,7 +62,7 @@ pub trait Basis: FiniteDimensional + Sized {
         Self::canonical_basis_component(1).unwrap()
     }
 
-    /// Gets the basis vector $\hat{k}$ that describes the $z$ axis.
+    /// Gets the canonical basis vector $\hat{k}$ that describes the $z$ axis.
     fn z() -> Self
     where
         Self::N: Cmp<U2, Output = Greater>,
