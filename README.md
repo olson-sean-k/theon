@@ -26,6 +26,9 @@ enabled using Cargo features.
 | `geometry-mint`     | No      | `mint`     | Partial  |
 | `geometry-nalgebra` | Yes     | `nalgebra` | Complete |
 
+Note that these downstream implementations have an important limitation: code
+that uses Theon must specify a compatible version of the given crate.
+
 ## Spatial Queries
 
 Geometric queries can be performed using any types that implement the
