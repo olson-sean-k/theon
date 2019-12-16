@@ -1,13 +1,8 @@
 pub mod array;
+mod integration;
 pub mod ops;
 pub mod query;
 pub mod space;
-
-// Foreign implementation modules. These are empty unless the corresponding
-// geometry features are enabled.
-mod cgmath;
-mod mint;
-mod nalgebra;
 
 use arrayvec::ArrayVec;
 use decorum::R64;
