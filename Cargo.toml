@@ -49,6 +49,6 @@ optional = true
 # Linux, but does not support Windows and yields strange results on MacOS. The
 # other supported packages require a more complex build environment.
 [target.'cfg(target_os = "linux")'.dependencies.ndarray-linalg]
-version = "^0.10.0"
+version = "^0.12.0"
 features = ["intel-mkl"]
 optional = true
