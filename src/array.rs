@@ -12,7 +12,10 @@ use crate::query::{Plane, Unit};
 use crate::space::{EuclideanSpace, FiniteDimensional, Scalar, Vector};
 use crate::{FromItems, IntoItems};
 
-pub use ndarray_linalg::types::Scalar as ArrayScalar;
+/// Scalar types that can be used with LAPACK.
+pub trait ArrayScalar: Lapack + ndarray_linalg::types::Scalar {}
+
+impl<T> ArrayScalar for T where T: Lapack + ndarray_linalg::types::Scalar {}
 
 impl<S> Plane<S>
 where
@@ -21,7 +24,7 @@ where
 {
     pub fn from_points<I>(points: I) -> Option<Self>
     where
-        Scalar<S>: ArrayScalar + Lapack,
+        Scalar<S>: ArrayScalar,
         Vector<S>: FromItems + IntoItems,
         I: AsRef<[S]>,
     {
@@ -60,7 +63,7 @@ fn svd_ev_plane<S, I>(points: I) -> Option<Plane<S>>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: ArrayScalar + Lapack,
+    Scalar<S>: ArrayScalar,
     Vector<S>: FromItems + IntoItems,
     I: AsRef<[S]>,
 {
