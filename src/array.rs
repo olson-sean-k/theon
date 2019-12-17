@@ -4,6 +4,7 @@ use ndarray::{Array, Ix2};
 use ndarray_linalg::convert;
 use ndarray_linalg::layout::MatrixLayout;
 use ndarray_linalg::svd::SVDInto;
+use ndarray_linalg::types::Lapack;
 use typenum::type_operators::Cmp;
 use typenum::{Greater, Unsigned, U2};
 
@@ -20,7 +21,7 @@ where
 {
     pub fn from_points<I>(points: I) -> Option<Self>
     where
-        Scalar<S>: ArrayScalar,
+        Scalar<S>: ArrayScalar + Lapack,
         Vector<S>: FromItems + IntoItems,
         I: AsRef<[S]>,
     {
@@ -36,7 +37,6 @@ fn map_into_array<I, T, U, F>(columns: I, f: F) -> Option<Array<U::Item, Ix2>>
 where
     I: AsRef<[T]>,
     U: FiniteDimensional + IntoItems,
-    U::Item: ArrayScalar,
     F: Fn(&T) -> U,
 {
     let columns = columns.as_ref();
@@ -60,7 +60,7 @@ fn svd_ev_plane<S, I>(points: I) -> Option<Plane<S>>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: ArrayScalar,
+    Scalar<S>: ArrayScalar + Lapack,
     Vector<S>: FromItems + IntoItems,
     I: AsRef<[S]>,
 {
@@ -74,7 +74,7 @@ where
             .enumerate()
             .min_by(|(_, v1), (_, v2)| v1.partial_cmp(v2).unwrap())?
             .0;
-        if i < u.cols() {
+        if i < u.ncols() {
             let normal = Vector::<S>::from_items(u.column(i).into_iter().cloned())?;
             Some(Plane {
                 origin: centroid,
