@@ -13,7 +13,7 @@ use typenum::{U2, U3};
 
 use crate::ops::{Cross, Dot, Fold, Interpolate, Map, Project, ZipMap};
 use crate::space::{Basis, FiniteDimensional};
-use crate::{Composite, Converged, FromItems, IntoItems};
+use crate::{Converged, FromItems, IntoItems, Series};
 
 impl<T> Basis for Vector2<T>
 where
@@ -92,14 +92,6 @@ where
             z: (self.x * other.y) - (self.y * other.x),
         }
     }
-}
-
-impl<T> Composite for Vector2<T> {
-    type Item = T;
-}
-
-impl<T> Composite for Vector3<T> {
-    type Item = T;
 }
 
 impl<T> Converged for Vector2<T>
@@ -310,6 +302,14 @@ where
     }
 }
 
+impl<T> Series for Vector2<T> {
+    type Item = T;
+}
+
+impl<T> Series for Vector3<T> {
+    type Item = T;
+}
+
 impl<T, U> ZipMap<U> for Vector2<T> {
     type Output = Vector2<U>;
 
@@ -339,20 +339,6 @@ impl<T, U> ZipMap<U> for Vector3<T> {
     }
 }
 
-impl<T> Composite for Point2<T>
-where
-    T: Num,
-{
-    type Item = T;
-}
-
-impl<T> Composite for Point3<T>
-where
-    T: Num,
-{
-    type Item = T;
-}
-
 impl<T> Interpolate for Point2<T>
 where
     T: Num + NumCast,
@@ -380,4 +366,18 @@ where
             z: crate::lerp(self.z, other.z, f),
         }
     }
+}
+
+impl<T> Series for Point2<T>
+where
+    T: Num,
+{
+    type Item = T;
+}
+
+impl<T> Series for Point3<T>
+where
+    T: Num,
+{
+    type Item = T;
 }

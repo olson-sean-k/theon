@@ -57,19 +57,19 @@ where
     }
 }
 
-pub trait Composite {
+pub trait Series {
     type Item;
 }
 
-impl<T> Composite for (T, T) {
+impl<T> Series for (T, T) {
     type Item = T;
 }
 
-impl<T> Composite for (T, T, T) {
+impl<T> Series for (T, T, T) {
     type Item = T;
 }
 
-pub trait IntoItems: Composite {
+pub trait IntoItems: Series {
     type Output: IntoIterator<Item = Self::Item>;
 
     fn into_items(self) -> Self::Output;
@@ -91,7 +91,7 @@ impl<T> IntoItems for (T, T, T) {
     }
 }
 
-pub trait FromItems: Composite + Sized {
+pub trait FromItems: Series + Sized {
     fn from_items<I>(items: I) -> Option<Self>
     where
         I: IntoIterator<Item = Self::Item>;
@@ -123,7 +123,7 @@ impl<T> FromItems for (T, T, T) {
     }
 }
 
-pub trait Converged: Composite {
+pub trait Converged: Series {
     fn converged(value: Self::Item) -> Self;
 }
 

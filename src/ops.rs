@@ -4,7 +4,7 @@ use num::{Bounded, One, Zero};
 use std::ops::{Add, Mul};
 
 use crate::space::{DualSpace, FiniteDimensional, Matrix, VectorSpace};
-use crate::{Composite, FromItems, Lattice};
+use crate::{FromItems, Lattice, Series};
 
 pub trait Project<T = Self> {
     type Output;
@@ -59,8 +59,8 @@ where
     }
 }
 
-pub trait Map<T = <Self as Composite>::Item>: Composite {
-    type Output: Composite<Item = T>;
+pub trait Map<T = <Self as Series>::Item>: Series {
+    type Output: Series<Item = T>;
 
     fn map<F>(self, f: F) -> Self::Output
     where
@@ -89,8 +89,8 @@ impl<T, U> Map<U> for (T, T, T) {
     }
 }
 
-pub trait Pop: Composite {
-    type Output: Composite<Item = Self::Item>;
+pub trait Pop: Series {
+    type Output: Series<Item = Self::Item>;
 
     fn pop(self) -> (Self::Output, Self::Item);
 }
@@ -104,8 +104,8 @@ impl<T> Pop for (T, T, T) {
     }
 }
 
-pub trait Push: Composite {
-    type Output: Composite<Item = Self::Item>;
+pub trait Push: Series {
+    type Output: Series<Item = Self::Item>;
 
     fn push(self, item: Self::Item) -> Self::Output;
 }
@@ -119,8 +119,8 @@ impl<T> Push for (T, T) {
     }
 }
 
-pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
-    type Output: Composite<Item = T>;
+pub trait ZipMap<T = <Self as Series>::Item>: Series {
+    type Output: Series<Item = T>;
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
@@ -128,7 +128,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
 
     fn per_item_sum(self, other: Self) -> Self::Output
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Add<Output = T>,
     {
         self.zip_map(other, |a, b| a + b)
@@ -136,7 +136,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
 
     fn per_item_product(self, other: Self) -> Self::Output
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Mul<Output = T>,
     {
         self.zip_map(other, |a, b| a * b)
@@ -144,7 +144,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
 
     fn per_item_partial_min(self, other: Self) -> Self::Output
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Copy + Lattice,
     {
         self.zip_map(other, crate::partial_min)
@@ -152,7 +152,7 @@ pub trait ZipMap<T = <Self as Composite>::Item>: Composite {
 
     fn per_item_partial_max(self, other: Self) -> Self::Output
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Copy + Lattice,
     {
         self.zip_map(other, crate::partial_max)
@@ -181,14 +181,14 @@ impl<T, U> ZipMap<U> for (T, T, T) {
     }
 }
 
-pub trait Fold<T = <Self as Composite>::Item>: Composite {
+pub trait Fold<T = <Self as Series>::Item>: Series {
     fn fold<F>(self, seed: T, f: F) -> T
     where
         F: FnMut(T, Self::Item) -> T;
 
     fn sum(self) -> T
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Add<Output = T> + Zero,
     {
         self.fold(Zero::zero(), |sum, n| sum + n)
@@ -196,7 +196,7 @@ pub trait Fold<T = <Self as Composite>::Item>: Composite {
 
     fn product(self) -> T
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Mul<Output = T> + One,
     {
         self.fold(One::one(), |product, n| product * n)
@@ -204,7 +204,7 @@ pub trait Fold<T = <Self as Composite>::Item>: Composite {
 
     fn partial_min(self) -> T
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Bounded + Copy + Lattice,
     {
         self.fold(Bounded::max_value(), crate::partial_min)
@@ -212,7 +212,7 @@ pub trait Fold<T = <Self as Composite>::Item>: Composite {
 
     fn partial_max(self) -> T
     where
-        Self: Composite<Item = T> + Sized,
+        Self: Series<Item = T> + Sized,
         T: Bounded + Copy + Lattice,
     {
         self.fold(Bounded::min_value(), crate::partial_max)

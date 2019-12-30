@@ -21,7 +21,7 @@ use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
     SquareMatrix, VectorSpace,
 };
-use crate::{Composite, Converged, FromItems, IntoItems};
+use crate::{Converged, FromItems, IntoItems, Series};
 
 impl<T, D> Basis for VectorN<T, D>
 where
@@ -52,16 +52,6 @@ where
             None
         }
     }
-}
-
-impl<T, R, C> Composite for MatrixMN<T, R, C>
-where
-    T: Scalar,
-    R: DimName,
-    C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
-{
-    type Item = T;
 }
 
 impl<T, R, C> Converged for MatrixMN<T, R, C>
@@ -381,6 +371,16 @@ where
     }
 }
 
+impl<T, R, C> Series for MatrixMN<T, R, C>
+where
+    T: Scalar,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type Item = T;
+}
+
 impl<T> SquareMatrix for Matrix2<T>
 where
     T: AddAssign + MulAssign + Real + Scalar,
@@ -442,7 +442,7 @@ where
     type Translation = VectorN<T, D>;
 }
 
-impl<T, D> Composite for Point<T, D>
+impl<T, D> Series for Point<T, D>
 where
     T: Scalar,
     D: DimName,
@@ -577,7 +577,7 @@ where
     T: Scalar,
     D: DimName + DimNameSub<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
-    VectorN<T, D>: Composite<Item = T> + Pop<Output = VectorN<T, DimNameDiff<D, U1>>>,
+    VectorN<T, D>: Series<Item = T> + Pop<Output = VectorN<T, DimNameDiff<D, U1>>>,
 {
     type Output = Point<T, DimNameDiff<D, U1>>;
 
@@ -592,7 +592,7 @@ where
     T: Scalar,
     D: DimName + DimNameAdd<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
-    VectorN<T, D>: Composite<Item = T> + Push<Output = VectorN<T, DimNameSum<D, U1>>>,
+    VectorN<T, D>: Series<Item = T> + Push<Output = VectorN<T, DimNameSum<D, U1>>>,
 {
     type Output = Point<T, DimNameSum<D, U1>>;
 

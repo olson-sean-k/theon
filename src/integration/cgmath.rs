@@ -10,7 +10,7 @@ use crate::ops::{Cross, Dot, Fold, Interpolate, Map, Pop, Push, ZipMap};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
-use crate::{Composite, Converged, FromItems, IntoItems};
+use crate::{Converged, FromItems, IntoItems, Series};
 
 impl<T> Basis for Vector2<T>
 where
@@ -56,14 +56,6 @@ where
             _ => None,
         }
     }
-}
-
-impl<T> Composite for Vector2<T> {
-    type Item = T;
-}
-
-impl<T> Composite for Vector3<T> {
-    type Item = T;
 }
 
 impl<T> Converged for Vector2<T>
@@ -289,6 +281,14 @@ where
     }
 }
 
+impl<T> Series for Vector2<T> {
+    type Item = T;
+}
+
+impl<T> Series for Vector3<T> {
+    type Item = T;
+}
+
 impl<T> VectorSpace for Vector2<T>
 where
     T: BaseNum + Real,
@@ -362,14 +362,6 @@ where
     T: BaseNum + Real,
 {
     type Translation = Vector3<T>;
-}
-
-impl<T> Composite for Point2<T> {
-    type Item = T;
-}
-
-impl<T> Composite for Point3<T> {
-    type Item = T;
 }
 
 impl<T> Converged for Point2<T>
@@ -552,6 +544,14 @@ impl<T> Push for Point2<T> {
         let Point2 { x, y } = self;
         Point3::new(x, y, z)
     }
+}
+
+impl<T> Series for Point2<T> {
+    type Item = T;
+}
+
+impl<T> Series for Point3<T> {
+    type Item = T;
 }
 
 impl<T, U> ZipMap<U> for Point2<T> {
