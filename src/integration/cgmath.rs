@@ -6,11 +6,19 @@ use decorum::{Real, R64};
 use num::{Num, NumCast, One, Zero};
 use typenum::consts::{U2, U3};
 
-use crate::ops::{Cross, Dot, Fold, Interpolate, Map, Pop, Push, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Map, Pop, Push, ZipMap};
+use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
-use crate::{Converged, FromItems, IntoItems, Series};
+
+impl<T> Adjunct for Vector2<T> {
+    type Item = T;
+}
+
+impl<T> Adjunct for Vector3<T> {
+    type Item = T;
+}
 
 impl<T> Basis for Vector2<T>
 where
@@ -281,14 +289,6 @@ where
     }
 }
 
-impl<T> Series for Vector2<T> {
-    type Item = T;
-}
-
-impl<T> Series for Vector3<T> {
-    type Item = T;
-}
-
 impl<T> VectorSpace for Vector2<T>
 where
     T: BaseNum + Real,
@@ -348,6 +348,14 @@ impl<T, U> ZipMap<U> for Vector3<T> {
     {
         Vector3::new(f(self.x, other.x), f(self.y, other.y), f(self.z, other.z))
     }
+}
+
+impl<T> Adjunct for Point2<T> {
+    type Item = T;
+}
+
+impl<T> Adjunct for Point3<T> {
+    type Item = T;
 }
 
 impl<T> AffineSpace for Point2<T>
@@ -544,14 +552,6 @@ impl<T> Push for Point2<T> {
         let Point2 { x, y } = self;
         Point3::new(x, y, z)
     }
-}
-
-impl<T> Series for Point2<T> {
-    type Item = T;
-}
-
-impl<T> Series for Point3<T> {
-    type Item = T;
 }
 
 impl<T, U> ZipMap<U> for Point2<T> {

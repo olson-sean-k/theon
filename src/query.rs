@@ -8,7 +8,8 @@ use std::ops::Neg;
 use typenum::type_operators::Cmp;
 use typenum::{Greater, U0, U1, U2};
 
-use crate::ops::{Dot, Fold, ZipMap};
+use crate::adjunct::{Fold, ZipMap};
+use crate::ops::Dot;
 use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
 use crate::Lattice;
 
@@ -574,9 +575,9 @@ where
 mod tests {
     use nalgebra::{Point2, Point3};
 
+    use crate::adjunct::Converged;
     use crate::query::{Aabb, Intersection, Plane, Ray, Unit};
     use crate::space::{Basis, EuclideanSpace};
-    use crate::Converged;
 
     type E2 = Point2<f64>;
     type E3 = Point3<f64>;

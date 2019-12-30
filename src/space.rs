@@ -7,8 +7,8 @@ use typenum::consts::{U0, U1, U2, U3};
 use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
-use crate::ops::{Dot, Fold, Pop, Project, Push, ZipMap};
-use crate::Series;
+use crate::adjunct::{Adjunct, Fold, Pop, Push, ZipMap};
+use crate::ops::{Dot, Project};
 
 /// The scalar of a `EuclideanSpace`.
 pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
@@ -77,7 +77,7 @@ pub trait VectorSpace:
     + Fold<<Self as VectorSpace>::Scalar>
     + Mul<<Self as VectorSpace>::Scalar, Output = Self>
     + Neg<Output = Self>
-    + Series<Item = <Self as VectorSpace>::Scalar>
+    + Adjunct<Item = <Self as VectorSpace>::Scalar>
     + Zero
     + ZipMap<<Self as VectorSpace>::Scalar, Output = Self>
 {
@@ -247,7 +247,7 @@ pub trait AffineSpace:
     Add<<Self as AffineSpace>::Translation, Output = Self>
     + Copy
     + Fold<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
-    + Series<Item = <<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
+    + Adjunct<Item = <<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
     + Sub<Output = <Self as AffineSpace>::Translation>
     + ZipMap<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar, Output = Self>
 {

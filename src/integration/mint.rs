@@ -11,9 +11,17 @@ use num::{Num, NumCast, One, Zero};
 use std::ops::Neg;
 use typenum::{U2, U3};
 
-use crate::ops::{Cross, Dot, Fold, Interpolate, Map, Project, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Map, ZipMap};
+use crate::ops::{Cross, Dot, Interpolate, Project};
 use crate::space::{Basis, FiniteDimensional};
-use crate::{Converged, FromItems, IntoItems, Series};
+
+impl<T> Adjunct for Vector2<T> {
+    type Item = T;
+}
+
+impl<T> Adjunct for Vector3<T> {
+    type Item = T;
+}
 
 impl<T> Basis for Vector2<T>
 where
@@ -302,14 +310,6 @@ where
     }
 }
 
-impl<T> Series for Vector2<T> {
-    type Item = T;
-}
-
-impl<T> Series for Vector3<T> {
-    type Item = T;
-}
-
 impl<T, U> ZipMap<U> for Vector2<T> {
     type Output = Vector2<U>;
 
@@ -339,6 +339,20 @@ impl<T, U> ZipMap<U> for Vector3<T> {
     }
 }
 
+impl<T> Adjunct for Point2<T>
+where
+    T: Num,
+{
+    type Item = T;
+}
+
+impl<T> Adjunct for Point3<T>
+where
+    T: Num,
+{
+    type Item = T;
+}
+
 impl<T> Interpolate for Point2<T>
 where
     T: Num + NumCast,
@@ -366,18 +380,4 @@ where
             z: crate::lerp(self.z, other.z, f),
         }
     }
-}
-
-impl<T> Series for Point2<T>
-where
-    T: Num,
-{
-    type Item = T;
-}
-
-impl<T> Series for Point3<T>
-where
-    T: Num,
-{
-    type Item = T;
 }

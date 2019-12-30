@@ -36,9 +36,9 @@ appropriate geometric traits.
 
 ```rust
 use nalgebra::Point2;
+use theon::adjunct::Converged;
 use theon::query::{Aabb, Intersection, Ray, Unit};
-use theon::space::{Basis, EuclideanSpace};
-use theon::Converged;
+use theon::space::EuclideanSpace;
 
 type E2 = Point2<f64>;
 
@@ -48,7 +48,7 @@ let aabb = Aabb::<E2> {
 };
 let ray = Ray::<E2> {
     origin: EuclideanSpace::from_xy(-1.0, 0.5),
-    direction: Unit::try_from_inner(Basis::x()).unwrap(),
+    direction: Unit::x(),
 };
 assert_eq!(Some((1.0, 2.0)), ray.intersection(&aabb));
 assert_eq!(None, ray.reverse().intersection(&aabb));
@@ -61,13 +61,13 @@ implements `EuclideanSpace` and the necessary operational traits.
 ## LAPACK
 
 Some queries require solving linear systems of arbitrary and non-trivial size.
-To support these queries, the `array` feature depends on
+To support these queries, the `lapack` feature depends on
 [`ndarray`](https://crates.io/crates/ndarray) and
 [LAPACK](https://en.wikipedia.org/wiki/lapack). For example,
-`Plane::from_points` is enabled by the `array` feature and computes a best-fit
+`Plane::from_points` is enabled by the `lapack` feature and computes a best-fit
 plane using a singular value decomposition.
 
 These operations are exposed in terms of geometric traits and the implementing
 types that are being used.
 
-The `array` feature only supports Linux at this time.
+The `lapack` feature only supports Linux at this time.

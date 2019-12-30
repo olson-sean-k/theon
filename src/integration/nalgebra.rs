@@ -16,12 +16,22 @@ use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
 
-use crate::ops::{Cross, Dot, Fold, Interpolate, Map, MulMN, Pop, Push, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Map, Pop, Push, ZipMap};
+use crate::ops::{Cross, Dot, Interpolate, MulMN};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
     SquareMatrix, VectorSpace,
 };
-use crate::{Converged, FromItems, IntoItems, Series};
+
+impl<T, R, C> Adjunct for MatrixMN<T, R, C>
+where
+    T: Scalar,
+    R: DimName,
+    C: DimName,
+    DefaultAllocator: Allocator<T, R, C>,
+{
+    type Item = T;
+}
 
 impl<T, D> Basis for VectorN<T, D>
 where
@@ -371,16 +381,6 @@ where
     }
 }
 
-impl<T, R, C> Series for MatrixMN<T, R, C>
-where
-    T: Scalar,
-    R: DimName,
-    C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
-{
-    type Item = T;
-}
-
 impl<T> SquareMatrix for Matrix2<T>
 where
     T: AddAssign + MulAssign + Real + Scalar,
@@ -432,6 +432,15 @@ where
     }
 }
 
+impl<T, D> Adjunct for Point<T, D>
+where
+    T: Scalar,
+    D: DimName,
+    DefaultAllocator: Allocator<T, D>,
+{
+    type Item = T;
+}
+
 impl<T, D> AffineSpace for Point<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar + SubAssign,
@@ -440,15 +449,6 @@ where
     <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
 {
     type Translation = VectorN<T, D>;
-}
-
-impl<T, D> Series for Point<T, D>
-where
-    T: Scalar,
-    D: DimName,
-    DefaultAllocator: Allocator<T, D>,
-{
-    type Item = T;
 }
 
 impl<T, D> Converged for Point<T, D>
@@ -577,7 +577,7 @@ where
     T: Scalar,
     D: DimName + DimNameSub<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
-    VectorN<T, D>: Series<Item = T> + Pop<Output = VectorN<T, DimNameDiff<D, U1>>>,
+    VectorN<T, D>: Adjunct<Item = T> + Pop<Output = VectorN<T, DimNameDiff<D, U1>>>,
 {
     type Output = Point<T, DimNameDiff<D, U1>>;
 
@@ -592,7 +592,7 @@ where
     T: Scalar,
     D: DimName + DimNameAdd<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
-    VectorN<T, D>: Series<Item = T> + Push<Output = VectorN<T, DimNameSum<D, U1>>>,
+    VectorN<T, D>: Adjunct<Item = T> + Push<Output = VectorN<T, DimNameSum<D, U1>>>,
 {
     type Output = Point<T, DimNameSum<D, U1>>;
 

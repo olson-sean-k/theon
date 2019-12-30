@@ -25,10 +25,10 @@ travis-ci = { repository = "olson-sean-k/theon" }
 
 [features]
 default = ["geometry-nalgebra"]
-array = ["ndarray", "ndarray-linalg"]
 geometry-cgmath = ["cgmath"]
 geometry-mint = ["mint"]
 geometry-nalgebra = ["nalgebra"]
+lapack = ["ndarray", "ndarray-linalg"]
 
 [dependencies]
 arrayvec = "^0.5.1"

@@ -1,21 +1,20 @@
-#![cfg(all(feature = "array", target_os = "linux"))]
+#![cfg(all(feature = "lapack", target_os = "linux"))]
 
 use ndarray::{Array, Ix2};
 use ndarray_linalg::convert;
 use ndarray_linalg::layout::MatrixLayout;
 use ndarray_linalg::svd::SVDInto;
-use ndarray_linalg::types::Lapack;
 use typenum::type_operators::Cmp;
 use typenum::{Greater, Unsigned, U2};
 
+use crate::adjunct::{FromItems, IntoItems};
 use crate::query::{Plane, Unit};
 use crate::space::{EuclideanSpace, FiniteDimensional, Scalar, Vector};
-use crate::{FromItems, IntoItems};
 
 /// Scalar types that can be used with LAPACK.
-pub trait ArrayScalar: Lapack + ndarray_linalg::types::Scalar {}
+pub trait Lapack: ndarray_linalg::types::Lapack + ndarray_linalg::types::Scalar {}
 
-impl<T> ArrayScalar for T where T: Lapack + ndarray_linalg::types::Scalar {}
+impl<T> Lapack for T where T: ndarray_linalg::types::Lapack + ndarray_linalg::types::Scalar {}
 
 impl<S> Plane<S>
 where
@@ -24,7 +23,7 @@ where
 {
     pub fn from_points<I>(points: I) -> Option<Self>
     where
-        Scalar<S>: ArrayScalar,
+        Scalar<S>: Lapack,
         Vector<S>: FromItems + IntoItems,
         I: AsRef<[S]>,
     {
@@ -63,7 +62,7 @@ fn svd_ev_plane<S, I>(points: I) -> Option<Plane<S>>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: ArrayScalar,
+    Scalar<S>: Lapack,
     Vector<S>: FromItems + IntoItems,
     I: AsRef<[S]>,
 {

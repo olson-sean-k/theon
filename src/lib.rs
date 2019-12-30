@@ -1,10 +1,10 @@
-pub mod array;
+pub mod adjunct;
 mod integration;
+pub mod lapack;
 pub mod ops;
 pub mod query;
 pub mod space;
 
-use arrayvec::ArrayVec;
 use decorum::R64;
 use num::{self, Num, NumCast, One, Zero};
 use std::cmp::Ordering;
@@ -32,7 +32,7 @@ pub trait AsPosition {
         *self.as_position_mut() = f(self.as_position());
     }
 
-    fn map<F>(mut self, f: F) -> Self
+    fn map_position<F>(mut self, f: F) -> Self
     where
         Self: Sized,
         F: FnMut(&Self::Position) -> Self::Position,
@@ -54,94 +54,6 @@ where
 
     fn as_position_mut(&mut self) -> &mut Self::Position {
         self
-    }
-}
-
-pub trait Series {
-    type Item;
-}
-
-impl<T> Series for (T, T) {
-    type Item = T;
-}
-
-impl<T> Series for (T, T, T) {
-    type Item = T;
-}
-
-pub trait IntoItems: Series {
-    type Output: IntoIterator<Item = Self::Item>;
-
-    fn into_items(self) -> Self::Output;
-}
-
-impl<T> IntoItems for (T, T) {
-    type Output = ArrayVec<[T; 2]>;
-
-    fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.0, self.1])
-    }
-}
-
-impl<T> IntoItems for (T, T, T) {
-    type Output = ArrayVec<[T; 3]>;
-
-    fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.0, self.1, self.2])
-    }
-}
-
-pub trait FromItems: Series + Sized {
-    fn from_items<I>(items: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self::Item>;
-}
-
-impl<T> FromItems for (T, T) {
-    fn from_items<I>(items: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self::Item>,
-    {
-        let mut items = items.into_iter().take(2);
-        match (items.next(), items.next()) {
-            (Some(a), Some(b)) => Some((a, b)),
-            _ => None,
-        }
-    }
-}
-
-impl<T> FromItems for (T, T, T) {
-    fn from_items<I>(items: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self::Item>,
-    {
-        let mut items = items.into_iter().take(3);
-        match (items.next(), items.next(), items.next()) {
-            (Some(a), Some(b), Some(c)) => Some((a, b, c)),
-            _ => None,
-        }
-    }
-}
-
-pub trait Converged: Series {
-    fn converged(value: Self::Item) -> Self;
-}
-
-impl<T> Converged for (T, T)
-where
-    T: Clone,
-{
-    fn converged(value: Self::Item) -> Self {
-        (value.clone(), value)
-    }
-}
-
-impl<T> Converged for (T, T, T)
-where
-    T: Clone,
-{
-    fn converged(value: Self::Item) -> Self {
-        (value.clone(), value.clone(), value)
     }
 }
 
