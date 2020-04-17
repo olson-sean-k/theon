@@ -1,5 +1,8 @@
 #![cfg(feature = "geometry-nalgebra")]
 
+#[doc(hidden)]
+pub use nalgebra::*;
+
 use arrayvec::ArrayVec;
 use decorum::{Real, R64};
 use nalgebra::base::allocator::Allocator;
@@ -7,10 +10,6 @@ use nalgebra::base::default_allocator::DefaultAllocator;
 use nalgebra::base::dimension::{
     DimName, DimNameAdd, DimNameDiff, DimNameMax, DimNameMaximum, DimNameMin, DimNameSub,
     DimNameSum, U1,
-};
-use nalgebra::{
-    Matrix2, Matrix3, MatrixMN, Point, Point2, Point3, RowVector2, RowVector3, Scalar, Vector2,
-    Vector3, VectorN,
 };
 use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};

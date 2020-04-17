@@ -1,5 +1,5 @@
 pub mod adjunct;
-mod integration;
+pub mod integration;
 pub mod lapack;
 pub mod ops;
 pub mod query;

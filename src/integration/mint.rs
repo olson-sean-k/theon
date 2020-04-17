@@ -4,9 +4,11 @@
 //       because they require foreign traits on foreign types.
 // TODO: Implement as many traits as possible.
 
+#[doc(hidden)]
+pub use mint::*;
+
 use arrayvec::ArrayVec;
 use decorum::R64;
-use mint::{Point2, Point3, Vector2, Vector3};
 use num::{Num, NumCast, One, Zero};
 use std::ops::Neg;
 use typenum::{U2, U3};
