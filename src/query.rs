@@ -13,15 +13,20 @@ use crate::ops::Dot;
 use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
 use crate::Lattice;
 
-/// Pair-wise intersection.
+// Intersections are implemented for types with a lesser lexographical order.
+// For example, `Intersection` is implemented for `Aabb` before `Plane`, with
+// `Plane` having a trivial symmetric implementation.
+/// Intersection.
 ///
-/// Determines if two entities intersect and produces data describing the
-/// intersection. Each pairing of entities produces its own intersection
-/// data.
+/// Determines if a pair of objects intersects and produces data describing the
+/// intersection. Each set of objects produces its own intersection data as the
+/// `Output` type.
+///
+/// A symmetrical implementation is provided For heterogeneous pairs.
 ///
 /// # Examples
 ///
-/// Testing for intersecions of an axis-aligned bounding box and a ray:
+/// Testing for intersection of an axis-aligned bounding box and a ray:
 ///
 /// ```rust
 /// # extern crate nalgebra;
@@ -50,22 +55,19 @@ use crate::Lattice;
 pub trait Intersection<T> {
     type Output;
 
-    fn intersection(&self, _: &T) -> Option<Self::Output>;
+    fn intersection(&self, other: &T) -> Option<Self::Output>;
 }
-macro_rules! impl_reciprocal_intersection {
-    (provider => $t:ident, target => $u:ident) => {
-        impl_reciprocal_intersection!(provider => $t, target => $u, bounds => ());
-    };
-    (provider => $t:ident, target => $u:ident, bounds => ($(($bt:path, $bb:path)),*$(,)?)) => {
-        impl<S> Intersection<$t<S>> for $u<S>
+macro_rules! impl_symmetrical_intersection {
+    ($a:ident, $b:ident $(,)?) => {
+        /// Symmetrical intersection.
+        impl<S> Intersection<$a<S>> for $b<S>
         where
             S: EuclideanSpace,
-            $t<S>: Intersection<$u<S>>,
-            $($bt: $bb),*
+            $a<S>: Intersection<$b<S>>,
         {
-            type Output = <$t<S> as Intersection<$u<S>>>::Output;
+            type Output = <$a<S> as Intersection<$b<S>>>::Output;
 
-            fn intersection(&self, other: &$t<S>) -> Option<Self::Output> {
+            fn intersection(&self, other: &$a<S>) -> Option<Self::Output> {
                 other.intersection(self)
             }
         }
@@ -247,7 +249,8 @@ where
     }
 }
 
-impl<S> Intersection<Line<S>> for Plane<S>
+/// Intersection of a line and plane.
+impl<S> Intersection<Plane<S>> for Line<S>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
@@ -265,23 +268,20 @@ where
     /// Given a line formed from an origin $P_0$ and a unit direction
     /// $\hat{u}$, the point of intersection with the plane is $P_0 +
     /// (t\hat{u})$.
-    fn intersection(&self, line: &Line<S>) -> Option<Self::Output> {
+    fn intersection(&self, plane: &Plane<S>) -> Option<Self::Output> {
+        let line = self;
         let direction = *line.direction.get();
-        let normal = *self.normal.get();
+        let normal = *plane.normal.get();
         let product = direction.dot(normal);
         if product != Zero::zero() {
-            Some((self.origin - line.origin).dot(normal) / product)
+            Some((plane.origin - line.origin).dot(normal) / product)
         }
         else {
             None
         }
     }
 }
-impl_reciprocal_intersection!(
-    provider => Plane,
-    target => Line,
-    bounds => ((S, FiniteDimensional),(S::N, Cmp<U2, Output = Greater>))
-);
+impl_symmetrical_intersection!(Line, Plane);
 
 /// Ray or half-line.
 ///
@@ -340,100 +340,6 @@ where
         }
     }
 }
-
-// TODO: This implementation requires `INF` and `-INF` representations.
-impl<S> Intersection<Aabb<S>> for Ray<S>
-where
-    S: EuclideanSpace,
-    Scalar<S>: Bounded + Infinite + Lattice,
-{
-    /// The minimum and maximum _times of impact_ of the intersection.
-    ///
-    /// The times of impact $t_{min}$ and $t_{max}$ describe the distance along
-    /// the half-line from the ray's origin at which the intersection occurs.
-    type Output = (Scalar<S>, Scalar<S>);
-
-    /// Determines the minimum and maximum _times of impact_ of a `Ray`
-    /// intersection with an `Aabb`.
-    ///
-    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
-    /// the nearest point of intersection is $P_0 + (t_{min}\hat{u})$.
-    ///
-    /// # Examples
-    ///
-    /// Determine the point of impact between a ray and axis-aligned bounding box:
-    ///
-    /// ```rust
-    /// # extern crate nalgebra;
-    /// # extern crate theon;
-    /// #
-    /// use nalgebra::Point2;
-    /// use theon::space::{Basis, EuclideanSpace, VectorSpace};
-    /// use theon::query::{Aabb, Intersection, Ray, Unit};
-    ///
-    /// type E2 = Point2<f64>;
-    ///
-    /// # fn main() {
-    /// let aabb = Aabb::<E2> {
-    ///     origin: EuclideanSpace::from_xy(1.0, -1.0),
-    ///     extent: VectorSpace::from_xy(2.0, 2.0),
-    /// };
-    /// let ray = Ray::<E2> {
-    ///     origin: EuclideanSpace::origin(),
-    ///     direction: Unit::try_from_inner(Basis::x()).unwrap(),
-    /// };
-    /// let (min, _) = ray.intersection(&aabb).unwrap();
-    /// let point = ray.origin + (ray.direction.get() * min);
-    /// # }
-    fn intersection(&self, aabb: &Aabb<S>) -> Option<Self::Output> {
-        let direction = *self.direction.get();
-        let origin = (aabb.origin - self.origin).zip_map(direction, |a, b| a / b);
-        let endpoint = ((aabb.endpoint()) - self.origin).zip_map(direction, |a, b| a / b);
-        let min = origin.per_item_partial_min(endpoint).partial_max();
-        let max = origin.per_item_partial_max(endpoint).partial_min();
-        if max < Zero::zero() || min > max {
-            None
-        }
-        else {
-            Some((min, max))
-        }
-    }
-}
-impl_reciprocal_intersection!(provider => Ray, target => Aabb);
-
-impl<S> Intersection<Plane<S>> for Ray<S>
-where
-    S: EuclideanSpace + FiniteDimensional,
-    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: Signed,
-{
-    /// The _time of impact_ of the intersection.
-    ///
-    /// The time of impact $t$ describes the distance along the half-line from
-    /// the ray's origin at which the intersection occurs.
-    type Output = Scalar<S>;
-
-    // TODO: Detect rays that lie within the plane.
-    /// Determines the _time of impact_ of a `Ray` intersection with a `Plane`.
-    ///
-    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
-    /// the point of intersection with the plane is $P_0 + (t\hat{u})$.
-    fn intersection(&self, plane: &Plane<S>) -> Option<Self::Output> {
-        self.into_line().intersection(plane).and_then(|t| {
-            if t.is_positive() {
-                Some(t)
-            }
-            else {
-                None
-            }
-        })
-    }
-}
-impl_reciprocal_intersection!(
-    provider => Ray,
-    target => Plane,
-    bounds => ((S, FiniteDimensional),(S::N, Cmp<U2, Output = Greater>))
-);
 
 impl<S> Neg for Ray<S>
 where
@@ -542,22 +448,84 @@ where
     }
 }
 
+/// Intersection of axis-aligned bounding boxes.
 impl<S> Intersection<Aabb<S>> for Aabb<S>
 where
     S: EuclideanSpace,
 {
     type Output = Self;
 
-    fn intersection(&self, _: &Self) -> Option<Self::Output> {
+    fn intersection(&self, _: &Aabb<S>) -> Option<Self::Output> {
         None // TODO:
     }
 }
 
+// TODO: This implementation requires `INF` and `-INF` representations.
+/// Intersection of an axis-aligned bounding box and ray.
+impl<S> Intersection<Ray<S>> for Aabb<S>
+where
+    S: EuclideanSpace,
+    Scalar<S>: Bounded + Infinite + Lattice,
+{
+    /// The minimum and maximum _times of impact_ of the intersection.
+    ///
+    /// The times of impact $t_{min}$ and $t_{max}$ describe the distance along
+    /// the half-line from the ray's origin at which the intersection occurs.
+    type Output = (Scalar<S>, Scalar<S>);
+
+    /// Determines the minimum and maximum _times of impact_ of a `Ray`
+    /// intersection with an `Aabb`.
+    ///
+    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
+    /// the nearest point of intersection is $P_0 + (t_{min}\hat{u})$.
+    ///
+    /// # Examples
+    ///
+    /// Determine the point of impact between a ray and axis-aligned bounding box:
+    ///
+    /// ```rust
+    /// # extern crate nalgebra;
+    /// # extern crate theon;
+    /// #
+    /// use nalgebra::Point2;
+    /// use theon::space::{Basis, EuclideanSpace, VectorSpace};
+    /// use theon::query::{Aabb, Intersection, Ray, Unit};
+    ///
+    /// type E2 = Point2<f64>;
+    ///
+    /// # fn main() {
+    /// let aabb = Aabb::<E2> {
+    ///     origin: EuclideanSpace::from_xy(1.0, -1.0),
+    ///     extent: VectorSpace::from_xy(2.0, 2.0),
+    /// };
+    /// let ray = Ray::<E2> {
+    ///     origin: EuclideanSpace::origin(),
+    ///     direction: Unit::try_from_inner(Basis::x()).unwrap(),
+    /// };
+    /// let (min, _) = ray.intersection(&aabb).unwrap();
+    /// let point = ray.origin + (ray.direction.get() * min);
+    /// # }
+    fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
+        let aabb = self;
+        let direction = *ray.direction.get();
+        let origin = (aabb.origin - ray.origin).zip_map(direction, |a, b| a / b);
+        let endpoint = ((aabb.endpoint()) - ray.origin).zip_map(direction, |a, b| a / b);
+        let min = origin.per_item_partial_min(endpoint).partial_max();
+        let max = origin.per_item_partial_max(endpoint).partial_min();
+        if max < Zero::zero() || min > max {
+            None
+        }
+        else {
+            Some((min, max))
+        }
+    }
+}
+impl_symmetrical_intersection!(Aabb, Ray);
+
 #[derive(Clone)]
 pub struct Plane<S>
 where
-    S: EuclideanSpace + FiniteDimensional,
-    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    S: EuclideanSpace,
 {
     pub origin: S,
     pub normal: Unit<Vector<S>>,
@@ -565,11 +533,42 @@ where
 
 impl<S> Copy for Plane<S>
 where
-    S: EuclideanSpace + FiniteDimensional,
-    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    S: EuclideanSpace,
     Vector<S>: Copy,
 {
 }
+
+/// Intersection of a plane and a ray.
+impl<S> Intersection<Ray<S>> for Plane<S>
+where
+    S: EuclideanSpace + FiniteDimensional,
+    <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    Scalar<S>: Signed,
+{
+    /// The _time of impact_ of the intersection.
+    ///
+    /// The time of impact $t$ describes the distance along the half-line from
+    /// the ray's origin at which the intersection occurs.
+    type Output = Scalar<S>;
+
+    // TODO: Detect rays that lie within the plane.
+    /// Determines the _time of impact_ of a `Ray` intersection with a `Plane`.
+    ///
+    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
+    /// the point of intersection with the plane is $P_0 + (t\hat{u})$.
+    fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
+        let plane = self;
+        ray.into_line().intersection(plane).and_then(|t| {
+            if t.is_positive() {
+                Some(t)
+            }
+            else {
+                None
+            }
+        })
+    }
+}
+impl_symmetrical_intersection!(Plane, Ray);
 
 #[cfg(test)]
 mod tests {
