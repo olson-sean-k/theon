@@ -1,6 +1,6 @@
 **Theon** is a Rust library that abstracts Euclidean spaces.
 
-[![Build Status](https://travis-ci.org/olson-sean-k/theon.svg?branch=master)](https://travis-ci.org/olson-sean-k/theon)
+[![CI](https://github.com/olson-sean-k/theon/workflows/CI/badge.svg)](https://github.com/olson-sean-k/theon/actions)
 [![Documentation](https://docs.rs/theon/badge.svg)](https://docs.rs/theon)
 [![Crate](https://img.shields.io/crates/v/theon.svg)](https://crates.io/crates/theon)
 

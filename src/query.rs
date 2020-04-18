@@ -38,7 +38,6 @@ use crate::Lattice;
 ///
 /// type E2 = Point2<f64>;
 ///
-/// # fn main() {
 /// let aabb = Aabb::<E2> {
 ///     origin: EuclideanSpace::from_xy(1.0, -1.0),
 ///     extent: VectorSpace::from_xy(2.0, 2.0),
@@ -50,7 +49,6 @@ use crate::Lattice;
 /// if let Some((min, max)) = ray.intersection(&aabb) {
 ///     // ...
 /// }
-/// # }
 /// ```
 pub trait Intersection<T> {
     type Output;
@@ -110,9 +108,7 @@ where
     ///
     /// type R3 = Vector3<f64>;
     ///
-    /// # fn main() {
     /// let unit = Unit::<R3>::try_from_inner(Basis::x()).unwrap();
-    /// # }
     /// ```
     pub fn try_from_inner(inner: S) -> Option<Self> {
         inner.normalize().map(|inner| Unit { inner })
@@ -493,7 +489,6 @@ where
     ///
     /// type E2 = Point2<f64>;
     ///
-    /// # fn main() {
     /// let aabb = Aabb::<E2> {
     ///     origin: EuclideanSpace::from_xy(1.0, -1.0),
     ///     extent: VectorSpace::from_xy(2.0, 2.0),
@@ -504,7 +499,6 @@ where
     /// };
     /// let (min, _) = ray.intersection(&aabb).unwrap();
     /// let point = ray.origin + (ray.direction.get() * min);
-    /// # }
     fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
         let aabb = self;
         let direction = *ray.direction.get();
