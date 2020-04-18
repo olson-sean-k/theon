@@ -1,3 +1,6 @@
+//! **Theon** abstracts Euclidean spaces and geometric queries with support for
+//! popular linear algebra and spatial crates in the Rust ecosystem.
+
 pub mod adjunct;
 pub mod integration;
 pub mod lapack;
@@ -12,12 +15,46 @@ use std::cmp::Ordering;
 use crate::space::EuclideanSpace;
 
 pub mod prelude {
+    //! Re-exports commonly used types and traits.
+
     pub use crate::query::Intersection as _;
     pub use crate::Lattice as _;
 }
 
 pub type Position<T> = <T as AsPosition>::Position;
 
+/// Positional data.
+///
+/// This trait exposes positional data for geometric types.
+///
+/// # Examples
+///
+/// Exposing positional data for a vertex:
+///
+/// ```rust
+/// # extern crate nalgebra;
+/// # extern crate theon;
+/// #
+/// use nalgebra::{Point3, Vector3};
+/// use theon::AsPosition;
+///
+/// pub struct Vertex {
+///     position: Point3<f64>,
+///     normal: Vector3<f64>,
+/// }
+///
+/// impl AsPosition for Vertex {
+///     type Position = Point3<f64>;
+///
+///     fn as_position(&self) -> &Self::Position {
+///         &self.position
+///     }
+///
+///     fn as_position_mut(&mut self) -> &mut Self::Position {
+///         &mut self.position
+///     }
+/// }
+/// ```
 pub trait AsPosition {
     type Position: EuclideanSpace;
 
@@ -119,6 +156,7 @@ where
     }
 }
 
+/// Linearly interpolates between two values.
 pub fn lerp<T>(a: T, b: T, f: R64) -> T
 where
     T: Num + NumCast,

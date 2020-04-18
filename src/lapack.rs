@@ -1,3 +1,5 @@
+//! LAPACK and non-trivial linear algebra.
+
 #![cfg(all(feature = "lapack", target_os = "linux"))]
 
 use ndarray::{Array, Ix2};

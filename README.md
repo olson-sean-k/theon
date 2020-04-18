@@ -18,7 +18,8 @@ provides optional implementations for commonly used crates in the Rust
 ecosystem, including [`cgmath`](https://crates.io/crates/cgmath),
 [`mint`](https://crates.io/crates/mint), and
 [`nalgebra`](https://crates.io/crates/nalgebra). These implementations can be
-enabled using Cargo features.
+enabled using Cargo features and integrated crates are re-exported in the
+`integration` module.
 
 | Feature             | Default | Crate      | Support  |
 |---------------------|---------|------------|----------|
@@ -27,7 +28,8 @@ enabled using Cargo features.
 | `geometry-nalgebra` | Yes     | `nalgebra` | Complete |
 
 Note that these downstream implementations have an important limitation: code
-that uses Theon must specify a compatible version of the given crate.
+that uses Theon must specify a compatible version of the given crate or depend
+on re-exported crates in the `integration` module.
 
 ## Spatial Queries
 
