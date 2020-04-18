@@ -77,16 +77,19 @@ where
 
 impl<T> Cross for Vector3<T>
 where
-    T: Num + Scalar,
+    // TODO: Is the `Copy` requirement too strict? See `Fold` implementation.
+    T: Copy + Num + Scalar,
     <<T as Mul>::Output as Sub>::Output: Neg<Output = T>,
 {
     type Output = Self;
 
     fn cross(self, other: Self) -> Self::Output {
+        let [ax, ay, az]: [T; 3] = self.into();
+        let [bx, by, bz]: [T; 3] = other.into();
         Vector3::new(
-            (self.y * other.z) - (self.z * other.y),
-            (self.z * other.x) - (self.x * other.z),
-            (self.x * other.y) - (self.y * other.x),
+            (ay * bz) - (az * by),
+            (az * bx) - (ax * bz),
+            (ax * by) - (ay * bx),
         )
     }
 }
@@ -133,7 +136,8 @@ where
 
 impl<T, U, R, C> Fold<U> for MatrixMN<T, R, C>
 where
-    T: Scalar,
+    // TODO: Re-examine adjunct traits that take items by value.
+    T: Clone + Scalar,
     R: DimName,
     C: DimName,
     DefaultAllocator: Allocator<T, R, C>,
@@ -143,7 +147,7 @@ where
         F: FnMut(U, Self::Item) -> U,
     {
         for a in self.iter() {
-            seed = f(seed, *a);
+            seed = f(seed, a.clone());
         }
         seed
     }
@@ -194,7 +198,8 @@ where
     type Output = ArrayVec<[T; 2]>;
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y])
+        let array: [T; 2] = self.into();
+        array.into()
     }
 }
 
@@ -205,7 +210,8 @@ where
     type Output = ArrayVec<[T; 3]>;
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y, self.z])
+        let array: [T; 3] = self.into();
+        array.into()
     }
 }
 
@@ -539,7 +545,8 @@ where
     type Output = ArrayVec<[T; 2]>;
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y])
+        let array: [T; 2] = self.coords.into();
+        array.into()
     }
 }
 
@@ -550,7 +557,8 @@ where
     type Output = ArrayVec<[T; 3]>;
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y, self.z])
+        let array: [T; 3] = self.coords.into();
+        array.into()
     }
 }
 
