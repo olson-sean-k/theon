@@ -94,7 +94,7 @@ where
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "geometry-nalgebra"))]
 mod tests {
     use nalgebra::Point3;
 

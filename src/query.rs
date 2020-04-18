@@ -564,7 +564,7 @@ where
 }
 impl_symmetrical_intersection!(Plane, Ray);
 
-#[cfg(test)]
+#[cfg(all(test, feature = "geometry-nalgebra"))]
 mod tests {
     use nalgebra::{Point2, Point3};
 

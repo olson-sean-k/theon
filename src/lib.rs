@@ -1,6 +1,9 @@
 //! **Theon** abstracts Euclidean spaces and geometric queries with support for
 //! popular linear algebra and spatial crates in the Rust ecosystem.
 
+// TODO: Require the `geometry-nalgebra` feature for doc tests.
+//       See https://github.com/rust-lang/rust/issues/43781
+
 pub mod adjunct;
 pub mod integration;
 pub mod lapack;
