@@ -1,3 +1,8 @@
+<div align="center">
+    <img alt="Theon" src="https://raw.githubusercontent.com/olson-sean-k/theon/master/doc/theon.svg?sanitize=true" width="320"/>
+</div>
+<br/>
+
 **Theon** is a Rust library that abstracts Euclidean spaces.
 
 [![CI](https://github.com/olson-sean-k/theon/workflows/CI/badge.svg)](https://github.com/olson-sean-k/theon/actions)

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg width="512" height="512" version="1.1" viewBox="0 0 135.47 135.47" xmlns="http://www.w3.org/2000/svg" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:xlink="http://www.w3.org/1999/xlink">
+ <defs>
+  <linearGradient id="linearGradient1834">
+   <stop stop-color="#c8c8c8" offset="0"/>
+   <stop stop-color="#c8c8c8" stop-opacity="0" offset="1"/>
+  </linearGradient>
+  <radialGradient id="radialGradient1836" cx="256" cy="256" r="256" gradientUnits="userSpaceOnUse" xlink:href="#linearGradient1834"/>
+  <linearGradient id="linearGradient1844" x2="512" y1="272" y2="272" gradientUnits="userSpaceOnUse">
+   <stop stop-color="#33e7ff" offset="0"/>
+   <stop stop-color="#ff831a" offset="1"/>
+  </linearGradient>
+ </defs>
+ <metadata>
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g display="none">
+  <rect y="4.2667e-6" width="135.47" height="135.47" fill="#fff" fill-rule="evenodd"/>
+ </g>
+ <g>
+  <path transform="scale(.26458)" d="m116 0v116l-51.998 2e-3v24l51.998-4e-3v104h-116v23.998h116v104h-116v23.998h116v116h24v-116h104l-0.00195 52h24l1e-5 -52h104v116h23.998v-116h116v-23.998h-116v-104h116v-23.998h-116v-104l51.998 4e-3v-24l-51.998-2e-3v-116h-23.998v116h-104v-116h-23.998v116h-104v-116zm24 140h104v104h-104zm128 0h104v104h-104zm-128 128h104v104h-104zm128 0h104v104h-104z" color="#000000" color-rendering="auto" dominant-baseline="auto" fill="url(#radialGradient1836)" image-rendering="auto" shape-rendering="auto" solid-color="#000000" style="font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;isolation:auto;mix-blend-mode:normal;shape-padding:0;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal"/>
+ </g>
+ <g display="none">
+  <path transform="scale(.26458)" d="m51.998 0v51.998h-51.998v23.998h51.998v104h-51.998v23.998h51.998v104h-51.998v23.998h51.998v104h-51.998v24.006h51.998v51.998h23.998v-51.998h104v51.998h23.998v-51.998h104v51.998h23.998v-51.998h104v51.998h24.006v-51.998h51.998v-24.006h-51.998v-104h51.998v-23.998h-51.998v-104h51.998v-23.998h-51.998v-104h51.998v-23.998h-51.998v-51.998h-24.006v51.998h-104v-51.998h-23.998v51.998h-104v-51.998h-23.998v51.998h-104v-51.998zm23.998 75.996h104v104h-104zm128 0h104v104h-104zm128 0h104v104h-104zm-256 128h104v104h-104zm128 0h104v104h-104zm128 0h104v104h-104zm-256 128h104v104h-104zm128 0h104v104h-104zm128 0h104v104h-104z" color="#000000" color-rendering="auto" display="inline" dominant-baseline="auto" fill="url(#radialGradient1836)" image-rendering="auto" shape-rendering="auto" solid-color="#000000" style="font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;isolation:auto;mix-blend-mode:normal;shape-padding:0;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal"/>
+ </g>
+ <g transform="translate(0 -161.53)">
+  <path transform="matrix(.26458 0 0 .26458 0 161.53)" d="m140 64-108 64 108 64v-40l76.846-1e-5c3.7891 6.1662 8.9807 11.351 15.152 15.131l0.00195 204.87h-40l64 108 64-108h-40l2e-3 -204.85c6.1662-3.7891 11.35-8.9807 15.131-15.152l76.867 1e-5v40l108-64-108-64v40l-76.844 2e-3c-8.3452-13.632-23.173-21.95-39.156-21.965-15.975 0.02352-30.792 8.3401-39.133 21.965l-76.867-0.00194z" fill="url(#linearGradient1844)"/>
+ </g>
+ <g transform="translate(0 -161.53)" display="none">
+  <path transform="matrix(.26458 0 0 .26458 0 161.53)" d="m120 80-72 48 72 48v-32h108.33a32 32 0 0 0 11.668 11.678v236.32h-32l48 72 48-72h-32v-236.33a32 32 0 0 0 11.678-11.668h108.32v32l72-48-72-48v32h-108.33a32 32 0 0 0-27.668-16 32 32 0 0 0-27.678 16h-108.32z" fill="#646464"/>
+ </g>
+</svg>

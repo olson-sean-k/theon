@@ -4,6 +4,13 @@
 // TODO: Require the `geometry-nalgebra` feature for doc tests.
 //       See https://github.com/rust-lang/rust/issues/43781
 
+#![doc(
+    html_favicon_url = "https://raw.githubusercontent.com/olson-sean-k/theon/master/doc/theon-favicon.ico"
+)]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/olson-sean-k/theon/master/doc/theon.svg?sanitize=true"
+)]
+
 pub mod adjunct;
 pub mod integration;
 pub mod lapack;
