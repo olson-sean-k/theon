@@ -480,14 +480,12 @@ where
 }
 
 // TODO: This implementation requires `INF` and `-INF` representations and may
-//       compute `NaN`s. `NaN`s require the use of special types to avoid panics
-//       when computing partial minima and maxima (see the `partial_min` and
-//       `partial_max` functions. Avoid the use of haphazard division.
+//       interact poorly with partial minima and maxima computations.
 /// Intersection of an axis-aligned bounding box and ray.
 impl<S> Intersection<Ray<S>> for Aabb<S>
 where
     S: EuclideanSpace,
-    Scalar<S>: Bounded + Infinite + Lattice,
+    Scalar<S>: Bounded + Infinite + Lattice + Signed,
 {
     /// The minimum and maximum _times of impact_ of the intersection.
     ///
@@ -526,13 +524,24 @@ where
     /// let (min, _) = ray.intersection(&aabb).unwrap();
     /// let point = ray.origin + (ray.direction.get() * min);
     fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
+        // Avoid computing `NaN`s. Note that multiplying by the inverse (instead
+        // of dividing) avoids dividing zero by zero, but does not avoid
+        // multiplying zero by infinity.
+        let pdiv = |a: Scalar<S>, b: Scalar<S>| {
+            if a.is_zero() {
+                a
+            }
+            else {
+                a / b
+            }
+        };
         let aabb = self;
         let direction = *ray.direction.get();
-        let origin = (aabb.origin - ray.origin).zip_map(direction, |a, b| a / b);
-        let endpoint = ((aabb.endpoint()) - ray.origin).zip_map(direction, |a, b| a / b);
+        let origin = (aabb.origin - ray.origin).zip_map(direction, pdiv);
+        let endpoint = ((aabb.endpoint()) - ray.origin).zip_map(direction, pdiv);
         let min = origin.per_item_partial_min(endpoint).partial_max();
         let max = origin.per_item_partial_max(endpoint).partial_min();
-        if max < Zero::zero() || min > max {
+        if max.is_negative() || min > max {
             None
         }
         else {
@@ -592,6 +601,7 @@ impl_symmetrical_intersection!(Plane, Ray);
 
 #[cfg(all(test, feature = "geometry-nalgebra"))]
 mod tests {
+    use decorum::N64;
     use nalgebra::{Point2, Point3};
 
     use crate::adjunct::Converged;
@@ -627,6 +637,21 @@ mod tests {
         };
         assert_eq!(Some((1.0, 2.0)), ray.intersection(&aabb));
         assert_eq!(None, ray.reverse().intersection(&aabb));
+    }
+
+    // Ensure that certain values do not produce `NaN`s when querying the
+    // intersection of `Aabb` and `Ray`.
+    #[test]
+    fn aabb_ray_intersection_nan() {
+        let aabb = Aabb::<Point2<N64>> {
+            origin: EuclideanSpace::origin(),
+            extent: Converged::converged(1.0.into()),
+        };
+        let ray = Ray::<Point2<N64>> {
+            origin: EuclideanSpace::origin(),
+            direction: Unit::x(),
+        };
+        assert_eq!(Some((0.0.into(), 1.0.into())), ray.intersection(&aabb));
     }
 
     #[test]
