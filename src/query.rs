@@ -16,13 +16,36 @@ use crate::Lattice;
 // Intersections are implemented for types with a lesser lexographical order.
 // For example, `Intersection` is implemented for `Aabb` before `Plane`, with
 // `Plane` having a trivial symmetric implementation.
-/// Intersection.
+/// Intersection of geometric objects.
 ///
 /// Determines if a pair of objects intersects and produces data describing the
 /// intersection. Each set of objects produces its own intersection data as the
 /// `Output` type.
 ///
-/// A symmetrical implementation is provided For heterogeneous pairs.
+/// A symmetrical implementation is provided for heterogeneous pairs:
+///
+/// ```rust
+/// # extern crate nalgebra;
+/// # extern crate theon;
+/// #
+/// # use nalgebra::Point3;
+/// # use theon::query::{Intersection, Line, Plane, Unit};
+/// # use theon::space::EuclideanSpace;
+/// #
+/// # type E3 = Point3<f64>;
+/// #
+/// # let line = Line::<E3> {
+/// #     origin: EuclideanSpace::origin(),
+/// #     direction: Unit::x(),
+/// # };
+/// # let plane = Plane::<E3> {
+/// #     origin: EuclideanSpace::from_xyz(1.0, 0.0, 0.0),
+/// #     normal: Unit::x(),
+/// # };
+/// // These queries are equivalent.
+/// if let Some(t) = line.intersection(&plane) { /* ... */ }
+/// if let Some(t) = plane.intersection(&line) { /* ... */ }
+/// ```
 ///
 /// # Examples
 ///
@@ -456,7 +479,10 @@ where
     }
 }
 
-// TODO: This implementation requires `INF` and `-INF` representations.
+// TODO: This implementation requires `INF` and `-INF` representations and may
+//       compute `NaN`s. `NaN`s require the use of special types to avoid panics
+//       when computing partial minima and maxima (see the `partial_min` and
+//       `partial_max` functions. Avoid the use of haphazard division.
 /// Intersection of an axis-aligned bounding box and ray.
 impl<S> Intersection<Ray<S>> for Aabb<S>
 where

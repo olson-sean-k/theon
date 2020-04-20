@@ -177,6 +177,11 @@ where
     <T as NumCast>::from(af + bf).unwrap()
 }
 
+// TODO: The use of the `partial_min` and `partial_max` functions in `Fold` and
+//       `ZipMap` obscures the ordering of scalar types and leads to panics.
+//       Partial comparison APIs should always emit `Option` or `Result` types
+//       to allow client code to respond to errors.
+
 fn partial_min<T>(a: T, b: T) -> T
 where
     T: Copy + Lattice,

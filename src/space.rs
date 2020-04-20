@@ -32,12 +32,13 @@ pub trait Basis: FiniteDimensional + Sized {
     /// or _standard_ basis vectors of the space.
     ///
     /// Such basis vectors must only have one component set to the
-    /// multiplicative identity one and all other components set to zero.
-    /// Moreover, the set of basis vectors must contain ordered and unique
-    /// elements and be of size equal to the dimensionality of the space.
+    /// multiplicative identity and all other components set to the additive
+    /// identity (one and zero in $\Reals$, respectively). Moreover, the set of
+    /// basis vectors must contain ordered and unique elements and be of size
+    /// equal to the dimensionality of the space.
     ///
-    /// For example, the set of basis vectors for the real coordinate space
-    /// $\Reals^2$ is:
+    /// For example, the set of canonical basis vectors for the real coordinate
+    /// space $\Reals^2$ is:
     ///
     /// $\\{\begin{bmatrix}1\\\0\end{bmatrix},\begin{bmatrix}0\\\1\end{bmatrix}\\}$
     fn canonical_basis() -> Self::Bases;
