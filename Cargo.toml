@@ -20,9 +20,6 @@ rustdoc-args = [
     "doc/katex-header.html",
 ]
 
-[badges]
-travis-ci = { repository = "olson-sean-k/theon" }
-
 [features]
 default = ["geometry-nalgebra"]
 geometry-cgmath = ["cgmath"]
