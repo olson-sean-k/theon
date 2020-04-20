@@ -19,7 +19,7 @@ use std::ops::{Add, Mul};
 
 use crate::Lattice;
 
-pub trait Adjunct {
+pub trait Adjunct: Sized {
     type Item;
 }
 
@@ -29,7 +29,7 @@ pub trait IntoItems: Adjunct {
     fn into_items(self) -> Self::Output;
 }
 
-pub trait FromItems: Adjunct + Sized {
+pub trait FromItems: Adjunct {
     fn from_items<I>(items: I) -> Option<Self>
     where
         I: IntoIterator<Item = Self::Item>;
@@ -68,7 +68,7 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn per_item_sum(self, other: Self) -> Self::Output
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Add<Output = T>,
     {
         self.zip_map(other, |a, b| a + b)
@@ -76,7 +76,7 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn per_item_product(self, other: Self) -> Self::Output
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Mul<Output = T>,
     {
         self.zip_map(other, |a, b| a * b)
@@ -84,7 +84,7 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn per_item_partial_min(self, other: Self) -> Self::Output
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Copy + Lattice,
     {
         self.zip_map(other, crate::partial_min)
@@ -92,7 +92,7 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn per_item_partial_max(self, other: Self) -> Self::Output
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Copy + Lattice,
     {
         self.zip_map(other, crate::partial_max)
@@ -106,7 +106,7 @@ pub trait Fold<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn sum(self) -> T
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Add<Output = T> + Zero,
     {
         self.fold(Zero::zero(), |sum, n| sum + n)
@@ -114,7 +114,7 @@ pub trait Fold<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn product(self) -> T
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Mul<Output = T> + One,
     {
         self.fold(One::one(), |product, n| product * n)
@@ -122,7 +122,7 @@ pub trait Fold<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn partial_min(self) -> T
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Bounded + Copy + Lattice,
     {
         self.fold(Bounded::max_value(), crate::partial_min)
@@ -130,7 +130,7 @@ pub trait Fold<T = <Self as Adjunct>::Item>: Adjunct {
 
     fn partial_max(self) -> T
     where
-        Self: Adjunct<Item = T> + Sized,
+        Self: Adjunct<Item = T>,
         T: Bounded + Copy + Lattice,
     {
         self.fold(Bounded::min_value(), crate::partial_max)
