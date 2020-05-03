@@ -7,6 +7,11 @@
 //! Re-exported types are hidden in Theon's documentation. Refer to the
 //! documentation for integrated crates at the corresponding version.
 
+pub mod decorum {
+    #[doc(hidden)]
+    pub use decorum::*;
+}
+
 // Feature modules. These are empty unless Cargo features are enabled.
 pub mod cgmath;
 pub mod mint;

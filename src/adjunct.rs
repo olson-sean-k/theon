@@ -14,10 +14,9 @@
 //! `geometry-nalgebra` feature is enabled.
 
 use arrayvec::ArrayVec;
+use decorum::cmp::{self, IntrinsicOrd};
 use num::{Bounded, One, Zero};
 use std::ops::{Add, Mul};
-
-use crate::Lattice;
 
 pub trait Adjunct: Sized {
     type Item;
@@ -82,20 +81,20 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
         self.zip_map(other, |a, b| a * b)
     }
 
-    fn per_item_partial_min(self, other: Self) -> Self::Output
+    fn per_item_min_or_undefined(self, other: Self) -> Self::Output
     where
         Self: Adjunct<Item = T>,
-        T: Copy + Lattice,
+        T: Copy + IntrinsicOrd,
     {
-        self.zip_map(other, crate::partial_min)
+        self.zip_map(other, cmp::min_or_undefined)
     }
 
-    fn per_item_partial_max(self, other: Self) -> Self::Output
+    fn per_item_max_or_undefined(self, other: Self) -> Self::Output
     where
         Self: Adjunct<Item = T>,
-        T: Copy + Lattice,
+        T: Copy + IntrinsicOrd,
     {
-        self.zip_map(other, crate::partial_max)
+        self.zip_map(other, cmp::max_or_undefined)
     }
 }
 
@@ -120,20 +119,20 @@ pub trait Fold<T = <Self as Adjunct>::Item>: Adjunct {
         self.fold(One::one(), |product, n| product * n)
     }
 
-    fn partial_min(self) -> T
+    fn min_or_undefined(self) -> T
     where
         Self: Adjunct<Item = T>,
-        T: Bounded + Copy + Lattice,
+        T: Bounded + Copy + IntrinsicOrd,
     {
-        self.fold(Bounded::max_value(), crate::partial_min)
+        self.fold(Bounded::max_value(), cmp::min_or_undefined)
     }
 
-    fn partial_max(self) -> T
+    fn max_or_undefined(self) -> T
     where
         Self: Adjunct<Item = T>,
-        T: Bounded + Copy + Lattice,
+        T: Bounded + Copy + IntrinsicOrd,
     {
-        self.fold(Bounded::min_value(), crate::partial_max)
+        self.fold(Bounded::min_value(), cmp::max_or_undefined)
     }
 }
 

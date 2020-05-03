@@ -2,6 +2,7 @@
 //!
 //! This module provides types and traits for performing spatial queries.
 
+use decorum::cmp::IntrinsicOrd;
 use decorum::{Infinite, Real};
 use num::{Bounded, Signed, Zero};
 use std::ops::Neg;
@@ -11,7 +12,6 @@ use typenum::{Greater, U0, U1, U2};
 use crate::adjunct::{Fold, ZipMap};
 use crate::ops::Dot;
 use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
-use crate::Lattice;
 
 // Intersections are implemented for types with a lesser lexographical order.
 // For example, `Intersection` is implemented for `Aabb` before `Plane`, with
@@ -406,12 +406,13 @@ where
     pub fn from_points<I>(points: I) -> Self
     where
         I: IntoIterator<Item = S>,
+        Scalar<S>: IntrinsicOrd,
     {
         let mut min = S::origin();
         let mut max = S::origin();
         for point in points {
-            min = min.per_item_partial_min(point);
-            max = max.per_item_partial_max(point);
+            min = min.per_item_min_or_undefined(point);
+            max = max.per_item_max_or_undefined(point);
         }
         Aabb {
             origin: min,
@@ -423,12 +424,18 @@ where
         self.origin + self.extent
     }
 
-    pub fn upper_bound(&self) -> S {
-        self.origin.per_item_partial_max(self.endpoint())
+    pub fn upper_bound(&self) -> S
+    where
+        Scalar<S>: IntrinsicOrd,
+    {
+        self.origin.per_item_max_or_undefined(self.endpoint())
     }
 
-    pub fn lower_bound(&self) -> S {
-        self.origin.per_item_partial_min(self.endpoint())
+    pub fn lower_bound(&self) -> S
+    where
+        Scalar<S>: IntrinsicOrd,
+    {
+        self.origin.per_item_min_or_undefined(self.endpoint())
     }
 
     /// Gets the Lebesgue measure ($n$-dimensional volume) of the bounding box.
@@ -441,9 +448,17 @@ where
             .product()
     }
 
-    pub fn union(&self, aabb: &Self) -> Self {
-        let origin = self.lower_bound().per_item_partial_min(aabb.lower_bound());
-        let extent = self.upper_bound().per_item_partial_max(aabb.upper_bound()) - origin;
+    pub fn union(&self, aabb: &Self) -> Self
+    where
+        Scalar<S>: IntrinsicOrd,
+    {
+        let origin = self
+            .lower_bound()
+            .per_item_min_or_undefined(aabb.lower_bound());
+        let extent = self
+            .upper_bound()
+            .per_item_max_or_undefined(aabb.upper_bound())
+            - origin;
         Aabb { origin, extent }
     }
 }
@@ -479,13 +494,11 @@ where
     }
 }
 
-// TODO: This implementation requires `INF` and `-INF` representations and may
-//       interact poorly with partial minima and maxima computations.
 /// Intersection of an axis-aligned bounding box and ray.
 impl<S> Intersection<Ray<S>> for Aabb<S>
 where
     S: EuclideanSpace,
-    Scalar<S>: Bounded + Infinite + Lattice + Signed,
+    Scalar<S>: Bounded + Infinite + IntrinsicOrd + Signed,
 {
     /// The minimum and maximum _times of impact_ of the intersection.
     ///
@@ -539,8 +552,12 @@ where
         let direction = *ray.direction.get();
         let origin = (aabb.origin - ray.origin).zip_map(direction, pdiv);
         let endpoint = ((aabb.endpoint()) - ray.origin).zip_map(direction, pdiv);
-        let min = origin.per_item_partial_min(endpoint).partial_max();
-        let max = origin.per_item_partial_max(endpoint).partial_min();
+        let min = origin
+            .per_item_min_or_undefined(endpoint)
+            .max_or_undefined();
+        let max = origin
+            .per_item_max_or_undefined(endpoint)
+            .min_or_undefined();
         if max.is_negative() || min > max {
             None
         }

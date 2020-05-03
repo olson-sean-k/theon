@@ -20,7 +20,6 @@ pub mod space;
 
 use decorum::R64;
 use num::{self, Num, NumCast, One, Zero};
-use std::cmp::Ordering;
 
 use crate::space::EuclideanSpace;
 
@@ -28,7 +27,6 @@ pub mod prelude {
     //! Re-exports commonly used types and traits.
 
     pub use crate::query::Intersection as _;
-    pub use crate::Lattice as _;
 }
 
 pub type Position<T> = <T as AsPosition>::Position;
@@ -104,68 +102,6 @@ where
     }
 }
 
-pub trait Lattice: PartialOrd + Sized {
-    fn meet(&self, other: &Self) -> Self;
-
-    fn join(&self, other: &Self) -> Self;
-
-    fn meet_join(&self, other: &Self) -> (Self, Self) {
-        (self.meet(other), self.join(other))
-    }
-
-    fn partial_min<'a>(&'a self, other: &'a Self) -> Option<&'a Self> {
-        match self.partial_cmp(other) {
-            Some(Ordering::Greater) => Some(other),
-            Some(_) => Some(self),
-            None => None,
-        }
-    }
-
-    fn partial_max<'a>(&'a self, other: &'a Self) -> Option<&'a Self> {
-        match self.partial_cmp(other) {
-            Some(Ordering::Less) => Some(other),
-            Some(_) => Some(self),
-            None => None,
-        }
-    }
-
-    fn partial_ordered_pair<'a>(&'a self, other: &'a Self) -> Option<(&'a Self, &'a Self)> {
-        match self.partial_cmp(other) {
-            Some(Ordering::Less) => Some((self, other)),
-            Some(_) => Some((other, self)),
-            None => None,
-        }
-    }
-
-    fn partial_clamp<'a>(&'a self, min: &'a Self, max: &'a Self) -> Option<&'a Self> {
-        let _ = (min, max);
-        unimplemented!() // TODO:
-    }
-}
-
-impl<T> Lattice for T
-where
-    T: Copy + PartialOrd + Sized,
-{
-    fn meet(&self, other: &Self) -> Self {
-        if *self <= *other {
-            *self
-        }
-        else {
-            *other
-        }
-    }
-
-    fn join(&self, other: &Self) -> Self {
-        if *self >= *other {
-            *self
-        }
-        else {
-            *other
-        }
-    }
-}
-
 /// Linearly interpolates between two values.
 pub fn lerp<T>(a: T, b: T, f: R64) -> T
 where
@@ -175,23 +111,4 @@ where
     let af = <R64 as NumCast>::from(a).unwrap() * (R64::one() - f);
     let bf = <R64 as NumCast>::from(b).unwrap() * f;
     <T as NumCast>::from(af + bf).unwrap()
-}
-
-// TODO: The use of the `partial_min` and `partial_max` functions in `Fold` and
-//       `ZipMap` obscures the ordering of scalar types and leads to panics.
-//       Partial comparison APIs should always emit `Option` or `Result` types
-//       to allow client code to respond to errors.
-
-fn partial_min<T>(a: T, b: T) -> T
-where
-    T: Copy + Lattice,
-{
-    *a.partial_min(&b).unwrap()
-}
-
-fn partial_max<T>(a: T, b: T) -> T
-where
-    T: Copy + Lattice,
-{
-    *a.partial_max(&b).unwrap()
 }
