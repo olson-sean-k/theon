@@ -4,7 +4,6 @@
 pub use cgmath::*;
 
 use arrayvec::ArrayVec;
-use cgmath;
 use decorum::{Real, R64};
 use num::{Num, NumCast, One, Zero};
 use typenum::consts::{U2, U3};
