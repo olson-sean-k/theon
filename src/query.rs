@@ -558,7 +558,7 @@ where
         let max = origin
             .per_item_max_or_undefined(endpoint)
             .min_or_undefined();
-        if max.is_negative() || min > max {
+        if max.is_negative() || min > max || min.is_undefined() || max.is_undefined() {
             None
         }
         else {
