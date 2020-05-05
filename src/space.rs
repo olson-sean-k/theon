@@ -38,9 +38,15 @@ pub trait Basis: FiniteDimensional + Sized {
     /// equal to the dimensionality of the space.
     ///
     /// For example, the set of canonical basis vectors for the real coordinate
-    /// space $\Reals^2$ is:
+    /// space $\Reals^3$ is:
     ///
-    /// $\\{\begin{bmatrix}1\\\0\end{bmatrix},\begin{bmatrix}0\\\1\end{bmatrix}\\}$
+    /// $$
+    /// \\left\\{
+    /// \begin{bmatrix}1\\\0\\\0\end{bmatrix},
+    /// \begin{bmatrix}0\\\1\\\0\end{bmatrix},
+    /// \begin{bmatrix}0\\\0\\\1\end{bmatrix}
+    /// \\right\\}
+    /// $$
     fn canonical_basis() -> Self::Bases;
 
     fn canonical_basis_component(index: usize) -> Option<Self> {

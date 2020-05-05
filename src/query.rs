@@ -294,7 +294,7 @@ where
     ///
     /// Given a line formed from an origin $P_0$ and a unit direction
     /// $\hat{u}$, the point of intersection with the plane is $P_0 +
-    /// (t\hat{u})$.
+    /// t\hat{u}$.
     fn intersection(&self, plane: &Plane<S>) -> Option<Self::Output> {
         let line = self;
         let direction = *line.direction.get();
@@ -569,7 +569,7 @@ where
     /// intersection with an `Aabb`.
     ///
     /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
-    /// the nearest point of intersection is $P_0 + (t_{min}\hat{u})$.
+    /// the nearest point of intersection is $P_0 + t_{min}\hat{u}$.
     ///
     /// # Examples
     ///
@@ -680,7 +680,7 @@ where
     /// Determines the _time of impact_ of a `Ray` intersection with a `Plane`.
     ///
     /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
-    /// the point of intersection with the plane is $P_0 + (t\hat{u})$.
+    /// the point of intersection with the plane is $P_0 + t\hat{u}$.
     fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
         let plane = self;
         ray.into_line().intersection(plane).and_then(|t| {
