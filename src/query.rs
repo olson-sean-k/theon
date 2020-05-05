@@ -5,6 +5,7 @@
 use decorum::cmp::IntrinsicOrd;
 use decorum::{Infinite, Real};
 use num::{Bounded, Signed, Zero};
+use std::fmt::{self, Debug, Formatter};
 use std::ops::Neg;
 use typenum::type_operators::Cmp;
 use typenum::{Greater, U0, U1, U2};
@@ -249,6 +250,20 @@ where
     }
 }
 
+impl<S> Debug for Line<S>
+where
+    S: Debug + EuclideanSpace,
+    Vector<S>: Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("Line")
+            .field("origin", &self.origin)
+            .field("direction", &self.direction)
+            .finish()
+    }
+}
+
 impl<S> Default for Line<S>
 where
     S: EuclideanSpace,
@@ -331,6 +346,20 @@ where
             origin,
             direction: Unit::from_inner_unchecked(-direction.into_inner()),
         }
+    }
+}
+
+impl<S> Debug for Ray<S>
+where
+    S: Debug + EuclideanSpace,
+    Vector<S>: Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("Ray")
+            .field("origin", &self.origin)
+            .field("direction", &self.direction)
+            .finish()
     }
 }
 
@@ -446,6 +475,20 @@ where
             .per_item_max_or_undefined(aabb.upper_bound())
             - origin;
         Aabb { origin, extent }
+    }
+}
+
+impl<S> Debug for Aabb<S>
+where
+    S: Debug + EuclideanSpace,
+    Vector<S>: Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("Aabb")
+            .field("origin", &self.origin)
+            .field("extent", &self.extent)
+            .finish()
     }
 }
 
@@ -585,6 +628,20 @@ where
 {
 }
 
+impl<S> Debug for Plane<S>
+where
+    S: Debug + EuclideanSpace,
+    Vector<S>: Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        formatter
+            .debug_struct("Plane")
+            .field("origin", &self.origin)
+            .field("normal", &self.normal)
+            .finish()
+    }
+}
+
 /// Intersection of a plane and a ray.
 impl<S> Intersection<Ray<S>> for Plane<S>
 where
@@ -639,13 +696,19 @@ mod tests {
             origin: Converged::converged(1.0),
             extent: Converged::converged(2.0),
         };
-        // TODO: Implement `Debug` for query types.
-        assert!(
+        assert_eq!(Some(aabb1), aabb1.intersection(&aabb1));
+        assert_eq!(
             Some(Aabb::<E2> {
                 origin: Converged::converged(1.0),
                 extent: Converged::converged(1.0),
-            }) == aabb1.intersection(&aabb2)
+            }),
+            aabb1.intersection(&aabb2)
         );
+        let aabb2 = Aabb::<E2> {
+            origin: Converged::converged(-3.0),
+            extent: Converged::converged(2.0),
+        };
+        assert_eq!(None, aabb1.intersection(&aabb2));
     }
 
     #[test]
