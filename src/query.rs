@@ -504,6 +504,27 @@ where
     }
 }
 
+/// Intersection of an axis-aligned bounding box and a point.
+impl<S> Intersection<S> for Aabb<S>
+where
+    S: EuclideanSpace,
+    Scalar<S>: IntrinsicOrd + Signed,
+{
+    type Output = Vector<S>;
+
+    fn intersection(&self, point: &S) -> Option<Self::Output> {
+        let aabb = self;
+        let lower = aabb.lower_bound().per_item_max_or_undefined(*point);
+        let upper = aabb.upper_bound().per_item_min_or_undefined(*point);
+        if lower == upper {
+            Some(*point - aabb.lower_bound())
+        }
+        else {
+            None
+        }
+    }
+}
+
 /// Intersection of axis-aligned bounding boxes.
 impl<S> Intersection<Aabb<S>> for Aabb<S>
 where
@@ -681,7 +702,7 @@ mod tests {
 
     use crate::adjunct::Converged;
     use crate::query::{Aabb, Intersection, Plane, Ray, Unit};
-    use crate::space::{Basis, EuclideanSpace};
+    use crate::space::{Basis, EuclideanSpace, Vector};
 
     type E2 = Point2<f64>;
     type E3 = Point3<f64>;
@@ -702,13 +723,28 @@ mod tests {
                 origin: Converged::converged(1.0),
                 extent: Converged::converged(1.0),
             }),
-            aabb1.intersection(&aabb2)
+            aabb1.intersection(&aabb2),
         );
         let aabb2 = Aabb::<E2> {
             origin: Converged::converged(-3.0),
             extent: Converged::converged(2.0),
         };
         assert_eq!(None, aabb1.intersection(&aabb2));
+    }
+
+    #[test]
+    fn aabb_point_intersection_e2() {
+        let aabb = Aabb::<E2> {
+            origin: EuclideanSpace::origin(),
+            extent: Converged::converged(2.0),
+        };
+        let point = E2::converged(1.0);
+        assert_eq!(
+            Some(Vector::<E2>::converged(1.0)),
+            aabb.intersection(&point),
+        );
+        let point = E2::converged(3.0);
+        assert_eq!(None, aabb.intersection(&point));
     }
 
     #[test]
