@@ -80,6 +80,20 @@ pub trait Intersection<T> {
     fn intersection(&self, other: &T) -> Option<Self::Output>;
 }
 macro_rules! impl_symmetrical_intersection {
+    ($a:ident $(,)?) => {
+        /// Symmetrical intersection.
+        impl<S> Intersection<$a<S>> for S
+        where
+            S: EuclideanSpace,
+            $a<S>: Intersection<S>,
+        {
+            type Output = <$a<S> as Intersection<S>>::Output;
+
+            fn intersection(&self, other: &$a<S>) -> Option<Self::Output> {
+                other.intersection(self)
+            }
+        }
+    };
     ($a:ident, $b:ident $(,)?) => {
         /// Symmetrical intersection.
         impl<S> Intersection<$a<S>> for $b<S>
@@ -524,6 +538,7 @@ where
         }
     }
 }
+impl_symmetrical_intersection!(Aabb);
 
 /// Intersection of axis-aligned bounding boxes.
 impl<S> Intersection<Aabb<S>> for Aabb<S>
