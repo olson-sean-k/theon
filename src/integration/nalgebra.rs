@@ -134,7 +134,7 @@ where
     type N = <DimNameMaximum<R, C> as DimName>::Value;
 }
 
-impl<T, U, R, C> Fold<U> for MatrixMN<T, R, C>
+impl<T, R, C> Fold for MatrixMN<T, R, C>
 where
     // TODO: Re-examine adjunct traits that take items by value.
     T: Clone + Scalar,
@@ -142,7 +142,7 @@ where
     C: DimName,
     DefaultAllocator: Allocator<T, R, C>,
 {
-    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
@@ -497,13 +497,13 @@ where
     type N = D::Value;
 }
 
-impl<T, U, D> Fold<U> for Point<T, D>
+impl<T, D> Fold for Point<T, D>
 where
     T: Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
 {
-    fn fold<F>(self, seed: U, f: F) -> U
+    fn fold<U, F>(self, seed: U, f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {

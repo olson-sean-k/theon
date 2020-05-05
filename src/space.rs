@@ -74,11 +74,12 @@ pub trait Basis: FiniteDimensional + Sized {
 
 pub trait VectorSpace:
     Add<Output = Self>
+    + Adjunct<Item = <Self as VectorSpace>::Scalar>
     + Copy
-    + Fold<<Self as VectorSpace>::Scalar>
+    + Fold
+    + PartialEq
     + Mul<<Self as VectorSpace>::Scalar, Output = Self>
     + Neg<Output = Self>
-    + Adjunct<Item = <Self as VectorSpace>::Scalar>
     + Zero
     + ZipMap<<Self as VectorSpace>::Scalar, Output = Self>
 {
@@ -246,9 +247,10 @@ where
 
 pub trait AffineSpace:
     Add<<Self as AffineSpace>::Translation, Output = Self>
-    + Copy
-    + Fold<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
     + Adjunct<Item = <<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
+    + Copy
+    + Fold
+    + PartialEq
     + Sub<Output = <Self as AffineSpace>::Translation>
     + ZipMap<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar, Output = Self>
 {

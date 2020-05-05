@@ -98,7 +98,7 @@ macro_rules! impl_symmetrical_intersection {
 /// Unit vector.
 ///
 /// Primarily represents a direction within an `InnerSpace`.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Unit<S>
 where
     S: InnerSpace,
@@ -228,7 +228,7 @@ where
 ///
 /// This representation is typically known as the _vector form_ $P_0 +
 /// t\hat{u}$ where $t$ is some non-zero _time of impact_.
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Line<S>
 where
     S: EuclideanSpace,
@@ -247,13 +247,6 @@ where
         let Line { origin, direction } = self;
         Ray { origin, direction }
     }
-}
-
-impl<S> Copy for Line<S>
-where
-    S: EuclideanSpace,
-    Vector<S>: Copy,
-{
 }
 
 impl<S> Default for Line<S>
@@ -308,7 +301,7 @@ impl_symmetrical_intersection!(Line, Plane);
 /// _direction_. Rays extend infinitely from their origin. The origin $P_0$ and
 /// the point $P_0 + \hat{u}$ (where $\hat{u}$ is the direction of the ray)
 /// form a half-line originating from $P_0$.
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Ray<S>
 where
     S: EuclideanSpace,
@@ -341,13 +334,6 @@ where
     }
 }
 
-impl<S> Copy for Ray<S>
-where
-    S: EuclideanSpace,
-    Vector<S>: Copy,
-{
-}
-
 impl<S> Default for Ray<S>
 where
     S: EuclideanSpace,
@@ -376,7 +362,7 @@ where
 /// Represents an $n$-dimensional volume along each basis vector of a Euclidean
 /// space. The bounding box is defined by the region between its _origin_ and
 /// _endpoint_.
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq)]
 pub struct Aabb<S>
 where
     S: EuclideanSpace,
@@ -463,13 +449,6 @@ where
     }
 }
 
-impl<S> Copy for Aabb<S>
-where
-    S: EuclideanSpace,
-    Vector<S>: Copy,
-{
-}
-
 impl<S> Default for Aabb<S>
 where
     S: EuclideanSpace,
@@ -486,15 +465,31 @@ where
 impl<S> Intersection<Aabb<S>> for Aabb<S>
 where
     S: EuclideanSpace,
+    Scalar<S>: IntrinsicOrd + Signed,
 {
     type Output = Self;
 
-    fn intersection(&self, _: &Aabb<S>) -> Option<Self::Output> {
-        None // TODO:
+    fn intersection(&self, other: &Aabb<S>) -> Option<Self::Output> {
+        let max_lower_bound = self
+            .lower_bound()
+            .per_item_max_or_undefined(other.lower_bound());
+        let min_upper_bound = self
+            .upper_bound()
+            .per_item_min_or_undefined(other.upper_bound());
+        let difference = min_upper_bound - max_lower_bound;
+        if difference.all(|x| (!x.is_undefined()) && x.is_positive()) {
+            Some(Aabb {
+                origin: max_lower_bound,
+                extent: difference,
+            })
+        }
+        else {
+            None
+        }
     }
 }
 
-/// Intersection of an axis-aligned bounding box and ray.
+/// Intersection of an axis-aligned bounding box and a ray.
 impl<S> Intersection<Ray<S>> for Aabb<S>
 where
     S: EuclideanSpace,
@@ -568,6 +563,12 @@ where
 }
 impl_symmetrical_intersection!(Aabb, Ray);
 
+//impl<S> PartialEq for Aabb<S>
+//where
+//    S: EuclideanSpace,
+//{
+//}
+
 #[derive(Clone)]
 pub struct Plane<S>
 where
@@ -627,6 +628,25 @@ mod tests {
 
     type E2 = Point2<f64>;
     type E3 = Point3<f64>;
+
+    #[test]
+    fn aabb_aabb_intersection_e2() {
+        let aabb1 = Aabb::<E2> {
+            origin: EuclideanSpace::origin(),
+            extent: Converged::converged(2.0),
+        };
+        let aabb2 = Aabb::<E2> {
+            origin: Converged::converged(1.0),
+            extent: Converged::converged(2.0),
+        };
+        // TODO: Implement `Debug` for query types.
+        assert!(
+            Some(Aabb::<E2> {
+                origin: Converged::converged(1.0),
+                extent: Converged::converged(1.0),
+            }) == aabb1.intersection(&aabb2)
+        );
+    }
 
     #[test]
     fn aabb_ray_intersection_e2() {

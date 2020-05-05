@@ -149,11 +149,11 @@ impl<T> FiniteDimensional for Vector3<T> {
     type N = U3;
 }
 
-impl<T, U> Fold<U> for Vector2<T>
+impl<T> Fold for Vector2<T>
 where
     T: Copy,
 {
-    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
@@ -164,11 +164,11 @@ where
     }
 }
 
-impl<T, U> Fold<U> for Vector3<T>
+impl<T> Fold for Vector3<T>
 where
     T: Copy,
 {
-    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
@@ -422,11 +422,11 @@ impl<T> FiniteDimensional for Point3<T> {
     type N = U3;
 }
 
-impl<T, U> Fold<U> for Point2<T>
+impl<T> Fold for Point2<T>
 where
     T: Copy,
 {
-    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
@@ -437,11 +437,11 @@ where
     }
 }
 
-impl<T, U> Fold<U> for Point3<T>
+impl<T> Fold for Point3<T>
 where
     T: Copy,
 {
-    fn fold<F>(self, mut seed: U, mut f: F) -> U
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {

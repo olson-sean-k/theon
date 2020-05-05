@@ -98,41 +98,65 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
     }
 }
 
-pub trait Fold<T = <Self as Adjunct>::Item>: Adjunct {
-    fn fold<F>(self, seed: T, f: F) -> T
+pub trait Fold: Adjunct {
+    fn fold<T, F>(self, seed: T, f: F) -> T
     where
         F: FnMut(T, Self::Item) -> T;
 
-    fn sum(self) -> T
+    fn sum(self) -> Self::Item
     where
-        Self: Adjunct<Item = T>,
-        T: Add<Output = T> + Zero,
+        Self::Item: Add<Output = Self::Item> + Zero,
     {
         self.fold(Zero::zero(), |sum, n| sum + n)
     }
 
-    fn product(self) -> T
+    fn product(self) -> Self::Item
     where
-        Self: Adjunct<Item = T>,
-        T: Mul<Output = T> + One,
+        Self::Item: Mul<Output = Self::Item> + One,
     {
         self.fold(One::one(), |product, n| product * n)
     }
 
-    fn min_or_undefined(self) -> T
+    fn min_or_undefined(self) -> Self::Item
     where
-        Self: Adjunct<Item = T>,
-        T: Bounded + Copy + IntrinsicOrd,
+        Self::Item: Bounded + Copy + IntrinsicOrd,
     {
         self.fold(Bounded::max_value(), cmp::min_or_undefined)
     }
 
-    fn max_or_undefined(self) -> T
+    fn max_or_undefined(self) -> Self::Item
     where
-        Self: Adjunct<Item = T>,
-        T: Bounded + Copy + IntrinsicOrd,
+        Self::Item: Bounded + Copy + IntrinsicOrd,
     {
         self.fold(Bounded::min_value(), cmp::max_or_undefined)
+    }
+
+    fn any<F>(self, mut f: F) -> bool
+    where
+        F: FnMut(Self::Item) -> bool,
+    {
+        self.fold(false, |sum, item| {
+            if sum {
+                sum
+            }
+            else {
+                f(item)
+            }
+        })
+    }
+
+    fn all<F>(self, mut f: F) -> bool
+    where
+        F: FnMut(Self::Item) -> bool,
+    {
+        self.fold(true, |sum, item| {
+            if sum {
+                f(item)
+            }
+            else {
+                sum
+            }
+        })
     }
 }
 
@@ -156,8 +180,8 @@ where
     }
 }
 
-impl<T, U> Fold<U> for (T, T) {
-    fn fold<F>(self, mut seed: U, mut f: F) -> U
+impl<T> Fold for (T, T) {
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
@@ -167,8 +191,8 @@ impl<T, U> Fold<U> for (T, T) {
     }
 }
 
-impl<T, U> Fold<U> for (T, T, T) {
-    fn fold<F>(self, mut seed: U, mut f: F) -> U
+impl<T> Fold for (T, T, T) {
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
