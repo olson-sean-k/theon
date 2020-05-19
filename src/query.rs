@@ -3,7 +3,7 @@
 //! This module provides types and traits for performing spatial queries.
 
 use decorum::cmp::IntrinsicOrd;
-use decorum::{Infinite, Real};
+use decorum::Infinite;
 use num::{Bounded, Signed, Zero};
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Neg;

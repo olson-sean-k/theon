@@ -84,7 +84,7 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
     fn per_item_min_or_undefined(self, other: Self) -> Self::Output
     where
         Self: Adjunct<Item = T>,
-        T: Copy + IntrinsicOrd,
+        T: IntrinsicOrd,
     {
         self.zip_map(other, cmp::min_or_undefined)
     }
@@ -92,7 +92,7 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
     fn per_item_max_or_undefined(self, other: Self) -> Self::Output
     where
         Self: Adjunct<Item = T>,
-        T: Copy + IntrinsicOrd,
+        T: IntrinsicOrd,
     {
         self.zip_map(other, cmp::max_or_undefined)
     }
@@ -119,14 +119,14 @@ pub trait Fold: Adjunct {
 
     fn min_or_undefined(self) -> Self::Item
     where
-        Self::Item: Bounded + Copy + IntrinsicOrd,
+        Self::Item: Bounded + IntrinsicOrd,
     {
         self.fold(Bounded::max_value(), cmp::min_or_undefined)
     }
 
     fn max_or_undefined(self) -> Self::Item
     where
-        Self::Item: Bounded + Copy + IntrinsicOrd,
+        Self::Item: Bounded + IntrinsicOrd,
     {
         self.fold(Bounded::min_value(), cmp::max_or_undefined)
     }

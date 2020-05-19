@@ -109,7 +109,7 @@ where
 
 impl<T, R, C> DualSpace for MatrixMN<T, R, C>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
     R: DimName + DimNameMin<C, Output = U1>,
     C: DimName + DimNameMin<R, Output = U1>,
     DefaultAllocator: Allocator<T, R, C> + Allocator<T, C, R>,
@@ -170,7 +170,7 @@ where
 
 impl<T, D> InnerSpace for VectorN<T, D>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
     Self: Copy,
@@ -236,7 +236,7 @@ where
 // TODO: Use a (more) generic implementation.
 impl<T> Matrix for Matrix2<T>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     type Row = RowVector2<T>;
     type Column = Vector2<T>;
@@ -267,7 +267,7 @@ where
 
 impl<T> Matrix for Matrix3<T>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     type Row = RowVector3<T>;
     type Column = Vector3<T>;
@@ -299,7 +299,7 @@ where
 // TODO: Use a (more) generic implementation.
 impl<T> MulMN<Matrix2<T>> for Matrix2<T>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     type Output = Matrix2<T>;
 
@@ -310,7 +310,7 @@ where
 
 impl<T> MulMN<Matrix3<T>> for Matrix3<T>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     type Output = Matrix3<T>;
 
@@ -321,7 +321,7 @@ where
 
 // TODO: It is possible to implement `Pop` for both column and row vectors.
 //       However, this is not possible for `Push`, because it may be ambiguous
-//       if a push should proceed down a row or column.  Moreover, the type
+//       if a push should proceed down a row or column. Moreover, the type
 //       bounds to constrain such an implementation would be very complex.
 //
 //  impl<T, R, C> Pop for MatrixMN<T, R, C>
@@ -388,7 +388,7 @@ where
 
 impl<T> SquareMatrix for Matrix2<T>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     fn multiplicative_identity() -> Self {
         nalgebra::Matrix2::<T>::identity()
@@ -397,7 +397,7 @@ where
 
 impl<T> SquareMatrix for Matrix3<T>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     fn multiplicative_identity() -> Self {
         nalgebra::Matrix3::<T>::identity()
@@ -406,7 +406,7 @@ where
 
 impl<T, R, C> VectorSpace for MatrixMN<T, R, C>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar,
     R: DimName,
     C: DimName,
     DefaultAllocator: Allocator<T, R, C>,
@@ -448,7 +448,7 @@ where
 
 impl<T, D> AffineSpace for Point<T, D>
 where
-    T: AddAssign + MulAssign + Real + Scalar + SubAssign,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar + SubAssign,
     D: DimName,
     DefaultAllocator: Allocator<T, D>,
     <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
@@ -469,7 +469,7 @@ where
 
 impl<T, D> EuclideanSpace for Point<T, D>
 where
-    T: AddAssign + MulAssign + Real + Scalar + SubAssign,
+    T: AddAssign + MulAssign + NumCast + Real + Scalar + SubAssign,
     D: DimName,
     D::Value: NonZero,
     DefaultAllocator: Allocator<T, D>,

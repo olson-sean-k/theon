@@ -41,6 +41,7 @@ pub trait Basis: FiniteDimensional + Sized {
     /// space $\Reals^3$ is:
     ///
     /// $$
+    /// \\{\hat{i},\hat{j},\hat{k}\\}=
     /// \\left\\{
     /// \begin{bmatrix}1\\\0\\\0\end{bmatrix},
     /// \begin{bmatrix}0\\\1\\\0\end{bmatrix},
@@ -89,7 +90,7 @@ pub trait VectorSpace:
     + Zero
     + ZipMap<<Self as VectorSpace>::Scalar, Output = Self>
 {
-    type Scalar: Copy + Real;
+    type Scalar: NumCast + Real;
 
     fn scalar_component(&self, index: usize) -> Option<&Self::Scalar>;
 
