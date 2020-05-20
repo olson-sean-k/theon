@@ -8,7 +8,7 @@ use typenum::consts::{U0, U1, U2, U3};
 use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
-use crate::adjunct::{Adjunct, Fold, Pop, Push, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Fold, Pop, Push, ZipMap};
 use crate::ops::{Dot, Project};
 use crate::AsPosition;
 
@@ -84,17 +84,17 @@ pub trait Basis: FiniteDimensional + Sized {
 pub trait VectorSpace:
     Add<Output = Self>
     + Adjunct<Item = <Self as VectorSpace>::Scalar>
+    + Converged
     + Copy
     + Fold
     + PartialEq
     + Mul<<Self as VectorSpace>::Scalar, Output = Self>
     + Neg<Output = Self>
-    + Zero
     + ZipMap<<Self as VectorSpace>::Scalar, Output = Self>
 {
     type Scalar: AbsDiffEq + NumCast + Real;
 
-    fn scalar_component(&self, index: usize) -> Option<&Self::Scalar>;
+    fn scalar_component(&self, index: usize) -> Option<Self::Scalar>;
 
     fn from_x(x: Self::Scalar) -> Self
     where
@@ -143,7 +143,7 @@ pub trait VectorSpace:
         Self: FiniteDimensional,
         Self::N: Cmp<U0, Output = Greater>,
     {
-        *self.scalar_component(0).unwrap()
+        self.scalar_component(0).unwrap()
     }
 
     fn y(&self) -> Self::Scalar
@@ -151,7 +151,7 @@ pub trait VectorSpace:
         Self: FiniteDimensional,
         Self::N: Cmp<U1, Output = Greater>,
     {
-        *self.scalar_component(1).unwrap()
+        self.scalar_component(1).unwrap()
     }
 
     fn z(&self) -> Self::Scalar
@@ -159,7 +159,15 @@ pub trait VectorSpace:
         Self: FiniteDimensional,
         Self::N: Cmp<U2, Output = Greater>,
     {
-        *self.scalar_component(2).unwrap()
+        self.scalar_component(2).unwrap()
+    }
+
+    fn zero() -> Self {
+        Converged::converged(Zero::zero())
+    }
+
+    fn is_zero(&self) -> bool {
+        self.all(|x| x.is_zero())
     }
 
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
@@ -259,7 +267,7 @@ pub trait Matrix: VectorSpace {
         Self::Row::dimensions()
     }
 
-    fn scalar_component(&self, row: usize, column: usize) -> Option<&Self::Scalar> {
+    fn scalar_component(&self, row: usize, column: usize) -> Option<Self::Scalar> {
         <Self as VectorSpace>::scalar_component(self, row + (column * Self::row_count()))
     }
 

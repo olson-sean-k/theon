@@ -416,8 +416,8 @@ where
 {
     type Scalar = T;
 
-    fn scalar_component(&self, index: usize) -> Option<&Self::Scalar> {
-        self.get(index)
+    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
+        self.get(index).cloned()
     }
 }
 

@@ -14,22 +14,24 @@ dependents.
 
 ## Geometric Traits
 
-Theon provides geometric traits that model [Euclidean spaces][1]. These traits
-are not always mathematically rigorous, but this allows them to be implemented
-for many types. APIs are designed for computations in lower dimensional
-Euclidean spaces, but traits and types are generic with respect to dimension.
+Theon provides geometric traits that model [Euclidean spaces][space]. These
+traits are not always mathematically rigorous, but this allows them to be
+implemented for many types. APIs are designed for computations in lower
+dimensional Euclidean spaces, but traits and types are generic with respect to
+dimension.
 
 ## Integrations
 
 Theon provides optional implementations for commonly used crates in the Rust
-ecosystem, including [`cgmath`], [`mint`], and [`nalgebra`]. These
+ecosystem, including [`cgmath`], [`glam`], [`mint`], and [`nalgebra`]. These
 implementations can be enabled using Cargo features.
 
-| Feature             | Default | Crate        | Support  |
-|---------------------|---------|--------------|----------|
-| `geometry-cgmath`   | No      | [`cgmath`]   | Complete |
-| `geometry-mint`     | No      | [`mint`]     | Partial  |
-| `geometry-nalgebra` | Yes     | [`nalgebra`] | Complete |
+| Feature             | Default | Crate        | Support   |
+|---------------------|---------|--------------|-----------|
+| `geometry-cgmath`   | No      | [`cgmath`]   | Complete¹ |
+| `geometry-glam`     | No      | [`glam`]     | Complete¹ |
+| `geometry-mint`     | No      | [`mint`]     | Partial   |
+| `geometry-nalgebra` | Yes     | [`nalgebra`] | Complete¹ |
 
 Integrated crates are re-exported in the `integration` module. Because a given
 version of Theon implements traits for specific versions of integrated crates,
@@ -37,6 +39,11 @@ care must be taken to align these versions. Dependent crates can either use the
 re-exported crates provided by Theon with no direct dependency or ensure that
 the version of a supported crate resolves to the same version for which Theon
 implements its traits.
+
+\[1\]: Because Theon is still in its initial development phase, _complete_ does
+not necessarily mean that all traits and features are implemented, but instead
+that all traits and features can be feasibly supported and are implemented for
+common use cases.
 
 ## Spatial Queries
 
@@ -64,21 +71,24 @@ assert_eq!(None, ray.reverse().intersection(&aabb));
 ```
 
 In the above example, it is possible to replace the `E2` type definition with
-types from [`cgmath`] or any other type that implements `EuclideanSpace`, etc.
+types from [`cgmath`], [`glam`], or any other type that implements
+`EuclideanSpace`, etc.
 
 ## LAPACK
 
 Some queries require solving linear systems of arbitrary and non-trivial size.
 To support these queries, the `lapack` feature depends on [`ndarray`] and
-[LAPACK][2] libraries. For example, `Plane::from_points` is enabled by the
+[LAPACK][lapack] libraries. For example, `Plane::from_points` is enabled by the
 `lapack` feature and computes a best-fit plane using a singular value
 decomposition.
 
 The `lapack` feature only supports Linux at this time.
 
-[1]: https://en.wikipedia.org/wiki/euclidean_space
-[2]: https://en.wikipedia.org/wiki/lapack
+[space]: https://en.wikipedia.org/wiki/euclidean_space
+[lapack]: https://en.wikipedia.org/wiki/lapack
+
 [`cgmath`]: https://crates.io/crates/cgmath
+[`glam`]: https://crates.io/crates/glam
 [`mint`]: https://crates.io/crates/mint
 [`nalgebra`]: https://crates.io/crates/nalgebra
 [`ndarray`]: https://crates.io/crates/ndarray

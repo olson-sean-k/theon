@@ -299,10 +299,10 @@ where
 {
     type Scalar = T;
 
-    fn scalar_component(&self, index: usize) -> Option<&Self::Scalar> {
+    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
         match index {
-            0 => Some(&self.x),
-            1 => Some(&self.y),
+            0 => Some(self.x),
+            1 => Some(self.y),
             _ => None,
         }
     }
@@ -318,11 +318,11 @@ where
 {
     type Scalar = T;
 
-    fn scalar_component(&self, index: usize) -> Option<&Self::Scalar> {
+    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
         match index {
-            0 => Some(&self.x),
-            1 => Some(&self.y),
-            2 => Some(&self.z),
+            0 => Some(self.x),
+            1 => Some(self.y),
+            2 => Some(self.z),
             _ => None,
         }
     }
