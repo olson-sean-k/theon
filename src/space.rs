@@ -1,5 +1,6 @@
 //! Vector and affine spaces.
 
+use approx::AbsDiffEq;
 use decorum::Real;
 use num::{NumCast, One, Zero};
 use std::ops::{Add, Mul, Neg, Sub};
@@ -90,7 +91,7 @@ pub trait VectorSpace:
     + Zero
     + ZipMap<<Self as VectorSpace>::Scalar, Output = Self>
 {
-    type Scalar: NumCast + Real;
+    type Scalar: AbsDiffEq + NumCast + Real;
 
     fn scalar_component(&self, index: usize) -> Option<&Self::Scalar>;
 

@@ -3,6 +3,7 @@
 #[doc(hidden)]
 pub use cgmath::*;
 
+use approx::AbsDiffEq;
 use arrayvec::ArrayVec;
 use decorum::{Real, R64};
 use num::{Num, NumCast, One, Zero};
@@ -121,7 +122,7 @@ where
 
 impl<T> DualSpace for Vector2<T>
 where
-    T: BaseNum + Real,
+    T: AbsDiffEq + BaseNum + Real,
 {
     type Dual = Self;
 
@@ -132,7 +133,7 @@ where
 
 impl<T> DualSpace for Vector3<T>
 where
-    T: BaseNum + Real,
+    T: AbsDiffEq + BaseNum + Real,
 {
     type Dual = Self;
 
@@ -293,7 +294,7 @@ where
 
 impl<T> VectorSpace for Vector2<T>
 where
-    T: BaseNum + Real,
+    T: AbsDiffEq + BaseNum + Real,
 {
     type Scalar = T;
 
@@ -312,7 +313,7 @@ where
 
 impl<T> VectorSpace for Vector3<T>
 where
-    T: BaseNum + Real,
+    T: AbsDiffEq + BaseNum + Real,
 {
     type Scalar = T;
 
@@ -362,14 +363,14 @@ impl<T> Adjunct for Point3<T> {
 
 impl<T> AffineSpace for Point2<T>
 where
-    T: BaseNum + Real,
+    T: AbsDiffEq + BaseNum + Real,
 {
     type Translation = Vector2<T>;
 }
 
 impl<T> AffineSpace for Point3<T>
 where
-    T: BaseNum + Real,
+    T: AbsDiffEq + BaseNum + Real,
 {
     type Translation = Vector3<T>;
 }

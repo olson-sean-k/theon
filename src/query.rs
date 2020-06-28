@@ -2,7 +2,7 @@
 //!
 //! This module provides types and traits for performing spatial queries.
 
-use approx::{abs_diff_eq, AbsDiffEq};
+use approx::abs_diff_eq;
 use decorum::cmp::IntrinsicOrd;
 use decorum::Infinite;
 use num::{Bounded, Signed, Zero};
@@ -302,7 +302,6 @@ impl<S> Intersection<Plane<S>> for Line<S>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: AbsDiffEq,
 {
     // TODO: Update this documentation.
     /// The _time of impact_ of the intersection.
@@ -590,7 +589,7 @@ where
 impl<S> Intersection<Ray<S>> for Aabb<S>
 where
     S: EuclideanSpace,
-    Scalar<S>: AbsDiffEq + Bounded + Infinite + IntrinsicOrd + Signed,
+    Scalar<S>: Bounded + Infinite + IntrinsicOrd + Signed,
 {
     /// The minimum and maximum _times of impact_ of the intersection.
     ///
@@ -701,7 +700,7 @@ impl<S> Intersection<Ray<S>> for Plane<S>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: AbsDiffEq + Signed,
+    Scalar<S>: Signed,
 {
     // TODO: Update this documentation.
     /// The _time of impact_ of the intersection.
