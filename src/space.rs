@@ -55,7 +55,7 @@ pub trait Basis: FiniteDimensional + Sized {
     }
 
     /// Gets the canonical basis vector $\hat{i}$ that describes the $x$ axis.
-    fn x() -> Self
+    fn i() -> Self
     where
         Self::N: Cmp<U0, Output = Greater>,
     {
@@ -63,7 +63,7 @@ pub trait Basis: FiniteDimensional + Sized {
     }
 
     /// Gets the canonical basis vector $\hat{j}$ that describes the $y$ axis.
-    fn y() -> Self
+    fn j() -> Self
     where
         Self::N: Cmp<U1, Output = Greater>,
     {
@@ -71,7 +71,7 @@ pub trait Basis: FiniteDimensional + Sized {
     }
 
     /// Gets the canonical basis vector $\hat{k}$ that describes the $z$ axis.
-    fn z() -> Self
+    fn k() -> Self
     where
         Self::N: Cmp<U2, Output = Greater>,
     {
@@ -98,40 +98,66 @@ pub trait VectorSpace:
     where
         Self: Basis + FiniteDimensional<N = U1>,
     {
-        Self::x() * x
+        Self::i() * x
     }
 
     fn from_xy(x: Self::Scalar, y: Self::Scalar) -> Self
     where
         Self: Basis + FiniteDimensional<N = U2>,
     {
-        (Self::x() * x) + (Self::y() * y)
+        (Self::i() * x) + (Self::j() * y)
     }
 
     fn from_xyz(x: Self::Scalar, y: Self::Scalar, z: Self::Scalar) -> Self
     where
         Self: Basis + FiniteDimensional<N = U3>,
     {
-        (Self::x() * x) + (Self::y() * y) + (Self::z() * z)
+        (Self::i() * x) + (Self::j() * y) + (Self::k() * z)
     }
 
-    fn into_x(self) -> Self::Scalar {
+    fn into_x(self) -> Self::Scalar
+    where
+        Self: FiniteDimensional<N = U1>,
+    {
+        self.x()
+    }
+
+    fn into_xy(self) -> (Self::Scalar, Self::Scalar)
+    where
+        Self: FiniteDimensional<N = U2>,
+    {
+        (self.x(), self.y())
+    }
+
+    fn into_xyz(self) -> (Self::Scalar, Self::Scalar, Self::Scalar)
+    where
+        Self: FiniteDimensional<N = U3>,
+    {
+        (self.x(), self.y(), self.z())
+    }
+
+    fn x(&self) -> Self::Scalar
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U0, Output = Greater>,
+    {
         *self.scalar_component(0).unwrap()
     }
 
-    fn into_xy(self) -> (Self::Scalar, Self::Scalar) {
-        (
-            *self.scalar_component(0).unwrap(),
-            *self.scalar_component(1).unwrap(),
-        )
+    fn y(&self) -> Self::Scalar
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U1, Output = Greater>,
+    {
+        *self.scalar_component(1).unwrap()
     }
 
-    fn into_xyz(self) -> (Self::Scalar, Self::Scalar, Self::Scalar) {
-        (
-            *self.scalar_component(0).unwrap(),
-            *self.scalar_component(1).unwrap(),
-            *self.scalar_component(2).unwrap(),
-        )
+    fn z(&self) -> Self::Scalar
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U2, Output = Greater>,
+    {
+        *self.scalar_component(2).unwrap()
     }
 
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>

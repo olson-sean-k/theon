@@ -69,7 +69,7 @@ use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar,
 /// };
 /// let ray = Ray::<E2> {
 ///     origin: EuclideanSpace::origin(),
-///     direction: Unit::try_from_inner(Basis::x()).unwrap(),
+///     direction: Unit::try_from_inner(Basis::i()).unwrap(),
 /// };
 /// if let Some((min, max)) = ray.intersection(&aabb) {
 ///     // ...
@@ -153,7 +153,7 @@ where
     ///
     /// type R3 = Vector3<f64>;
     ///
-    /// let unit = Unit::<R3>::try_from_inner(Basis::x()).unwrap();
+    /// let unit = Unit::<R3>::try_from_inner(Basis::i()).unwrap();
     /// ```
     pub fn try_from_inner(inner: S) -> Option<Self> {
         inner.normalize().map(|inner| Unit { inner })
@@ -168,7 +168,7 @@ where
         S: Basis + FiniteDimensional,
         S::N: Cmp<U0, Output = Greater>,
     {
-        Self::try_from_inner(Basis::x()).expect("zero-vector")
+        Self::from_inner_unchecked(Basis::i())
     }
 
     pub fn y() -> Self
@@ -176,7 +176,7 @@ where
         S: Basis + FiniteDimensional,
         S::N: Cmp<U1, Output = Greater>,
     {
-        Self::try_from_inner(Basis::y()).expect("zero-vector")
+        Self::from_inner_unchecked(Basis::j())
     }
 
     pub fn z() -> Self
@@ -184,7 +184,7 @@ where
         S: Basis + FiniteDimensional,
         S::N: Cmp<U2, Output = Greater>,
     {
-        Self::try_from_inner(Basis::z()).expect("zero-vector")
+        Self::from_inner_unchecked(Basis::k())
     }
 
     pub fn get(&self) -> &S {
@@ -624,7 +624,7 @@ where
     /// };
     /// let ray = Ray::<E2> {
     ///     origin: EuclideanSpace::origin(),
-    ///     direction: Unit::try_from_inner(Basis::x()).unwrap(),
+    ///     direction: Unit::try_from_inner(Basis::i()).unwrap(),
     /// };
     /// let (min, _) = ray.intersection(&aabb).unwrap();
     /// let point = ray.origin + (ray.direction.get() * min);
@@ -740,7 +740,7 @@ mod tests {
 
     use crate::adjunct::Converged;
     use crate::query::{Aabb, Embedding, Intersection, Plane, Ray, Unit};
-    use crate::space::{Basis, EuclideanSpace, Vector};
+    use crate::space::{EuclideanSpace, Vector};
 
     type E2 = Point2<f64>;
     type E3 = Point3<f64>;
@@ -793,7 +793,7 @@ mod tests {
         };
         let ray = Ray::<E2> {
             origin: EuclideanSpace::from_xy(-1.0, 0.5),
-            direction: Unit::try_from_inner(Basis::x()).unwrap(),
+            direction: Unit::x(),
         };
         assert_eq!(Some((1.0, 2.0)), ray.intersection(&aabb));
         assert_eq!(None, ray.reverse().intersection(&aabb));
@@ -807,7 +807,7 @@ mod tests {
         };
         let ray = Ray::<E3> {
             origin: EuclideanSpace::from_xyz(-1.0, 0.5, 0.5),
-            direction: Unit::try_from_inner(Basis::x()).unwrap(),
+            direction: Unit::x(),
         };
         assert_eq!(Some((1.0, 2.0)), ray.intersection(&aabb));
         assert_eq!(None, ray.reverse().intersection(&aabb));
@@ -832,11 +832,11 @@ mod tests {
     fn plane_ray_intersection_e3() {
         let plane = Plane::<E3> {
             origin: EuclideanSpace::from_xyz(0.0, 0.0, 1.0),
-            normal: Unit::try_from_inner(Basis::z()).unwrap(),
+            normal: Unit::z(),
         };
         let ray = Ray::<E3> {
             origin: EuclideanSpace::origin(),
-            direction: Unit::try_from_inner(Basis::z()).unwrap(),
+            direction: Unit::z(),
         };
         assert_eq!(Some(Embedding::Partial(1.0)), ray.intersection(&plane));
         assert_eq!(None, ray.reverse().intersection(&plane));
