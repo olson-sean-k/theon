@@ -2,6 +2,7 @@
 //!
 //! This module provides types and traits for performing spatial queries.
 
+use approx::{abs_diff_eq, AbsDiffEq};
 use decorum::cmp::IntrinsicOrd;
 use decorum::Infinite;
 use num::{Bounded, Signed, Zero};
@@ -108,6 +109,12 @@ macro_rules! impl_symmetrical_intersection {
             }
         }
     };
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum Embedding<T, P> {
+    Total(T),
+    Partial(P),
 }
 
 /// Unit vector.
@@ -295,14 +302,15 @@ impl<S> Intersection<Plane<S>> for Line<S>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
+    Scalar<S>: AbsDiffEq,
 {
+    // TODO: Update this documentation.
     /// The _time of impact_ of the intersection.
     ///
     /// The time of impact $t$ describes the distance from the line's origin
     /// point at which the intersection occurs.
-    type Output = Scalar<S>;
+    type Output = Embedding<Line<S>, Scalar<S>>;
 
-    // TODO: Detect lines that lie within the plane.
     /// Determines the _time of impact_ of a `Plane` intersection with a
     /// `Line`.
     ///
@@ -313,12 +321,22 @@ where
         let line = self;
         let direction = *line.direction.get();
         let normal = *plane.normal.get();
-        let product = direction.dot(normal);
-        if product != Zero::zero() {
-            Some((plane.origin - line.origin).dot(normal) / product)
+        let orientation = direction.dot(normal);
+        if abs_diff_eq!(orientation, Zero::zero()) {
+            // The line and plane are parallel.
+            if abs_diff_eq!((plane.origin - line.origin).dot(normal), Zero::zero()) {
+                Some(Embedding::Total(*line))
+            }
+            else {
+                None
+            }
         }
         else {
-            None
+            // The line and plane are not parallel and must intersect at a
+            // point.
+            Some(Embedding::Partial(
+                (plane.origin - line.origin).dot(normal) / orientation,
+            ))
         }
     }
 }
@@ -572,7 +590,7 @@ where
 impl<S> Intersection<Ray<S>> for Aabb<S>
 where
     S: EuclideanSpace,
-    Scalar<S>: Bounded + Infinite + IntrinsicOrd + Signed,
+    Scalar<S>: AbsDiffEq + Bounded + Infinite + IntrinsicOrd + Signed,
 {
     /// The minimum and maximum _times of impact_ of the intersection.
     ///
@@ -615,7 +633,7 @@ where
         // of dividing) avoids dividing zero by zero, but does not avoid
         // multiplying zero by infinity.
         let pdiv = |a: Scalar<S>, b: Scalar<S>| {
-            if a.is_zero() {
+            if abs_diff_eq!(a, Zero::zero()) {
                 a
             }
             else {
@@ -683,29 +701,34 @@ impl<S> Intersection<Ray<S>> for Plane<S>
 where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
-    Scalar<S>: Signed,
+    Scalar<S>: AbsDiffEq + Signed,
 {
+    // TODO: Update this documentation.
     /// The _time of impact_ of the intersection.
     ///
     /// The time of impact $t$ describes the distance along the half-line from
     /// the ray's origin at which the intersection occurs.
-    type Output = Scalar<S>;
+    type Output = Embedding<Ray<S>, Scalar<S>>;
 
-    // TODO: Detect rays that lie within the plane.
     /// Determines the _time of impact_ of a `Ray` intersection with a `Plane`.
     ///
     /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
     /// the point of intersection with the plane is $P_0 + t\hat{u}$.
     fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
         let plane = self;
-        ray.into_line().intersection(plane).and_then(|t| {
-            if t.is_positive() {
-                Some(t)
-            }
-            else {
-                None
-            }
-        })
+        ray.into_line()
+            .intersection(plane)
+            .and_then(|embedding| match embedding {
+                Embedding::Total(_) => Some(Embedding::Total(*ray)),
+                Embedding::Partial(t) => {
+                    if t.is_positive() {
+                        Some(Embedding::Partial(t))
+                    }
+                    else {
+                        None
+                    }
+                }
+            })
     }
 }
 impl_symmetrical_intersection!(Plane, Ray);
@@ -716,7 +739,7 @@ mod tests {
     use nalgebra::{Point2, Point3};
 
     use crate::adjunct::Converged;
-    use crate::query::{Aabb, Intersection, Plane, Ray, Unit};
+    use crate::query::{Aabb, Embedding, Intersection, Plane, Ray, Unit};
     use crate::space::{Basis, EuclideanSpace, Vector};
 
     type E2 = Point2<f64>;
@@ -815,7 +838,7 @@ mod tests {
             origin: EuclideanSpace::origin(),
             direction: Unit::try_from_inner(Basis::z()).unwrap(),
         };
-        assert_eq!(Some(1.0), ray.intersection(&plane));
+        assert_eq!(Some(Embedding::Partial(1.0)), ray.intersection(&plane));
         assert_eq!(None, ray.reverse().intersection(&plane));
     }
 }
