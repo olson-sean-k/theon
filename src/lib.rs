@@ -31,13 +31,14 @@ pub mod prelude {
 
 pub type Position<T> = <T as AsPosition>::Position;
 
-/// Positional data.
+/// Immutable positional data.
 ///
-/// This trait exposes positional data for geometric types.
+/// This trait exposes positional data for geometric types along with its
+/// mutable variant `AsPositionMut`.
 ///
 /// # Examples
 ///
-/// Exposing positional data for a vertex:
+/// Exposing immutable positional data for a vertex:
 ///
 /// ```rust
 /// # extern crate nalgebra;
@@ -57,17 +58,50 @@ pub type Position<T> = <T as AsPosition>::Position;
 ///     fn as_position(&self) -> &Self::Position {
 ///         &self.position
 ///     }
-///
-///     fn as_position_mut(&mut self) -> &mut Self::Position {
-///         &mut self.position
-///     }
 /// }
 /// ```
 pub trait AsPosition {
     type Position: EuclideanSpace;
 
     fn as_position(&self) -> &Self::Position;
+}
 
+/// Mutable positional data.
+///
+/// This trait exposes positional data for geometric types along with its
+/// immutable variant `AsPosition`.
+///
+/// # Examples
+///
+/// Exposing mutable positional data for a vertex:
+///
+/// ```rust
+/// # extern crate nalgebra;
+/// # extern crate theon;
+/// #
+/// use nalgebra::{Point3, Vector3};
+/// use theon::{AsPosition, AsPositionMut};
+///
+/// pub struct Vertex {
+///     position: Point3<f64>,
+///     normal: Vector3<f64>,
+/// }
+///
+/// impl AsPosition for Vertex {
+///     type Position = Point3<f64>;
+///
+///     fn as_position(&self) -> &Self::Position {
+///         &self.position
+///     }
+/// }
+///
+/// impl AsPositionMut for Vertex {
+///     fn as_position_mut(&mut self) -> &mut Self::Position {
+///         &mut self.position
+///     }
+/// }
+/// ```
+pub trait AsPositionMut: AsPosition {
     fn as_position_mut(&mut self) -> &mut Self::Position;
 
     fn transform<F>(&mut self, mut f: F)
@@ -91,12 +125,17 @@ impl<S> AsPosition for S
 where
     S: EuclideanSpace,
 {
-    type Position = Self;
+    type Position = S;
 
     fn as_position(&self) -> &Self::Position {
         self
     }
+}
 
+impl<S> AsPositionMut for S
+where
+    S: EuclideanSpace,
+{
     fn as_position_mut(&mut self) -> &mut Self::Position {
         self
     }
