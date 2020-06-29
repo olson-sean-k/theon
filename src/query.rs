@@ -31,7 +31,7 @@ use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar,
 /// # extern crate theon;
 /// #
 /// # use nalgebra::Point3;
-/// # use theon::query::{Intersection, Line, Plane, Unit};
+/// # use theon::query::{Embedding, Intersection, Line, Plane, Unit};
 /// # use theon::space::EuclideanSpace;
 /// #
 /// # type E3 = Point3<f64>;
@@ -45,8 +45,8 @@ use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar,
 /// #     normal: Unit::x(),
 /// # };
 /// // These queries are equivalent.
-/// if let Some(t) = line.intersection(&plane) { /* ... */ }
-/// if let Some(t) = plane.intersection(&line) { /* ... */ }
+/// if let Some(Embedding::Partial(t)) = line.intersection(&plane) { /* ... */ }
+/// if let Some(Embedding::Partial(t)) = plane.intersection(&line) { /* ... */ }
 /// ```
 ///
 /// # Examples
@@ -59,7 +59,7 @@ use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar,
 /// #
 /// use nalgebra::Point2;
 /// use theon::query::{Aabb, Intersection, Ray, Unit};
-/// use theon::space::{Basis, EuclideanSpace, VectorSpace};
+/// use theon::space::{EuclideanSpace, VectorSpace};
 ///
 /// type E2 = Point2<f64>;
 ///
@@ -69,7 +69,7 @@ use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar,
 /// };
 /// let ray = Ray::<E2> {
 ///     origin: EuclideanSpace::origin(),
-///     direction: Unit::try_from_inner(Basis::i()).unwrap(),
+///     direction: Unit::x(),
 /// };
 /// if let Some((min, max)) = ray.intersection(&aabb) {
 ///     // ...
@@ -111,6 +111,7 @@ macro_rules! impl_symmetrical_intersection {
     };
 }
 
+/// Intersection that may embed one entity within another.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Embedding<T, P> {
     Total(T),
@@ -303,15 +304,16 @@ where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
 {
-    // TODO: Update this documentation.
-    /// The _time of impact_ of the intersection.
+    /// The _time of impact_ of a point intersection or the line if it lies
+    /// within the plane.
     ///
     /// The time of impact $t$ describes the distance from the line's origin
     /// point at which the intersection occurs.
     type Output = Embedding<Line<S>, Scalar<S>>;
 
-    /// Determines the _time of impact_ of a `Plane` intersection with a
-    /// `Line`.
+    /// Determines if a line intersects a plane at a point or lies within the
+    /// plane. Computes the _time of impact_ of a `Line` for a point
+    /// intersection.
     ///
     /// Given a line formed from an origin $P_0$ and a unit direction
     /// $\hat{u}$, the point of intersection with the plane is $P_0 +
@@ -612,7 +614,7 @@ where
     /// # extern crate theon;
     /// #
     /// use nalgebra::Point2;
-    /// use theon::space::{Basis, EuclideanSpace, VectorSpace};
+    /// use theon::space::{EuclideanSpace, VectorSpace};
     /// use theon::query::{Aabb, Intersection, Ray, Unit};
     ///
     /// type E2 = Point2<f64>;
@@ -623,7 +625,7 @@ where
     /// };
     /// let ray = Ray::<E2> {
     ///     origin: EuclideanSpace::origin(),
-    ///     direction: Unit::try_from_inner(Basis::i()).unwrap(),
+    ///     direction: Unit::x(),
     /// };
     /// let (min, _) = ray.intersection(&aabb).unwrap();
     /// let point = ray.origin + (ray.direction.get() * min);
@@ -702,14 +704,16 @@ where
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
     Scalar<S>: Signed,
 {
-    // TODO: Update this documentation.
-    /// The _time of impact_ of the intersection.
+    /// The _time of impact_ of a point intersection or the ray if it lies
+    /// within the plane.
     ///
     /// The time of impact $t$ describes the distance along the half-line from
     /// the ray's origin at which the intersection occurs.
     type Output = Embedding<Ray<S>, Scalar<S>>;
 
-    /// Determines the _time of impact_ of a `Ray` intersection with a `Plane`.
+    /// Determines if a ray intersects a plane at a point or lies within the
+    /// plane. Computes the _time of impact_ of a `Ray` for a point
+    /// intersection.
     ///
     /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
     /// the point of intersection with the plane is $P_0 + t\hat{u}$.
