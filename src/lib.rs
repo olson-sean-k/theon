@@ -121,23 +121,36 @@ pub trait AsPositionMut: AsPosition {
     }
 }
 
-impl<S> AsPosition for S
+impl<'a, T> AsPosition for &'a T
 where
-    S: EuclideanSpace,
+    T: AsPosition,
+    T::Position: EuclideanSpace,
 {
-    type Position = S;
+    type Position = <T as AsPosition>::Position;
 
     fn as_position(&self) -> &Self::Position {
-        self
+        T::as_position(self)
     }
 }
 
-impl<S> AsPositionMut for S
+impl<'a, T> AsPosition for &'a mut T
 where
-    S: EuclideanSpace,
+    T: AsPosition,
+    T::Position: EuclideanSpace,
+{
+    type Position = <T as AsPosition>::Position;
+
+    fn as_position(&self) -> &Self::Position {
+        T::as_position(self)
+    }
+}
+
+impl<'a, T> AsPositionMut for &'a mut T
+where
+    T: AsPositionMut,
 {
     fn as_position_mut(&mut self) -> &mut Self::Position {
-        self
+        T::as_position_mut(self)
     }
 }
 

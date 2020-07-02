@@ -14,6 +14,7 @@ use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
+use crate::{AsPosition, AsPositionMut};
 
 impl<T> Adjunct for Vector2<T> {
     type Item = T;
@@ -373,6 +374,50 @@ where
     T: AbsDiffEq + BaseNum + Real,
 {
     type Translation = Vector3<T>;
+}
+
+impl<T> AsPosition for Point2<T>
+where
+    Self: EuclideanSpace,
+    T: BaseNum,
+{
+    type Position = Self;
+
+    fn as_position(&self) -> &Self::Position {
+        self
+    }
+}
+
+impl<T> AsPosition for Point3<T>
+where
+    Self: EuclideanSpace,
+    T: BaseNum,
+{
+    type Position = Self;
+
+    fn as_position(&self) -> &Self::Position {
+        self
+    }
+}
+
+impl<T> AsPositionMut for Point2<T>
+where
+    Self: EuclideanSpace,
+    T: BaseNum,
+{
+    fn as_position_mut(&mut self) -> &mut Self::Position {
+        self
+    }
+}
+
+impl<T> AsPositionMut for Point3<T>
+where
+    Self: EuclideanSpace,
+    T: BaseNum,
+{
+    fn as_position_mut(&mut self) -> &mut Self::Position {
+        self
+    }
 }
 
 impl<T> Converged for Point2<T>

@@ -22,6 +22,7 @@ use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
     SquareMatrix, VectorSpace,
 };
+use crate::{AsPosition, AsPositionMut};
 
 impl<T, R, C> Adjunct for MatrixMN<T, R, C>
 where
@@ -455,6 +456,32 @@ where
     <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
 {
     type Translation = VectorN<T, D>;
+}
+
+impl<T, D> AsPosition for Point<T, D>
+where
+    Self: EuclideanSpace,
+    T: Scalar,
+    D: DimName,
+    DefaultAllocator: Allocator<T, D>,
+{
+    type Position = Self;
+
+    fn as_position(&self) -> &Self::Position {
+        self
+    }
+}
+
+impl<T, D> AsPositionMut for Point<T, D>
+where
+    Self: EuclideanSpace,
+    T: Scalar,
+    D: DimName,
+    DefaultAllocator: Allocator<T, D>,
+{
+    fn as_position_mut(&mut self) -> &mut Self::Position {
+        self
+    }
 }
 
 impl<T, D> Converged for Point<T, D>
