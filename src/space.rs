@@ -10,6 +10,7 @@ use typenum::{Greater, NonZero, Unsigned};
 
 use crate::adjunct::{Adjunct, Fold, Pop, Push, ZipMap};
 use crate::ops::{Dot, Project};
+use crate::AsPosition;
 
 /// The scalar of a `EuclideanSpace`.
 pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
@@ -300,7 +301,9 @@ pub trait AffineSpace:
 }
 
 pub trait EuclideanSpace:
-    AffineSpace<Translation = <Self as EuclideanSpace>::CoordinateSpace> + FiniteDimensional
+    AffineSpace<Translation = <Self as EuclideanSpace>::CoordinateSpace>
+    + AsPosition<Position = Self>
+    + FiniteDimensional
 {
     type CoordinateSpace: Basis + InnerSpace + FiniteDimensional<N = <Self as FiniteDimensional>::N>;
 
