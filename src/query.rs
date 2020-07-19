@@ -13,7 +13,9 @@ use typenum::{Greater, U0, U1, U2};
 
 use crate::adjunct::{Fold, ZipMap};
 use crate::ops::Dot;
-use crate::space::{Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector};
+use crate::space::{
+    Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector, VectorSpace,
+};
 
 // Intersections are implemented for types with a lesser lexographical order.
 // For example, `Intersection` is implemented for `Aabb` before `Plane`, with
@@ -266,9 +268,75 @@ impl<S> Line<S>
 where
     S: EuclideanSpace,
 {
+    pub fn x() -> Self
+    where
+        S: FiniteDimensional,
+        S::N: Cmp<U0, Output = Greater>,
+    {
+        Line {
+            origin: S::origin(),
+            direction: Unit::x(),
+        }
+    }
+
+    pub fn y() -> Self
+    where
+        S: FiniteDimensional,
+        S::N: Cmp<U1, Output = Greater>,
+    {
+        Line {
+            origin: S::origin(),
+            direction: Unit::y(),
+        }
+    }
+
+    pub fn z() -> Self
+    where
+        S: FiniteDimensional,
+        S::N: Cmp<U2, Output = Greater>,
+    {
+        Line {
+            origin: S::origin(),
+            direction: Unit::z(),
+        }
+    }
+
     pub fn into_ray(self) -> Ray<S> {
         let Line { origin, direction } = self;
         Ray { origin, direction }
+    }
+}
+
+// TODO: Provide higher dimensional intercepts, such as the xy-intercept in
+//       three dimensions.
+impl<S> Line<S>
+where
+    S: EuclideanSpace + FiniteDimensional<N = U2>,
+{
+    pub fn slope(&self) -> Option<Scalar<S>> {
+        let (x, y) = self.direction.get().into_xy();
+        if x.is_zero() {
+            None
+        }
+        else {
+            Some(y / x)
+        }
+    }
+
+    pub fn x_intercept(&self) -> Option<Scalar<S>> {
+        self.intersection(&Line::x())
+            .and_then(|embedding| match embedding {
+                Embedding::Partial(point) => Some(point.into_xy().0),
+                _ => None,
+            })
+    }
+
+    pub fn y_intercept(&self) -> Option<Scalar<S>> {
+        self.intersection(&Line::y())
+            .and_then(|embedding| match embedding {
+                Embedding::Partial(point) => Some(point.into_xy().1),
+                _ => None,
+            })
     }
 }
 
@@ -294,6 +362,44 @@ where
         Line {
             origin: S::origin(),
             direction: Unit::default(),
+        }
+    }
+}
+
+// TODO: Though higher dimensional intersections are probably less useful,
+//       consider a more general implementation. This could use projection into
+//       two dimensions followed by confirmation in the higher dimension.
+/// Intersection of lines in two dimensions.
+impl<S> Intersection<Line<S>> for Line<S>
+where
+    S: EuclideanSpace + FiniteDimensional<N = U2>,
+{
+    type Output = Embedding<Line<S>, S>;
+
+    fn intersection(&self, other: &Line<S>) -> Option<Self::Output> {
+        // TODO: Some of this computation is redundant: the `direction` is
+        //       already in vector form, so there is no need to compute
+        //       distances like `v2 - v1`.
+        let (x1, y1) = self.origin.into_xy();
+        let (x2, y2) = (self.origin + *self.direction.get()).into_xy();
+        let (u1, v1) = other.origin.into_xy();
+        let (u2, v2) = (other.origin + *other.direction.get()).into_xy();
+        let denominator = ((v2 - v1) * (x2 - x1)) - ((u2 - u1) * (y2 - y1));
+        if denominator.is_zero() {
+            None
+        }
+        else {
+            let numerator = ((u2 - u1) * (y1 - v1)) - ((v2 - v1) * (x1 - u1));
+            if numerator.is_zero() {
+                Some(Embedding::Total(*self))
+            }
+            else {
+                let quotient = numerator / denominator;
+                Some(Embedding::Partial(S::from_xy(
+                    x1 + (quotient * (x2 - x1)),
+                    y1 + (quotient * (y2 - y1)),
+                )))
+            }
         }
     }
 }
