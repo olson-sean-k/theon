@@ -377,27 +377,27 @@ where
     type Output = Embedding<Line<S>, S>;
 
     fn intersection(&self, other: &Line<S>) -> Option<Self::Output> {
-        // TODO: Some of this computation is redundant: the `direction` is
-        //       already in vector form, so there is no need to compute
-        //       distances like `v2 - v1`.
-        let (x1, y1) = self.origin.into_xy();
-        let (x2, y2) = (self.origin + *self.direction.get()).into_xy();
-        let (u1, v1) = other.origin.into_xy();
-        let (u2, v2) = (other.origin + *other.direction.get()).into_xy();
-        let denominator = ((v2 - v1) * (x2 - x1)) - ((u2 - u1) * (y2 - y1));
-        if denominator.is_zero() {
-            None
+        let (x1, y1) = if (self.origin - other.origin).is_zero() {
+            // Detect like origins and avoid zeroes in the numerator by
+            // translating the origin.
+            (self.origin + *self.direction.get()).into_xy()
         }
         else {
-            let numerator = ((u2 - u1) * (y1 - v1)) - ((v2 - v1) * (x1 - u1));
-            if numerator.is_zero() {
-                Some(Embedding::Total(*self))
-            }
-            else {
+            self.origin.into_xy()
+        };
+        let (u1, v1) = self.direction.get().into_xy();
+        let (x2, y2) = other.origin.into_xy();
+        let (u2, v2) = other.direction.get().into_xy();
+        let numerator = (u2 * (y1 - y2)) - (v2 * (x1 - x2));
+        let denominator = (v2 * u1) - (u2 * v1);
+        match (numerator.is_zero(), denominator.is_zero()) {
+            (true, true) => Some(Embedding::Total(*self)),
+            (false, true) => None,
+            _ => {
                 let quotient = numerator / denominator;
                 Some(Embedding::Partial(S::from_xy(
-                    x1 + (quotient * (x2 - x1)),
-                    y1 + (quotient * (y2 - y1)),
+                    x1 + (quotient * u1),
+                    y1 + (quotient * v1),
                 )))
             }
         }
@@ -848,8 +848,8 @@ mod tests {
     use nalgebra::{Point2, Point3};
 
     use crate::adjunct::Converged;
-    use crate::query::{Aabb, Embedding, Intersection, Plane, Ray, Unit};
-    use crate::space::{EuclideanSpace, Vector};
+    use crate::query::{Aabb, Embedding, Intersection, Line, Plane, Ray, Unit};
+    use crate::space::{EuclideanSpace, Vector, VectorSpace};
 
     type E2 = Point2<f64>;
     type E3 = Point3<f64>;
@@ -935,6 +935,36 @@ mod tests {
             direction: Unit::x(),
         };
         assert_eq!(Some((0.0.into(), 1.0.into())), ray.intersection(&aabb));
+    }
+
+    #[test]
+    fn line_line_intersection_e2() {
+        let line = Line::<E2>::x();
+        assert_eq!(
+            Some(Embedding::Partial(E2::origin())),
+            line.intersection(&Line::y())
+        );
+        assert_eq!(Some(Embedding::Total(line)), line.intersection(&Line::x()));
+
+        let line1 = Line::<E2> {
+            origin: E2::origin(),
+            direction: Unit::try_from_inner(Converged::converged(1.0)).unwrap(),
+        };
+        let line2 = Line::<E2> {
+            origin: E2::from_xy(2.0, 0.0),
+            direction: Unit::try_from_inner(Vector::<E2>::from_xy(-1.0, 1.0)).unwrap(),
+        };
+        assert_eq!(
+            Some(Embedding::Partial(Converged::converged(1.0))),
+            line1.intersection(&line2),
+        );
+
+        let line1 = Line::<E2>::x();
+        let line2 = Line::<E2> {
+            origin: E2::from_xy(0.0, 1.0),
+            direction: Unit::x(),
+        };
+        assert_eq!(None, line1.intersection(&line2));
     }
 
     #[test]
