@@ -33,7 +33,7 @@ use crate::space::{
 /// # extern crate theon;
 /// #
 /// # use nalgebra::Point3;
-/// # use theon::query::{Embedding, Intersection, Line, Plane, Unit};
+/// # use theon::query::{Intersection, Line, LinePlane, Plane, Unit};
 /// # use theon::space::EuclideanSpace;
 /// #
 /// # type E3 = Point3<f64>;
@@ -47,8 +47,8 @@ use crate::space::{
 /// #     normal: Unit::x(),
 /// # };
 /// // These queries are equivalent.
-/// if let Some(Embedding::Partial(t)) = line.intersection(&plane) { /* ... */ }
-/// if let Some(Embedding::Partial(t)) = plane.intersection(&line) { /* ... */ }
+/// if let Some(LinePlane::TimeOfImpact(t)) = line.intersection(&plane) { /* ... */ }
+/// if let Some(LinePlane::TimeOfImpact(t)) = plane.intersection(&line) { /* ... */ }
 /// ```
 ///
 /// # Examples
@@ -111,13 +111,6 @@ macro_rules! impl_symmetrical_intersection {
             }
         }
     };
-}
-
-/// Intersection that may embed one entity within another.
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum Embedding<T, P> {
-    Total(T),
-    Partial(P),
 }
 
 /// Unit vector.
@@ -326,7 +319,7 @@ where
     pub fn x_intercept(&self) -> Option<Scalar<S>> {
         self.intersection(&Line::x())
             .and_then(|embedding| match embedding {
-                Embedding::Partial(point) => Some(point.into_xy().0),
+                LineLine::Point(point) => Some(point.into_xy().0),
                 _ => None,
             })
     }
@@ -334,7 +327,7 @@ where
     pub fn y_intercept(&self) -> Option<Scalar<S>> {
         self.intersection(&Line::y())
             .and_then(|embedding| match embedding {
-                Embedding::Partial(point) => Some(point.into_xy().1),
+                LineLine::Point(point) => Some(point.into_xy().1),
                 _ => None,
             })
     }
@@ -366,6 +359,33 @@ where
     }
 }
 
+/// Intersection of lines.
+#[derive(Clone, Copy, PartialEq)]
+pub enum LineLine<S>
+where
+    S: EuclideanSpace,
+{
+    // Lines and rays typically produce times of impact for point intersections,
+    // but this implementation computes the point. While this is a bit
+    // inconsistent, it avoids needing to know from which line the time of
+    // impact applies.
+    Point(S),
+    Line(Line<S>),
+}
+
+impl<S> Debug for LineLine<S>
+where
+    S: Debug + EuclideanSpace,
+    Vector<S>: Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        match *self {
+            LineLine::Point(point) => write!(formatter, "Point({:?})", point),
+            LineLine::Line(line) => write!(formatter, "Line({:?})", line),
+        }
+    }
+}
+
 // TODO: Though higher dimensional intersections are probably less useful,
 //       consider a more general implementation. This could use projection into
 //       two dimensions followed by confirmation in the higher dimension.
@@ -374,7 +394,7 @@ impl<S> Intersection<Line<S>> for Line<S>
 where
     S: EuclideanSpace + FiniteDimensional<N = U2>,
 {
-    type Output = Embedding<Line<S>, S>;
+    type Output = LineLine<S>;
 
     fn intersection(&self, other: &Line<S>) -> Option<Self::Output> {
         let (x1, y1) = if (self.origin - other.origin).is_zero() {
@@ -391,11 +411,11 @@ where
         let numerator = (u2 * (y1 - y2)) - (v2 * (x1 - x2));
         let denominator = (v2 * u1) - (u2 * v1);
         match (numerator.is_zero(), denominator.is_zero()) {
-            (true, true) => Some(Embedding::Total(*self)),
+            (true, true) => Some(LineLine::Line(*self)),
             (false, true) => None,
             _ => {
                 let quotient = numerator / denominator;
-                Some(Embedding::Partial(S::from_xy(
+                Some(LineLine::Point(S::from_xy(
                     x1 + (quotient * u1),
                     y1 + (quotient * v1),
                 )))
@@ -404,7 +424,31 @@ where
     }
 }
 
-/// Intersection of a line and plane.
+/// Intersection of a line and a plane.
+#[derive(Clone, Copy, PartialEq)]
+pub enum LinePlane<S>
+where
+    S: EuclideanSpace,
+{
+    TimeOfImpact(Scalar<S>),
+    Line(Line<S>),
+}
+
+impl<S> Debug for LinePlane<S>
+where
+    S: Debug + EuclideanSpace,
+    Scalar<S>: Debug,
+    Vector<S>: Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        match *self {
+            LinePlane::TimeOfImpact(x) => write!(formatter, "TimeOfImpact({:?})", x),
+            LinePlane::Line(line) => write!(formatter, "Line({:?})", line),
+        }
+    }
+}
+
+/// Intersection of a line and a plane.
 impl<S> Intersection<Plane<S>> for Line<S>
 where
     S: EuclideanSpace + FiniteDimensional,
@@ -415,7 +459,7 @@ where
     ///
     /// The time of impact $t$ describes the distance from the line's origin
     /// point at which the intersection occurs.
-    type Output = Embedding<Line<S>, Scalar<S>>;
+    type Output = LinePlane<S>;
 
     /// Determines if a line intersects a plane at a point or lies within the
     /// plane. Computes the _time of impact_ of a `Line` for a point
@@ -432,7 +476,7 @@ where
         if abs_diff_eq!(orientation, Zero::zero()) {
             // The line and plane are parallel.
             if abs_diff_eq!((plane.origin - line.origin).dot(normal), Zero::zero()) {
-                Some(Embedding::Total(*line))
+                Some(LinePlane::Line(*line))
             }
             else {
                 None
@@ -441,7 +485,7 @@ where
         else {
             // The line and plane are not parallel and must intersect at a
             // point.
-            Some(Embedding::Partial(
+            Some(LinePlane::TimeOfImpact(
                 (plane.origin - line.origin).dot(normal) / orientation,
             ))
         }
@@ -804,6 +848,30 @@ where
 }
 
 /// Intersection of a plane and a ray.
+#[derive(Clone, Copy, PartialEq)]
+pub enum PlaneRay<S>
+where
+    S: EuclideanSpace,
+{
+    TimeOfImpact(Scalar<S>),
+    Ray(Ray<S>),
+}
+
+impl<S> Debug for PlaneRay<S>
+where
+    S: Debug + EuclideanSpace,
+    Scalar<S>: Debug,
+    Vector<S>: Debug,
+{
+    fn fmt(&self, formatter: &mut Formatter) -> Result<(), fmt::Error> {
+        match *self {
+            PlaneRay::TimeOfImpact(x) => write!(formatter, "TimeOfImpact({:?})", x),
+            PlaneRay::Ray(ray) => write!(formatter, "Ray({:?})", ray),
+        }
+    }
+}
+
+/// Intersection of a plane and a ray.
 impl<S> Intersection<Ray<S>> for Plane<S>
 where
     S: EuclideanSpace + FiniteDimensional,
@@ -815,7 +883,7 @@ where
     ///
     /// The time of impact $t$ describes the distance along the half-line from
     /// the ray's origin at which the intersection occurs.
-    type Output = Embedding<Ray<S>, Scalar<S>>;
+    type Output = PlaneRay<S>;
 
     /// Determines if a ray intersects a plane at a point or lies within the
     /// plane. Computes the _time of impact_ of a `Ray` for a point
@@ -828,15 +896,15 @@ where
         ray.into_line()
             .intersection(plane)
             .and_then(|embedding| match embedding {
-                Embedding::Total(_) => Some(Embedding::Total(*ray)),
-                Embedding::Partial(t) => {
+                LinePlane::TimeOfImpact(t) => {
                     if t.is_positive() {
-                        Some(Embedding::Partial(t))
+                        Some(PlaneRay::TimeOfImpact(t))
                     }
                     else {
                         None
                     }
                 }
+                LinePlane::Line(_) => Some(PlaneRay::Ray(*ray)),
             })
     }
 }
@@ -848,7 +916,7 @@ mod tests {
     use nalgebra::{Point2, Point3};
 
     use crate::adjunct::Converged;
-    use crate::query::{Aabb, Embedding, Intersection, Line, Plane, Ray, Unit};
+    use crate::query::{Aabb, Intersection, Line, LineLine, Plane, PlaneRay, Ray, Unit};
     use crate::space::{EuclideanSpace, Vector, VectorSpace};
 
     type E2 = Point2<f64>;
@@ -941,10 +1009,10 @@ mod tests {
     fn line_line_intersection_e2() {
         let line = Line::<E2>::x();
         assert_eq!(
-            Some(Embedding::Partial(E2::origin())),
-            line.intersection(&Line::y())
+            Some(LineLine::Point(E2::origin())),
+            line.intersection(&Line::y()),
         );
-        assert_eq!(Some(Embedding::Total(line)), line.intersection(&Line::x()));
+        assert_eq!(Some(LineLine::Line(line)), line.intersection(&Line::x()));
 
         let line1 = Line::<E2> {
             origin: E2::origin(),
@@ -955,7 +1023,7 @@ mod tests {
             direction: Unit::try_from_inner(Vector::<E2>::from_xy(-1.0, 1.0)).unwrap(),
         };
         assert_eq!(
-            Some(Embedding::Partial(Converged::converged(1.0))),
+            Some(LineLine::Point(Converged::converged(1.0))),
             line1.intersection(&line2),
         );
 
@@ -977,7 +1045,7 @@ mod tests {
             origin: EuclideanSpace::origin(),
             direction: Unit::z(),
         };
-        assert_eq!(Some(Embedding::Partial(1.0)), ray.intersection(&plane));
+        assert_eq!(Some(PlaneRay::TimeOfImpact(1.0)), ray.intersection(&plane));
         assert_eq!(None, ray.reverse().intersection(&plane));
     }
 }
