@@ -1,8 +1,5 @@
 #![cfg(feature = "geometry-cgmath")]
 
-#[doc(hidden)]
-pub use cgmath::*;
-
 use approx::AbsDiffEq;
 use arrayvec::ArrayVec;
 use decorum::{Real, R64};
@@ -17,6 +14,9 @@ use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
+
+#[doc(hidden)]
+pub use cgmath::*;
 
 impl<T> Adjunct for Vector2<T> {
     type Item = T;

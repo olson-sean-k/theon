@@ -1,8 +1,5 @@
 #![cfg(feature = "geometry-nalgebra")]
 
-#[doc(hidden)]
-pub use nalgebra::*;
-
 use approx::AbsDiffEq;
 use arrayvec::ArrayVec;
 use decorum::{Real, R64};
@@ -25,6 +22,9 @@ use crate::space::{
     SquareMatrix, VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
+
+#[doc(hidden)]
+pub use nalgebra::*;
 
 impl<T, R, C> Adjunct for MatrixMN<T, R, C>
 where

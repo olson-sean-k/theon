@@ -2,7 +2,6 @@
 
 use arrayvec::ArrayVec;
 use decorum::R64;
-use glam::{Vec2, Vec3, Vec3A, Vec4};
 use typenum::consts::{U2, U3};
 
 use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
