@@ -23,15 +23,16 @@ dimension.
 ## Integrations
 
 Theon provides optional implementations for commonly used crates in the Rust
-ecosystem, including [`cgmath`], [`glam`], [`mint`], and [`nalgebra`]. These
-implementations can be enabled using Cargo features.
+ecosystem, including [`glam`] and [`ultraviolet`]. These implementations can be
+enabled using Cargo features.
 
-| Feature             | Default | Crate        | Support   |
-|---------------------|---------|--------------|-----------|
-| `geometry-cgmath`   | No      | [`cgmath`]   | Complete¹ |
-| `geometry-glam`     | No      | [`glam`]     | Complete¹ |
-| `geometry-mint`     | No      | [`mint`]     | Partial   |
-| `geometry-nalgebra` | Yes     | [`nalgebra`] | Complete¹ |
+| Feature                | Default | Crate           | Support   |
+|------------------------|---------|-----------------|-----------|
+| `geometry-cgmath`      | No      | [`cgmath`]      | Complete¹ |
+| `geometry-glam`        | No      | [`glam`]        | Complete¹ |
+| `geometry-mint`        | No      | [`mint`]        | Partial   |
+| `geometry-nalgebra`    | Yes     | [`nalgebra`]    | Complete¹ |
+| `geometry-ultraviolet` | No      | [`ultraviolet`] | Partial²  |
 
 Integrated crates are re-exported in the `integration` module. Because a given
 version of Theon implements traits for specific versions of integrated crates,
@@ -44,6 +45,9 @@ implements its traits.
 not necessarily mean that all traits and features are implemented, but instead
 that all traits and features can be feasibly supported and are implemented for
 common use cases.
+
+\[2\]: Importantly, traits and features are not yet implemented for SIMD types
+like `Wec3`.
 
 ## Spatial Queries
 
@@ -92,3 +96,4 @@ The `lapack` feature only supports Linux at this time.
 [`mint`]: https://crates.io/crates/mint
 [`nalgebra`]: https://crates.io/crates/nalgebra
 [`ndarray`]: https://crates.io/crates/ndarray
+[`ultraviolet`]: https://crates.io/crates/ultraviolet
