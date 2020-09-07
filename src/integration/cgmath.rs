@@ -9,7 +9,9 @@ use decorum::{Real, R64};
 use num::{Num, NumCast, One, Zero};
 use typenum::consts::{U2, U3};
 
-use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Map, Pop, Push, ZipMap};
+use crate::adjunct::{
+    Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Map, Truncate, ZipMap,
+};
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
@@ -143,6 +145,17 @@ where
     }
 }
 
+impl<T> Extend for Vector2<T>
+where
+    T: BaseNum,
+{
+    type Output = Vector3<T>;
+
+    fn extend(self, z: T) -> Self::Output {
+        self.extend(z)
+    }
+}
+
 impl<T> FiniteDimensional for Vector2<T> {
     type N = U2;
 }
@@ -271,25 +284,14 @@ impl<T, U> Map<U> for Vector3<T> {
     }
 }
 
-impl<T> Pop for Vector3<T>
+impl<T> Truncate for Vector3<T>
 where
     T: BaseNum,
 {
     type Output = Vector2<T>;
 
-    fn pop(self) -> (Self::Output, T) {
+    fn truncate(self) -> (Self::Output, T) {
         (self.truncate(), self.z)
-    }
-}
-
-impl<T> Push for Vector2<T>
-where
-    T: BaseNum,
-{
-    type Output = Vector3<T>;
-
-    fn push(self, z: T) -> Self::Output {
-        self.extend(z)
     }
 }
 
@@ -435,6 +437,15 @@ where
 {
     fn converged(value: Self::Item) -> Self {
         Point3::new(value, value, value)
+    }
+}
+
+impl<T> Extend for Point2<T> {
+    type Output = Point3<T>;
+
+    fn extend(self, z: T) -> Self::Output {
+        let Point2 { x, y } = self;
+        Point3::new(x, y, z)
     }
 }
 
@@ -584,21 +595,12 @@ impl<T, U> Map<U> for Point3<T> {
     }
 }
 
-impl<T> Pop for Point3<T> {
+impl<T> Truncate for Point3<T> {
     type Output = Point2<T>;
 
-    fn pop(self) -> (Self::Output, T) {
+    fn truncate(self) -> (Self::Output, T) {
         let Point3 { x, y, z } = self;
         (Point2::new(x, y), z)
-    }
-}
-
-impl<T> Push for Point2<T> {
-    type Output = Point3<T>;
-
-    fn push(self, z: T) -> Self::Output {
-        let Point2 { x, y } = self;
-        Point3::new(x, y, z)
     }
 }
 

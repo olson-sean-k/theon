@@ -46,16 +46,16 @@ pub trait Map<T = <Self as Adjunct>::Item>: Adjunct {
         F: FnMut(Self::Item) -> T;
 }
 
-pub trait Pop: Adjunct {
+pub trait Truncate: Adjunct {
     type Output: Adjunct<Item = Self::Item>;
 
-    fn pop(self) -> (Self::Output, Self::Item);
+    fn truncate(self) -> (Self::Output, Self::Item);
 }
 
-pub trait Push: Adjunct {
+pub trait Extend: Adjunct {
     type Output: Adjunct<Item = Self::Item>;
 
-    fn push(self, item: Self::Item) -> Self::Output;
+    fn extend(self, item: Self::Item) -> Self::Output;
 }
 
 pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
@@ -267,19 +267,19 @@ impl<T, U> Map<U> for (T, T, T) {
     }
 }
 
-impl<T> Pop for (T, T, T) {
+impl<T> Truncate for (T, T, T) {
     type Output = (T, T);
 
-    fn pop(self) -> (Self::Output, Self::Item) {
+    fn truncate(self) -> (Self::Output, Self::Item) {
         let (a, b, c) = self;
         ((a, b), c)
     }
 }
 
-impl<T> Push for (T, T) {
+impl<T> Extend for (T, T) {
     type Output = (T, T, T);
 
-    fn push(self, item: Self::Item) -> Self::Output {
+    fn extend(self, item: Self::Item) -> Self::Output {
         let (a, b) = self;
         (a, b, item)
     }

@@ -8,7 +8,7 @@ use typenum::consts::{U0, U1, U2, U3};
 use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
-use crate::adjunct::{Adjunct, Converged, Fold, Pop, Push, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Extend, Fold, Truncate, ZipMap};
 use crate::ops::{Dot, Project};
 use crate::AsPosition;
 
@@ -173,9 +173,9 @@ pub trait VectorSpace:
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
     where
         Self: Homogeneous,
-        Self::ProjectiveSpace: Pop<Output = Self> + VectorSpace<Scalar = Self::Scalar>,
+        Self::ProjectiveSpace: Truncate<Output = Self> + VectorSpace<Scalar = Self::Scalar>,
     {
-        let (vector, factor) = vector.pop();
+        let (vector, factor) = vector.truncate();
         if factor.is_zero() {
             Some(vector)
         }
@@ -186,10 +186,10 @@ pub trait VectorSpace:
 
     fn into_homogeneous(self) -> Self::ProjectiveSpace
     where
-        Self: Homogeneous + Push<Output = <Self as Homogeneous>::ProjectiveSpace>,
+        Self: Homogeneous + Extend<Output = <Self as Homogeneous>::ProjectiveSpace>,
         Self::ProjectiveSpace: VectorSpace<Scalar = Self::Scalar>,
     {
-        self.push(Zero::zero())
+        self.extend(Zero::zero())
     }
 
     fn mean<I>(vectors: I) -> Option<Self>
@@ -371,9 +371,9 @@ pub trait EuclideanSpace:
     where
         Self: Homogeneous,
         Self::ProjectiveSpace:
-            Pop<Output = Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
+            Truncate<Output = Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
     {
-        let (vector, factor) = vector.pop();
+        let (vector, factor) = vector.truncate();
         if factor.is_zero() {
             None
         }
@@ -385,10 +385,10 @@ pub trait EuclideanSpace:
     fn into_homogeneous(self) -> Self::ProjectiveSpace
     where
         Self: Homogeneous,
-        Self::CoordinateSpace: Push<Output = Self::ProjectiveSpace>,
+        Self::CoordinateSpace: Extend<Output = Self::ProjectiveSpace>,
         Self::ProjectiveSpace: VectorSpace<Scalar = Scalar<Self>>,
     {
-        self.into_coordinates().push(One::one())
+        self.into_coordinates().extend(One::one())
     }
 
     fn centroid<I>(points: I) -> Option<Self>

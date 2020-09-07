@@ -6,7 +6,7 @@ use typenum::consts::{U2, U3};
 use ultraviolet::lerp::Lerp;
 use ultraviolet::vec::{Vec2, Vec3, Vec4};
 
-use crate::adjunct::{Adjunct, Converged, Fold, Map, Pop, Push, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
@@ -156,6 +156,24 @@ impl DualSpace for Vec3 {
     }
 }
 
+impl Extend for Vec2 {
+    type Output = Vec3;
+
+    fn extend(self, z: Self::Item) -> Self::Output {
+        let (x, y) = self.into();
+        [x, y, z].into()
+    }
+}
+
+impl Extend for Vec3 {
+    type Output = Vec4;
+
+    fn extend(self, w: Self::Item) -> Self::Output {
+        let (x, y, z) = self.into();
+        [x, y, z, w].into()
+    }
+}
+
 impl EuclideanSpace for Vec2 {
     type CoordinateSpace = Self;
 
@@ -242,30 +260,12 @@ impl Map<f32> for Vec3 {
     }
 }
 
-impl Pop for Vec3 {
+impl Truncate for Vec3 {
     type Output = Vec2;
 
-    fn pop(self) -> (Self::Output, Self::Item) {
+    fn truncate(self) -> (Self::Output, Self::Item) {
         let z = self.z;
         (self.into(), z)
-    }
-}
-
-impl Push for Vec2 {
-    type Output = Vec3;
-
-    fn push(self, z: Self::Item) -> Self::Output {
-        let (x, y) = self.into();
-        [x, y, z].into()
-    }
-}
-
-impl Push for Vec3 {
-    type Output = Vec4;
-
-    fn push(self, w: Self::Item) -> Self::Output {
-        let (x, y, z) = self.into();
-        [x, y, z, w].into()
     }
 }
 

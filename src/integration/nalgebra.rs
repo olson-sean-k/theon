@@ -16,7 +16,9 @@ use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
 
-use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Map, Pop, Push, ZipMap};
+use crate::adjunct::{
+    Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Map, Truncate, ZipMap,
+};
 use crate::ops::{Cross, Dot, Interpolate, MulMN};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
@@ -122,6 +124,19 @@ where
 
     fn transpose(self) -> Self::Dual {
         nalgebra::Matrix::transpose(&self)
+    }
+}
+
+impl<T, D> Extend for VectorN<T, D>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+    D: DimName + DimNameAdd<U1>,
+    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
+{
+    type Output = VectorN<T, DimNameSum<D, U1>>;
+
+    fn extend(self, x: T) -> Self::Output {
+        VectorN::<_, DimNameSum<D, _>>::from_iterator(self.into_iter().cloned().chain(Some(x)))
     }
 }
 
@@ -321,73 +336,6 @@ where
     }
 }
 
-// TODO: It is possible to implement `Pop` for both column and row vectors.
-//       However, this is not possible for `Push`, because it may be ambiguous
-//       if a push should proceed down a row or column. Moreover, the type
-//       bounds to constrain such an implementation would be very complex.
-//
-//  impl<T, R, C> Pop for MatrixMN<T, R, C>
-//  where
-//      T: AddAssign + MulAssign + Real + Scalar,
-//      R: DimName + DimNameMin<C, Output = U1> + DimNameSub<U1>,
-//      C: DimName + DimNameMin<R, Output = U1> + DimNameSub<U1>,
-//      DimNameDiff<R, U1>: DimNameMax<U1>,
-//      DimNameDiff<C, U1>: DimNameMax<U1>,
-//      DefaultAllocator: Allocator<T, R, C>,
-//      DefaultAllocator: Allocator<
-//          T,
-//          DimNameMaximum<DimNameDiff<R, U1>, U1>,
-//          DimNameMaximum<DimNameDiff<C, U1>, U1>,
-//      >,
-//  {
-//      type Output =
-//          MatrixMN<T, DimNameMaximum<DimNameDiff<R, U1>, U1>, DimNameMaximum<DimNameDiff<C, U1>, U1>>;
-//
-//      fn pop(self) -> (Self::Output, T) {
-//          let n = self.len();
-//          let x = *self.get(n - 1).unwrap();
-//          (
-//              MatrixMN::<
-//                  T,
-//                  DimNameMaximum<DimNameDiff<R, U1>, U1>,
-//                  DimNameMaximum<DimNameDiff<C, U1>, U1>,
-//              >::from_iterator(self.into_iter().take(n - 1).cloned()),
-//              x,
-//          )
-//      }
-//  }
-
-impl<T, D> Pop for VectorN<T, D>
-where
-    T: AddAssign + MulAssign + Real + Scalar,
-    D: DimName + DimNameSub<U1>,
-    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
-{
-    type Output = VectorN<T, DimNameDiff<D, U1>>;
-
-    fn pop(self) -> (Self::Output, T) {
-        let n = self.len();
-        let x = *self.get(n - 1).unwrap();
-        (
-            VectorN::<_, DimNameDiff<D, _>>::from_iterator(self.into_iter().take(n - 1).cloned()),
-            x,
-        )
-    }
-}
-
-impl<T, D> Push for VectorN<T, D>
-where
-    T: AddAssign + MulAssign + Real + Scalar,
-    D: DimName + DimNameAdd<U1>,
-    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
-{
-    type Output = VectorN<T, DimNameSum<D, U1>>;
-
-    fn push(self, x: T) -> Self::Output {
-        VectorN::<_, DimNameSum<D, _>>::from_iterator(self.into_iter().cloned().chain(Some(x)))
-    }
-}
-
 impl<T> SquareMatrix for Matrix2<T>
 where
     T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
@@ -403,6 +351,24 @@ where
 {
     fn multiplicative_identity() -> Self {
         nalgebra::Matrix3::<T>::identity()
+    }
+}
+
+impl<T, D> Truncate for VectorN<T, D>
+where
+    T: AddAssign + MulAssign + Real + Scalar,
+    D: DimName + DimNameSub<U1>,
+    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
+{
+    type Output = VectorN<T, DimNameDiff<D, U1>>;
+
+    fn truncate(self) -> (Self::Output, T) {
+        let n = self.len();
+        let x = *self.get(n - 1).unwrap();
+        (
+            VectorN::<_, DimNameDiff<D, _>>::from_iterator(self.into_iter().take(n - 1).cloned()),
+            x,
+        )
     }
 }
 
@@ -492,6 +458,20 @@ where
 {
     fn converged(value: Self::Item) -> Self {
         Point::from(VectorN::<T, D>::converged(value))
+    }
+}
+
+impl<T, D> Extend for Point<T, D>
+where
+    T: Scalar,
+    D: DimName + DimNameAdd<U1>,
+    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
+    VectorN<T, D>: Adjunct<Item = T> + Extend<Output = VectorN<T, DimNameSum<D, U1>>>,
+{
+    type Output = Point<T, DimNameSum<D, U1>>;
+
+    fn extend(self, x: T) -> Self::Output {
+        self.coords.extend(x).into()
     }
 }
 
@@ -607,32 +587,18 @@ where
     }
 }
 
-impl<T, D> Pop for Point<T, D>
+impl<T, D> Truncate for Point<T, D>
 where
     T: Scalar,
     D: DimName + DimNameSub<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
-    VectorN<T, D>: Adjunct<Item = T> + Pop<Output = VectorN<T, DimNameDiff<D, U1>>>,
+    VectorN<T, D>: Adjunct<Item = T> + Truncate<Output = VectorN<T, DimNameDiff<D, U1>>>,
 {
     type Output = Point<T, DimNameDiff<D, U1>>;
 
-    fn pop(self) -> (Self::Output, T) {
-        let (vector, x) = self.coords.pop();
+    fn truncate(self) -> (Self::Output, T) {
+        let (vector, x) = self.coords.truncate();
         (vector.into(), x)
-    }
-}
-
-impl<T, D> Push for Point<T, D>
-where
-    T: Scalar,
-    D: DimName + DimNameAdd<U1>,
-    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
-    VectorN<T, D>: Adjunct<Item = T> + Push<Output = VectorN<T, DimNameSum<D, U1>>>,
-{
-    type Output = Point<T, DimNameSum<D, U1>>;
-
-    fn push(self, x: T) -> Self::Output {
-        self.coords.push(x).into()
     }
 }
 

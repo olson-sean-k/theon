@@ -5,7 +5,7 @@ use decorum::R64;
 use glam::{Vec2, Vec3, Vec3A, Vec4};
 use typenum::consts::{U2, U3};
 
-use crate::adjunct::{Adjunct, Converged, Fold, Map, Pop, Push, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
@@ -228,6 +228,31 @@ impl DualSpace for Vec3A {
     }
 }
 
+impl Extend for Vec2 {
+    // TODO: This is problematic when using `Vec3A`.
+    type Output = Vec3;
+
+    fn extend(self, w: Self::Item) -> Self::Output {
+        self.extend(w)
+    }
+}
+
+impl Extend for Vec3 {
+    type Output = Vec4;
+
+    fn extend(self, w: Self::Item) -> Self::Output {
+        self.extend(w)
+    }
+}
+
+impl Extend for Vec3A {
+    type Output = Vec4;
+
+    fn extend(self, w: Self::Item) -> Self::Output {
+        self.extend(w)
+    }
+}
+
 impl EuclideanSpace for Vec2 {
     type CoordinateSpace = Self;
 
@@ -357,46 +382,21 @@ impl Map<f32> for Vec3A {
     }
 }
 
-impl Pop for Vec3 {
+impl Truncate for Vec3 {
     type Output = Vec2;
 
-    fn pop(self) -> (Self::Output, Self::Item) {
+    fn truncate(self) -> (Self::Output, Self::Item) {
         let z = self.z();
         (self.truncate(), z)
     }
 }
 
-impl Pop for Vec3A {
+impl Truncate for Vec3A {
     type Output = Vec2;
 
-    fn pop(self) -> (Self::Output, Self::Item) {
+    fn truncate(self) -> (Self::Output, Self::Item) {
         let z = self.z();
         (self.truncate(), z)
-    }
-}
-
-impl Push for Vec2 {
-    // TODO: This is problematic when using `Vec3A`.
-    type Output = Vec3;
-
-    fn push(self, w: Self::Item) -> Self::Output {
-        self.extend(w)
-    }
-}
-
-impl Push for Vec3 {
-    type Output = Vec4;
-
-    fn push(self, w: Self::Item) -> Self::Output {
-        self.extend(w)
-    }
-}
-
-impl Push for Vec3A {
-    type Output = Vec4;
-
-    fn push(self, w: Self::Item) -> Self::Output {
-        self.extend(w)
     }
 }
 
