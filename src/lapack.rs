@@ -96,6 +96,7 @@ where
 
 #[cfg(all(test, feature = "geometry-nalgebra"))]
 mod tests {
+    use approx::assert_abs_diff_eq;
     use nalgebra::Point3;
 
     use crate::query::Plane;
@@ -107,11 +108,11 @@ mod tests {
     fn determined_svd_ev_plane_e3() {
         let plane = Plane::<E3>::from_points(vec![
             EuclideanSpace::from_xyz(1.0, 0.0, 0.0),
-            EuclideanSpace::from_xyz(0.0, 0.0, 0.0),
             EuclideanSpace::from_xyz(0.0, 1.0, 0.0),
+            EuclideanSpace::from_xyz(0.0, 0.0, 0.0),
         ])
         .unwrap();
-        assert_eq!(Vector::<E3>::z(), plane.normal.get().clone());
+        assert_abs_diff_eq!(Vector::<E3>::z(), plane.normal.get().clone());
     }
 
     #[test]
@@ -125,6 +126,6 @@ mod tests {
             EuclideanSpace::from_xyz(2.0, 3.0, 0.0),
         ])
         .unwrap();
-        assert_eq!(Vector::<E3>::z(), plane.normal.get().clone());
+        assert_abs_diff_eq!(Vector::<E3>::z(), plane.normal.get().clone());
     }
 }
