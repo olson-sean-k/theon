@@ -18,6 +18,9 @@ pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
 /// The vector (translation, coordinate space, etc.) of a `EuclideanSpace`.
 pub type Vector<S> = <S as EuclideanSpace>::CoordinateSpace;
 
+/// The projective space of a `EuclideanSpace`.
+pub type Projective<S> = <Vector<S> as Homogeneous>::ProjectiveSpace;
+
 pub trait FiniteDimensional {
     type N: NonZero + Unsigned;
 
@@ -367,12 +370,12 @@ pub trait EuclideanSpace:
         self.into_coordinates().into_xyz()
     }
 
-    fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
+    fn from_homogeneous(projective: Projective<Self>) -> Option<Self>
     where
-        Self: Homogeneous,
-        Self::ProjectiveSpace: Truncate<Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
+        Self::CoordinateSpace: Homogeneous,
+        Projective<Self>: Truncate<Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
     {
-        let (vector, factor) = vector.truncate();
+        let (vector, factor) = projective.truncate();
         if factor.is_zero() {
             None
         }
@@ -381,11 +384,10 @@ pub trait EuclideanSpace:
         }
     }
 
-    fn into_homogeneous(self) -> Self::ProjectiveSpace
+    fn into_homogeneous(self) -> Projective<Self>
     where
-        Self: Homogeneous,
-        Self::CoordinateSpace: Extend<Self::ProjectiveSpace>,
-        Self::ProjectiveSpace: VectorSpace<Scalar = Scalar<Self>>,
+        Self::CoordinateSpace: Homogeneous + Extend<Projective<Self>>,
+        Projective<Self>: VectorSpace<Scalar = Scalar<Self>>,
     {
         self.into_coordinates().extend(One::one())
     }
@@ -402,14 +404,6 @@ pub trait EuclideanSpace:
 // TODO: Constrain the dimensionality of the projective space. This introduces
 //       noisy type bounds, but ensures that the projective space has exactly
 //       one additional dimension (the line at infinity).
-//
-//   pub trait Homogeneous: FiniteDimensional
-//   where
-//       Self::N: Add<U1>,
-//       <Self::N as Add<U1>>::Output: NonZero + Unsigned,
-//   {
-//       type ProjectiveSpace: FiniteDimensional<N = <Self::N as Add<U1>>::Output>;
-//   }
-pub trait Homogeneous: FiniteDimensional {
-    type ProjectiveSpace: FiniteDimensional;
+pub trait Homogeneous: FiniteDimensional + VectorSpace {
+    type ProjectiveSpace: FiniteDimensional + VectorSpace;
 }

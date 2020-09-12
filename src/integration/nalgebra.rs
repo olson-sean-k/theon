@@ -185,14 +185,14 @@ where
 
 impl<T> Homogeneous for Vector2<T>
 where
-    T: Scalar,
+    T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     type ProjectiveSpace = Vector3<T>;
 }
 
 impl<T> Homogeneous for Vector3<T>
 where
-    T: Scalar,
+    T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
 {
     type ProjectiveSpace = Vector4<T>;
 }
@@ -368,7 +368,7 @@ where
 
 impl<T, D> Truncate<VectorN<T, DimNameDiff<D, U1>>> for VectorN<T, D>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: Real + Scalar,
     D: DimName + DimNameSub<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
 {
@@ -382,6 +382,7 @@ where
     }
 }
 
+// TODO: This is too general. Only "linear" types should implement this.
 impl<T, R, C> VectorSpace for MatrixMN<T, R, C>
 where
     T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
@@ -539,20 +540,6 @@ where
     {
         Some(Point::from(VectorN::from_iterator(items)))
     }
-}
-
-impl<T> Homogeneous for Point2<T>
-where
-    T: Scalar,
-{
-    type ProjectiveSpace = Point3<T>;
-}
-
-impl<T> Homogeneous for Point3<T>
-where
-    T: Scalar,
-{
-    type ProjectiveSpace = Point4<T>;
 }
 
 impl<T, D> Interpolate for Point<T, D>

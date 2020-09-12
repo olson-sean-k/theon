@@ -3,7 +3,7 @@
 use approx::AbsDiffEq;
 use arrayvec::ArrayVec;
 use decorum::{Real, R64};
-use num::{Num, NumCast, One, Zero};
+use num::{Num, NumCast};
 use typenum::consts::{U2, U3, U4};
 
 use crate::adjunct::{
@@ -33,7 +33,7 @@ impl<T> Adjunct for Vector4<T> {
 
 impl<T> Basis for Vector2<T>
 where
-    T: One + Zero,
+    T: BaseNum,
 {
     type Bases = ArrayVec<[Self; 2]>;
 
@@ -46,8 +46,8 @@ where
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
         match index {
-            0 => Some(Vector2::new(T::one(), T::zero())),
-            1 => Some(Vector2::new(T::zero(), T::one())),
+            0 => Some(Vector2::unit_x()),
+            1 => Some(Vector2::unit_y()),
             _ => None,
         }
     }
@@ -55,7 +55,7 @@ where
 
 impl<T> Basis for Vector3<T>
 where
-    T: One + Zero,
+    T: BaseNum,
 {
     type Bases = ArrayVec<[Self; 3]>;
 
@@ -69,9 +69,35 @@ where
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
         match index {
-            0 => Some(Vector3::new(T::one(), T::zero(), T::zero())),
-            1 => Some(Vector3::new(T::zero(), T::one(), T::zero())),
-            2 => Some(Vector3::new(T::zero(), T::zero(), T::one())),
+            0 => Some(Vector3::unit_x()),
+            1 => Some(Vector3::unit_y()),
+            2 => Some(Vector3::unit_z()),
+            _ => None,
+        }
+    }
+}
+
+impl<T> Basis for Vector4<T>
+where
+    T: BaseNum,
+{
+    type Bases = ArrayVec<[Self; 4]>;
+
+    fn canonical_basis() -> Self::Bases {
+        ArrayVec::from([
+            Self::canonical_basis_component(0).unwrap(),
+            Self::canonical_basis_component(1).unwrap(),
+            Self::canonical_basis_component(2).unwrap(),
+            Self::canonical_basis_component(3).unwrap(),
+        ])
+    }
+
+    fn canonical_basis_component(index: usize) -> Option<Self> {
+        match index {
+            0 => Some(Vector4::unit_x()),
+            1 => Some(Vector4::unit_y()),
+            2 => Some(Vector4::unit_z()),
+            3 => Some(Vector4::unit_w()),
             _ => None,
         }
     }
@@ -92,6 +118,15 @@ where
 {
     fn converged(value: Self::Item) -> Self {
         Vector3::new(value, value, value)
+    }
+}
+
+impl<T> Converged for Vector4<T>
+where
+    T: Copy,
+{
+    fn converged(value: Self::Item) -> Self {
+        Vector4::new(value, value, value, value)
     }
 }
 
@@ -128,6 +163,17 @@ where
     }
 }
 
+impl<T> Dot for Vector4<T>
+where
+    T: BaseFloat,
+{
+    type Output = T;
+
+    fn dot(self, other: Self) -> Self::Output {
+        <Self as cgmath::InnerSpace>::dot(self, other)
+    }
+}
+
 impl<T> DualSpace for Vector2<T>
 where
     T: AbsDiffEq + BaseNum + Real,
@@ -140,6 +186,17 @@ where
 }
 
 impl<T> DualSpace for Vector3<T>
+where
+    T: AbsDiffEq + BaseNum + Real,
+{
+    type Dual = Self;
+
+    fn transpose(self) -> Self::Dual {
+        self
+    }
+}
+
+impl<T> DualSpace for Vector4<T>
 where
     T: AbsDiffEq + BaseNum + Real,
 {
@@ -210,6 +267,21 @@ where
     }
 }
 
+impl<T> Fold for Vector4<T>
+where
+    T: Copy,
+{
+    fn fold<U, F>(self, mut seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        for a in &[self.x, self.y, self.z, self.w] {
+            seed = f(seed, *a);
+        }
+        seed
+    }
+}
+
 impl<T> FromItems for Vector2<T> {
     fn from_items<I>(items: I) -> Option<Self>
     where
@@ -236,17 +308,25 @@ impl<T> FromItems for Vector3<T> {
     }
 }
 
-impl<T> Homogeneous for Vector2<T> {
+impl<T> Homogeneous for Vector2<T>
+where
+    T: AbsDiffEq + BaseNum + Real,
+{
     type ProjectiveSpace = Vector3<T>;
 }
 
-impl<T> Homogeneous for Vector3<T> {
+impl<T> Homogeneous for Vector3<T>
+where
+    T: AbsDiffEq + BaseNum + Real,
+{
     type ProjectiveSpace = Vector4<T>;
 }
 
 impl<T> InnerSpace for Vector2<T> where T: BaseFloat + Real {}
 
 impl<T> InnerSpace for Vector3<T> where T: BaseFloat + Real {}
+
+impl<T> InnerSpace for Vector4<T> where T: BaseFloat + Real {}
 
 impl<T> Interpolate for Vector2<T>
 where
@@ -260,6 +340,17 @@ where
 }
 
 impl<T> Interpolate for Vector3<T>
+where
+    T: Num + NumCast,
+{
+    type Output = Self;
+
+    fn lerp(self, other: Self, f: R64) -> Self::Output {
+        self.zip_map(other, |a, b| crate::lerp(a, b, f))
+    }
+}
+
+impl<T> Interpolate for Vector4<T>
 where
     T: Num + NumCast,
 {
@@ -308,24 +399,23 @@ impl<T, U> Map<U> for Vector3<T> {
     }
 }
 
+impl<T, U> Map<U> for Vector4<T> {
+    type Output = Vector4<U>;
+
+    fn map<F>(self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item) -> U,
+    {
+        Vector4::new(f(self.x), f(self.y), f(self.z), f(self.w))
+    }
+}
+
 impl<T> Truncate<Vector2<T>> for Vector3<T>
 where
     T: BaseNum,
 {
     fn truncate(self) -> (Vector2<T>, T) {
         (self.truncate(), self.z)
-    }
-}
-
-// See implementation of `Extend<Vector4<T>>` for `Point3<T>`.
-impl<T> Truncate<Point3<T>> for Vector4<T>
-where
-    T: BaseNum,
-{
-    fn truncate(self) -> (Point3<T>, T) {
-        let w = self.w;
-        let Vector3 { x, y, z } = self.truncate();
-        (Point3::new(x, y, z), w)
     }
 }
 
@@ -377,6 +467,23 @@ where
     }
 }
 
+impl<T> VectorSpace for Vector4<T>
+where
+    T: AbsDiffEq + BaseNum + Real,
+{
+    type Scalar = T;
+
+    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
+        match index {
+            0 => Some(self.x),
+            1 => Some(self.y),
+            2 => Some(self.z),
+            3 => Some(self.w),
+            _ => None,
+        }
+    }
+}
+
 impl<T, U> ZipMap<U> for Vector2<T> {
     type Output = Vector2<U>;
 
@@ -396,6 +503,22 @@ impl<T, U> ZipMap<U> for Vector3<T> {
         F: FnMut(Self::Item, Self::Item) -> U,
     {
         Vector3::new(f(self.x, other.x), f(self.y, other.y), f(self.z, other.z))
+    }
+}
+
+impl<T, U> ZipMap<U> for Vector4<T> {
+    type Output = Vector4<U>;
+
+    fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item, Self::Item) -> U,
+    {
+        Vector4::new(
+            f(self.x, other.x),
+            f(self.y, other.y),
+            f(self.z, other.z),
+            f(self.w, other.w),
+        )
     }
 }
 
@@ -490,15 +613,6 @@ impl<T> Extend<Point3<T>> for Point2<T> {
     }
 }
 
-// TODO: `cgmath` does not provide a `Point4` type. For this to be complete,
-//       Euclidean traits must be implemented for vectors (at least `Vector4`).
-impl<T> Extend<Vector4<T>> for Point3<T> {
-    fn extend(self, w: T) -> Vector4<T> {
-        let Point3 { x, y, z } = self;
-        Vector4::new(x, y, z, w)
-    }
-}
-
 impl<T> EuclideanSpace for Point2<T>
 where
     T: BaseFloat + Real,
@@ -583,10 +697,6 @@ impl<T> FromItems for Point3<T> {
             _ => None,
         }
     }
-}
-
-impl<T> Homogeneous for Point2<T> {
-    type ProjectiveSpace = Point3<T>;
 }
 
 impl<T> Interpolate for Point2<T>

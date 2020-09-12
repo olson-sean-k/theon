@@ -146,6 +146,29 @@ impl Basis for Vec3A {
     }
 }
 
+impl Basis for Vec4 {
+    type Bases = ArrayVec<[Self; 4]>;
+
+    fn canonical_basis() -> Self::Bases {
+        ArrayVec::from([
+            Self::canonical_basis_component(0).unwrap(),
+            Self::canonical_basis_component(1).unwrap(),
+            Self::canonical_basis_component(2).unwrap(),
+            Self::canonical_basis_component(3).unwrap(),
+        ])
+    }
+
+    fn canonical_basis_component(index: usize) -> Option<Self> {
+        match index {
+            0 => Some(Self::unit_x()),
+            1 => Some(Self::unit_y()),
+            2 => Some(Self::unit_z()),
+            3 => Some(Self::unit_w()),
+            _ => None,
+        }
+    }
+}
+
 impl Converged for Vec2 {
     fn converged(value: Self::Item) -> Self {
         Self::splat(value)
@@ -159,6 +182,12 @@ impl Converged for Vec3 {
 }
 
 impl Converged for Vec3A {
+    fn converged(value: Self::Item) -> Self {
+        Self::splat(value)
+    }
+}
+
+impl Converged for Vec4 {
     fn converged(value: Self::Item) -> Self {
         Self::splat(value)
     }
@@ -204,6 +233,14 @@ impl Dot for Vec3A {
     }
 }
 
+impl Dot for Vec4 {
+    type Output = f32;
+
+    fn dot(self, other: Self) -> Self::Output {
+        Self::dot(self, other)
+    }
+}
+
 impl DualSpace for Vec2 {
     type Dual = Self;
 
@@ -221,6 +258,14 @@ impl DualSpace for Vec3 {
 }
 
 impl DualSpace for Vec3A {
+    type Dual = Self;
+
+    fn transpose(self) -> Self::Dual {
+        self
+    }
+}
+
+impl DualSpace for Vec4 {
     type Dual = Self;
 
     fn transpose(self) -> Self::Dual {
@@ -319,6 +364,15 @@ impl Fold for Vec3A {
     }
 }
 
+impl Fold for Vec4 {
+    fn fold<T, F>(self, seed: T, f: F) -> T
+    where
+        F: FnMut(T, Self::Item) -> T,
+    {
+        <[f32; 4]>::from(self).iter().cloned().fold(seed, f)
+    }
+}
+
 impl Homogeneous for Vec2 {
     type ProjectiveSpace = Vec3;
 }
@@ -337,6 +391,8 @@ impl InnerSpace for Vec3 {}
 
 impl InnerSpace for Vec3A {}
 
+impl InnerSpace for Vec4 {}
+
 impl Interpolate for Vec2 {
     type Output = Self;
 
@@ -354,6 +410,14 @@ impl Interpolate for Vec3 {
 }
 
 impl Interpolate for Vec3A {
+    type Output = Self;
+
+    fn lerp(self, other: Self, f: R64) -> Self::Output {
+        Self::lerp(self, other, f64::from(f) as f32)
+    }
+}
+
+impl Interpolate for Vec4 {
     type Output = Self;
 
     fn lerp(self, other: Self, f: R64) -> Self::Output {
@@ -394,6 +458,19 @@ impl Map<f32> for Vec3A {
     {
         let [x, y, z]: [f32; 3] = self.into();
         [f(x), f(y), f(z)].into()
+    }
+}
+
+impl Map<f32> for Vec4 {
+    type Output = Self;
+
+    #[allow(clippy::many_single_char_names)]
+    fn map<F>(self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item) -> f32,
+    {
+        let [x, y, z, w]: [f32; 4] = self.into();
+        [f(x), f(y), f(z), f(w)].into()
     }
 }
 
@@ -487,6 +564,24 @@ impl VectorSpace for Vec3A {
     }
 }
 
+impl VectorSpace for Vec4 {
+    type Scalar = f32;
+
+    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
+        match index {
+            0 => Some(self.x()),
+            1 => Some(self.y()),
+            2 => Some(self.z()),
+            3 => Some(self.w()),
+            _ => None,
+        }
+    }
+
+    fn zero() -> Self {
+        Self::zero()
+    }
+}
+
 impl ZipMap<f32> for Vec2 {
     type Output = Self;
 
@@ -523,6 +618,35 @@ impl ZipMap<f32> for Vec3A {
         let [x1, y1, z1]: [f32; 3] = self.into();
         let [x2, y2, z2]: [f32; 3] = other.into();
         From::from([f(x1, x2), f(y1, y2), f(z1, z2)])
+    }
+
+    fn per_item_sum(self, other: Self) -> Self::Output
+    where
+        Self: Adjunct<Item = f32>,
+    {
+        // The `Add` implementation uses `_mm_add_ps`.
+        self + other
+    }
+
+    fn per_item_product(self, other: Self) -> Self::Output
+    where
+        Self: Adjunct<Item = f32>,
+    {
+        // The `Mul` implementation uses `_mm_mul_ps`.
+        self * other
+    }
+}
+
+impl ZipMap<f32> for Vec4 {
+    type Output = Self;
+
+    fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item, Self::Item) -> f32,
+    {
+        let [x1, y1, z1, w1]: [f32; 4] = self.into();
+        let [x2, y2, z2, w2]: [f32; 4] = other.into();
+        From::from([f(x1, x2), f(y1, y2), f(z1, z2), f(w1, w2)])
     }
 
     fn per_item_sum(self, other: Self) -> Self::Output
