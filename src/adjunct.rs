@@ -46,16 +46,21 @@ pub trait Map<T = <Self as Adjunct>::Item>: Adjunct {
         F: FnMut(Self::Item) -> T;
 }
 
-pub trait Truncate: Adjunct {
-    type Output: Adjunct<Item = Self::Item>;
-
-    fn truncate(self) -> (Self::Output, Self::Item);
+// TODO: Consider renaming the `Truncate` and `Extend` traits to `TruncateMap`,
+//       `TruncateInto`, etc., because these traits must support multiple output
+//       types.
+pub trait Truncate<S>: Adjunct
+where
+    S: Adjunct<Item = Self::Item>,
+{
+    fn truncate(self) -> (S, Self::Item);
 }
 
-pub trait Extend: Adjunct {
-    type Output: Adjunct<Item = Self::Item>;
-
-    fn extend(self, item: Self::Item) -> Self::Output;
+pub trait Extend<S>: Adjunct
+where
+    S: Adjunct<Item = Self::Item>,
+{
+    fn extend(self, item: Self::Item) -> S;
 }
 
 pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
@@ -267,19 +272,15 @@ impl<T, U> Map<U> for (T, T, T) {
     }
 }
 
-impl<T> Truncate for (T, T, T) {
-    type Output = (T, T);
-
-    fn truncate(self) -> (Self::Output, Self::Item) {
+impl<T> Truncate<(T, T)> for (T, T, T) {
+    fn truncate(self) -> ((T, T), Self::Item) {
         let (a, b, c) = self;
         ((a, b), c)
     }
 }
 
-impl<T> Extend for (T, T) {
-    type Output = (T, T, T);
-
-    fn extend(self, item: Self::Item) -> Self::Output {
+impl<T> Extend<(T, T, T)> for (T, T) {
+    fn extend(self, item: Self::Item) -> (T, T, T) {
         let (a, b) = self;
         (a, b, item)
     }

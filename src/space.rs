@@ -173,7 +173,7 @@ pub trait VectorSpace:
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
     where
         Self: Homogeneous,
-        Self::ProjectiveSpace: Truncate<Output = Self> + VectorSpace<Scalar = Self::Scalar>,
+        Self::ProjectiveSpace: Truncate<Self> + VectorSpace<Scalar = Self::Scalar>,
     {
         let (vector, factor) = vector.truncate();
         if factor.is_zero() {
@@ -186,7 +186,7 @@ pub trait VectorSpace:
 
     fn into_homogeneous(self) -> Self::ProjectiveSpace
     where
-        Self: Homogeneous + Extend<Output = <Self as Homogeneous>::ProjectiveSpace>,
+        Self: Homogeneous + Extend<<Self as Homogeneous>::ProjectiveSpace>,
         Self::ProjectiveSpace: VectorSpace<Scalar = Self::Scalar>,
     {
         self.extend(Zero::zero())
@@ -370,8 +370,7 @@ pub trait EuclideanSpace:
     fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
     where
         Self: Homogeneous,
-        Self::ProjectiveSpace:
-            Truncate<Output = Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
+        Self::ProjectiveSpace: Truncate<Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
     {
         let (vector, factor) = vector.truncate();
         if factor.is_zero() {
@@ -385,7 +384,7 @@ pub trait EuclideanSpace:
     fn into_homogeneous(self) -> Self::ProjectiveSpace
     where
         Self: Homogeneous,
-        Self::CoordinateSpace: Extend<Output = Self::ProjectiveSpace>,
+        Self::CoordinateSpace: Extend<Self::ProjectiveSpace>,
         Self::ProjectiveSpace: VectorSpace<Scalar = Scalar<Self>>,
     {
         self.into_coordinates().extend(One::one())

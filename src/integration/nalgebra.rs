@@ -18,8 +18,8 @@ use crate::adjunct::{
 };
 use crate::ops::{Cross, Dot, Interpolate, MulMN};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, Matrix,
-    SquareMatrix, VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
+    Matrix, SquareMatrix, VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
 
@@ -127,15 +127,13 @@ where
     }
 }
 
-impl<T, D> Extend for VectorN<T, D>
+impl<T, D> Extend<VectorN<T, DimNameSum<D, U1>>> for VectorN<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar,
     D: DimName + DimNameAdd<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
 {
-    type Output = VectorN<T, DimNameSum<D, U1>>;
-
-    fn extend(self, x: T) -> Self::Output {
+    fn extend(self, x: T) -> VectorN<T, DimNameSum<D, U1>> {
         VectorN::<_, DimNameSum<D, _>>::from_iterator(self.into_iter().cloned().chain(Some(x)))
     }
 }
@@ -183,6 +181,20 @@ where
     {
         Some(Self::from_iterator(items))
     }
+}
+
+impl<T> Homogeneous for Vector2<T>
+where
+    T: Scalar,
+{
+    type ProjectiveSpace = Vector3<T>;
+}
+
+impl<T> Homogeneous for Vector3<T>
+where
+    T: Scalar,
+{
+    type ProjectiveSpace = Vector4<T>;
 }
 
 impl<T, D> InnerSpace for VectorN<T, D>
@@ -354,15 +366,13 @@ where
     }
 }
 
-impl<T, D> Truncate for VectorN<T, D>
+impl<T, D> Truncate<VectorN<T, DimNameDiff<D, U1>>> for VectorN<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar,
     D: DimName + DimNameSub<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
 {
-    type Output = VectorN<T, DimNameDiff<D, U1>>;
-
-    fn truncate(self) -> (Self::Output, T) {
+    fn truncate(self) -> (VectorN<T, DimNameDiff<D, U1>>, T) {
         let n = self.len();
         let x = *self.get(n - 1).unwrap();
         (
@@ -461,16 +471,14 @@ where
     }
 }
 
-impl<T, D> Extend for Point<T, D>
+impl<T, D> Extend<Point<T, DimNameSum<D, U1>>> for Point<T, D>
 where
     T: Scalar,
     D: DimName + DimNameAdd<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
-    VectorN<T, D>: Adjunct<Item = T> + Extend<Output = VectorN<T, DimNameSum<D, U1>>>,
+    VectorN<T, D>: Adjunct<Item = T> + Extend<VectorN<T, DimNameSum<D, U1>>>,
 {
-    type Output = Point<T, DimNameSum<D, U1>>;
-
-    fn extend(self, x: T) -> Self::Output {
+    fn extend(self, x: T) -> Point<T, DimNameSum<D, U1>> {
         self.coords.extend(x).into()
     }
 }
@@ -533,6 +541,20 @@ where
     }
 }
 
+impl<T> Homogeneous for Point2<T>
+where
+    T: Scalar,
+{
+    type ProjectiveSpace = Point3<T>;
+}
+
+impl<T> Homogeneous for Point3<T>
+where
+    T: Scalar,
+{
+    type ProjectiveSpace = Point4<T>;
+}
+
 impl<T, D> Interpolate for Point<T, D>
 where
     T: Num + NumCast + Scalar,
@@ -587,16 +609,14 @@ where
     }
 }
 
-impl<T, D> Truncate for Point<T, D>
+impl<T, D> Truncate<Point<T, DimNameDiff<D, U1>>> for Point<T, D>
 where
     T: Scalar,
     D: DimName + DimNameSub<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
-    VectorN<T, D>: Adjunct<Item = T> + Truncate<Output = VectorN<T, DimNameDiff<D, U1>>>,
+    VectorN<T, D>: Adjunct<Item = T> + Truncate<VectorN<T, DimNameDiff<D, U1>>>,
 {
-    type Output = Point<T, DimNameDiff<D, U1>>;
-
-    fn truncate(self) -> (Self::Output, T) {
+    fn truncate(self) -> (Point<T, DimNameDiff<D, U1>>, T) {
         let (vector, x) = self.coords.truncate();
         (vector.into(), x)
     }

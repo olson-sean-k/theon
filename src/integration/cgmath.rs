@@ -4,14 +4,15 @@ use approx::AbsDiffEq;
 use arrayvec::ArrayVec;
 use decorum::{Real, R64};
 use num::{Num, NumCast, One, Zero};
-use typenum::consts::{U2, U3};
+use typenum::consts::{U2, U3, U4};
 
 use crate::adjunct::{
     Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Map, Truncate, ZipMap,
 };
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
+    VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
 
@@ -23,6 +24,10 @@ impl<T> Adjunct for Vector2<T> {
 }
 
 impl<T> Adjunct for Vector3<T> {
+    type Item = T;
+}
+
+impl<T> Adjunct for Vector4<T> {
     type Item = T;
 }
 
@@ -145,14 +150,21 @@ where
     }
 }
 
-impl<T> Extend for Vector2<T>
+impl<T> Extend<Vector3<T>> for Vector2<T>
 where
     T: BaseNum,
 {
-    type Output = Vector3<T>;
-
-    fn extend(self, z: T) -> Self::Output {
+    fn extend(self, z: T) -> Vector3<T> {
         self.extend(z)
+    }
+}
+
+impl<T> Extend<Vector4<T>> for Vector3<T>
+where
+    T: BaseNum,
+{
+    fn extend(self, w: T) -> Vector4<T> {
+        self.extend(w)
     }
 }
 
@@ -162,6 +174,10 @@ impl<T> FiniteDimensional for Vector2<T> {
 
 impl<T> FiniteDimensional for Vector3<T> {
     type N = U3;
+}
+
+impl<T> FiniteDimensional for Vector4<T> {
+    type N = U4;
 }
 
 impl<T> Fold for Vector2<T>
@@ -218,6 +234,14 @@ impl<T> FromItems for Vector3<T> {
             _ => None,
         }
     }
+}
+
+impl<T> Homogeneous for Vector2<T> {
+    type ProjectiveSpace = Vector3<T>;
+}
+
+impl<T> Homogeneous for Vector3<T> {
+    type ProjectiveSpace = Vector4<T>;
 }
 
 impl<T> InnerSpace for Vector2<T> where T: BaseFloat + Real {}
@@ -284,14 +308,33 @@ impl<T, U> Map<U> for Vector3<T> {
     }
 }
 
-impl<T> Truncate for Vector3<T>
+impl<T> Truncate<Vector2<T>> for Vector3<T>
 where
     T: BaseNum,
 {
-    type Output = Vector2<T>;
-
-    fn truncate(self) -> (Self::Output, T) {
+    fn truncate(self) -> (Vector2<T>, T) {
         (self.truncate(), self.z)
+    }
+}
+
+// See implementation of `Extend<Vector4<T>>` for `Point3<T>`.
+impl<T> Truncate<Point3<T>> for Vector4<T>
+where
+    T: BaseNum,
+{
+    fn truncate(self) -> (Point3<T>, T) {
+        let w = self.w;
+        let Vector3 { x, y, z } = self.truncate();
+        (Point3::new(x, y, z), w)
+    }
+}
+
+impl<T> Truncate<Vector3<T>> for Vector4<T>
+where
+    T: BaseNum,
+{
+    fn truncate(self) -> (Vector3<T>, T) {
+        (self.truncate(), self.w)
     }
 }
 
@@ -440,12 +483,19 @@ where
     }
 }
 
-impl<T> Extend for Point2<T> {
-    type Output = Point3<T>;
-
-    fn extend(self, z: T) -> Self::Output {
+impl<T> Extend<Point3<T>> for Point2<T> {
+    fn extend(self, z: T) -> Point3<T> {
         let Point2 { x, y } = self;
         Point3::new(x, y, z)
+    }
+}
+
+// TODO: `cgmath` does not provide a `Point4` type. For this to be complete,
+//       Euclidean traits must be implemented for vectors (at least `Vector4`).
+impl<T> Extend<Vector4<T>> for Point3<T> {
+    fn extend(self, w: T) -> Vector4<T> {
+        let Point3 { x, y, z } = self;
+        Vector4::new(x, y, z, w)
     }
 }
 
@@ -535,6 +585,10 @@ impl<T> FromItems for Point3<T> {
     }
 }
 
+impl<T> Homogeneous for Point2<T> {
+    type ProjectiveSpace = Point3<T>;
+}
+
 impl<T> Interpolate for Point2<T>
 where
     T: Num + NumCast,
@@ -595,10 +649,8 @@ impl<T, U> Map<U> for Point3<T> {
     }
 }
 
-impl<T> Truncate for Point3<T> {
-    type Output = Point2<T>;
-
-    fn truncate(self) -> (Self::Output, T) {
+impl<T> Truncate<Point2<T>> for Point3<T> {
+    fn truncate(self) -> (Point2<T>, T) {
         let Point3 { x, y, z } = self;
         (Point2::new(x, y), z)
     }

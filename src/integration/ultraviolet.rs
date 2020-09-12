@@ -2,14 +2,15 @@
 
 use arrayvec::ArrayVec;
 use decorum::R64;
-use typenum::consts::{U2, U3};
+use typenum::consts::{U2, U3, U4};
 use ultraviolet::lerp::Lerp;
 use ultraviolet::vec::{Vec2, Vec3, Vec4};
 
 use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
+    VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
 
@@ -156,19 +157,15 @@ impl DualSpace for Vec3 {
     }
 }
 
-impl Extend for Vec2 {
-    type Output = Vec3;
-
-    fn extend(self, z: Self::Item) -> Self::Output {
+impl Extend<Vec3> for Vec2 {
+    fn extend(self, z: Self::Item) -> Vec3 {
         let (x, y) = self.into();
         [x, y, z].into()
     }
 }
 
-impl Extend for Vec3 {
-    type Output = Vec4;
-
-    fn extend(self, w: Self::Item) -> Self::Output {
+impl Extend<Vec4> for Vec3 {
+    fn extend(self, w: Self::Item) -> Vec4 {
         let (x, y, z) = self.into();
         [x, y, z, w].into()
     }
@@ -198,6 +195,10 @@ impl FiniteDimensional for Vec3 {
     type N = U3;
 }
 
+impl FiniteDimensional for Vec4 {
+    type N = U4;
+}
+
 impl Fold for Vec2 {
     fn fold<T, F>(self, seed: T, f: F) -> T
     where
@@ -214,6 +215,14 @@ impl Fold for Vec3 {
     {
         self.as_slice().iter().cloned().fold(seed, f)
     }
+}
+
+impl Homogeneous for Vec2 {
+    type ProjectiveSpace = Vec3;
+}
+
+impl Homogeneous for Vec3 {
+    type ProjectiveSpace = Vec4;
 }
 
 impl InnerSpace for Vec2 {}
@@ -260,12 +269,17 @@ impl Map<f32> for Vec3 {
     }
 }
 
-impl Truncate for Vec3 {
-    type Output = Vec2;
-
-    fn truncate(self) -> (Self::Output, Self::Item) {
+impl Truncate<Vec2> for Vec3 {
+    fn truncate(self) -> (Vec2, Self::Item) {
         let z = self.z;
         (self.into(), z)
+    }
+}
+
+impl Truncate<Vec3> for Vec4 {
+    fn truncate(self) -> (Vec3, Self::Item) {
+        let w = self.w;
+        (self.into(), w)
     }
 }
 

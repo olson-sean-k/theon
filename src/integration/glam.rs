@@ -2,12 +2,13 @@
 
 use arrayvec::ArrayVec;
 use decorum::R64;
-use typenum::consts::{U2, U3};
+use typenum::consts::{U2, U3, U4};
 
 use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
-    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, InnerSpace, VectorSpace,
+    AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
+    VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
 
@@ -227,27 +228,26 @@ impl DualSpace for Vec3A {
     }
 }
 
-impl Extend for Vec2 {
-    // TODO: This is problematic when using `Vec3A`.
-    type Output = Vec3;
-
-    fn extend(self, w: Self::Item) -> Self::Output {
+impl Extend<Vec3> for Vec2 {
+    fn extend(self, w: Self::Item) -> Vec3 {
         self.extend(w)
     }
 }
 
-impl Extend for Vec3 {
-    type Output = Vec4;
+impl Extend<Vec3A> for Vec2 {
+    fn extend(self, w: Self::Item) -> Vec3A {
+        self.extend(w).into()
+    }
+}
 
-    fn extend(self, w: Self::Item) -> Self::Output {
+impl Extend<Vec4> for Vec3 {
+    fn extend(self, w: Self::Item) -> Vec4 {
         self.extend(w)
     }
 }
 
-impl Extend for Vec3A {
-    type Output = Vec4;
-
-    fn extend(self, w: Self::Item) -> Self::Output {
+impl Extend<Vec4> for Vec3A {
+    fn extend(self, w: Self::Item) -> Vec4 {
         self.extend(w)
     }
 }
@@ -288,6 +288,10 @@ impl FiniteDimensional for Vec3A {
     type N = U3;
 }
 
+impl FiniteDimensional for Vec4 {
+    type N = U4;
+}
+
 impl Fold for Vec2 {
     fn fold<T, F>(self, seed: T, f: F) -> T
     where
@@ -313,6 +317,18 @@ impl Fold for Vec3A {
     {
         <[f32; 3]>::from(self).iter().cloned().fold(seed, f)
     }
+}
+
+impl Homogeneous for Vec2 {
+    type ProjectiveSpace = Vec3;
+}
+
+impl Homogeneous for Vec3 {
+    type ProjectiveSpace = Vec4;
+}
+
+impl Homogeneous for Vec3A {
+    type ProjectiveSpace = Vec4;
 }
 
 impl InnerSpace for Vec2 {}
@@ -381,19 +397,29 @@ impl Map<f32> for Vec3A {
     }
 }
 
-impl Truncate for Vec3 {
-    type Output = Vec2;
-
-    fn truncate(self) -> (Self::Output, Self::Item) {
+impl Truncate<Vec2> for Vec3 {
+    fn truncate(self) -> (Vec2, Self::Item) {
         let z = self.z();
         (self.truncate(), z)
     }
 }
 
-impl Truncate for Vec3A {
-    type Output = Vec2;
+impl Truncate<Vec2> for Vec3A {
+    fn truncate(self) -> (Vec2, Self::Item) {
+        let z = self.z();
+        (self.truncate(), z)
+    }
+}
 
-    fn truncate(self) -> (Self::Output, Self::Item) {
+impl Truncate<Vec3> for Vec4 {
+    fn truncate(self) -> (Vec3, Self::Item) {
+        let z = self.z();
+        (self.truncate().into(), z)
+    }
+}
+
+impl Truncate<Vec3A> for Vec4 {
+    fn truncate(self) -> (Vec3A, Self::Item) {
         let z = self.z();
         (self.truncate(), z)
     }
