@@ -373,6 +373,25 @@ where
     Line(Line<S>),
 }
 
+impl<S> LineLine<S>
+where
+    S: EuclideanSpace,
+{
+    pub fn into_point(self) -> Option<S> {
+        match self {
+            LineLine::Point(point) => Some(point),
+            _ => None,
+        }
+    }
+
+    pub fn into_line(self) -> Option<Line<S>> {
+        match self {
+            LineLine::Line(line) => Some(line),
+            _ => None,
+        }
+    }
+}
+
 impl<S> Debug for LineLine<S>
 where
     S: Debug + EuclideanSpace,
@@ -432,6 +451,25 @@ where
 {
     TimeOfImpact(Scalar<S>),
     Line(Line<S>),
+}
+
+impl<S> LinePlane<S>
+where
+    S: EuclideanSpace,
+{
+    pub fn into_time_of_impact(self) -> Option<Scalar<S>> {
+        match self {
+            LinePlane::TimeOfImpact(time) => Some(time),
+            _ => None,
+        }
+    }
+
+    pub fn into_line(self) -> Option<Line<S>> {
+        match self {
+            LinePlane::Line(line) => Some(line),
+            _ => None,
+        }
+    }
 }
 
 impl<S> Debug for LinePlane<S>
@@ -855,6 +893,25 @@ where
 {
     TimeOfImpact(Scalar<S>),
     Ray(Ray<S>),
+}
+
+impl<S> PlaneRay<S>
+where
+    S: EuclideanSpace,
+{
+    pub fn into_time_of_impact(self) -> Option<Scalar<S>> {
+        match self {
+            PlaneRay::TimeOfImpact(time) => Some(time),
+            _ => None,
+        }
+    }
+
+    pub fn into_ray(self) -> Option<Ray<S>> {
+        match self {
+            PlaneRay::Ray(ray) => Some(ray),
+            _ => None,
+        }
+    }
 }
 
 impl<S> Debug for PlaneRay<S>
