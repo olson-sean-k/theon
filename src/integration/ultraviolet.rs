@@ -3,7 +3,7 @@
 use arrayvec::ArrayVec;
 use decorum::R64;
 use typenum::consts::{U2, U3, U4};
-use ultraviolet::lerp::Lerp;
+use ultraviolet::interp::Lerp;
 use ultraviolet::vec::{Vec2, Vec3, Vec4};
 
 use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
