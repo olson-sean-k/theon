@@ -10,7 +10,7 @@ use num::{Num, NumCast, One, Zero};
 use std::ops::Neg;
 use typenum::{U2, U3};
 
-use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Map, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Linear, Map, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate, Project};
 use crate::space::{Basis, FiniteDimensional};
 
@@ -257,6 +257,10 @@ where
     }
 }
 
+impl<T> Linear for Vector2<T> {}
+
+impl<T> Linear for Vector3<T> {}
+
 impl<T, U> Map<U> for Vector2<T> {
     type Output = Vector2<U>;
 
@@ -383,3 +387,7 @@ where
         }
     }
 }
+
+impl<T> Linear for Point2<T> where T: Num {}
+
+impl<T> Linear for Point3<T> where T: Num {}

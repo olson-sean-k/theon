@@ -41,8 +41,9 @@ where
     Self::Row: DualSpace<Dual = <T as Matrix>::Column>
         + FiniteDimensional<N = <T::Column as FiniteDimensional>::N>,
 {
-    // TODO: This implementation requires `FromItems`, which could be
-    //       cumbersome to implement.
+    // TODO: This bound is impossible, because `FromItems` requires `Linear`,
+    //       which should not be implemented by non-linear matrix types.
+    //       Consider a higher dimension trait like `FromColumns`, etc.
     type Output: FromItems + Matrix<Scalar = Self::Scalar>;
 
     fn mul_mn(self, other: T) -> <Self as MulMN<T>>::Output {

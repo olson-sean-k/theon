@@ -14,9 +14,9 @@ use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
 
 use crate::adjunct::{
-    Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Map, Truncate, ZipMap,
+    Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Linear, Map, Truncate, ZipMap,
 };
-use crate::ops::{Cross, Dot, Interpolate, MulMN};
+use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
     Matrix, SquareMatrix, VectorSpace,
@@ -113,12 +113,14 @@ where
 
 impl<T, R, C> DualSpace for MatrixMN<T, R, C>
 where
-    T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
+    T: AbsDiffEq + NumCast + Real + Scalar,
     R: DimName + DimNameMin<C, Output = U1>,
     C: DimName + DimNameMin<R, Output = U1>,
     DefaultAllocator: Allocator<T, R, C> + Allocator<T, C, R>,
-    MatrixMN<T, C, R>: Copy + FiniteDimensional<N = <Self as FiniteDimensional>::N>,
-    Self: Copy + FiniteDimensional,
+    MatrixMN<T, C, R>: Copy
+        + FiniteDimensional<Item = T, N = <Self as FiniteDimensional>::N>
+        + VectorSpace<Scalar = T>,
+    Self: Copy + FiniteDimensional<Item = T> + VectorSpace<Scalar = T>,
 {
     type Dual = MatrixMN<T, C, R>;
 
@@ -129,9 +131,10 @@ where
 
 impl<T, D> Extend<VectorN<T, DimNameSum<D, U1>>> for VectorN<T, D>
 where
-    T: AddAssign + MulAssign + Real + Scalar,
+    T: Scalar,
     D: DimName + DimNameAdd<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
+    Self: Linear<Item = T>,
 {
     fn extend(self, x: T) -> VectorN<T, DimNameSum<D, U1>> {
         VectorN::<_, DimNameSum<D, _>>::from_iterator(self.into_iter().cloned().chain(Some(x)))
@@ -145,6 +148,7 @@ where
     <DimNameMaximum<R, C> as DimName>::Value: NonZero,
     C: DimName,
     DefaultAllocator: Allocator<T, R, C>,
+    Self: Linear<Item = T>,
 {
     type N = <DimNameMaximum<R, C> as DimName>::Value;
 }
@@ -174,6 +178,7 @@ where
     R: DimName,
     C: DimName,
     DefaultAllocator: Allocator<T, R, C>,
+    Self: Linear<Item = T>,
 {
     fn from_items<I>(items: I) -> Option<Self>
     where
@@ -242,6 +247,18 @@ where
         let array: [T; 3] = self.into();
         array.into()
     }
+}
+
+impl<T, R, C> Linear for MatrixMN<T, R, C>
+where
+    //T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
+    T: Scalar,
+    R: DimName + DimNameMin<C, Output = U1>,
+    C: DimName + DimNameMin<R, Output = U1>,
+    DefaultAllocator: Allocator<T, R, C> + Allocator<T, C, R>,
+    /*MatrixMN<T, C, R>: Copy + FiniteDimensional<N = <Self as FiniteDimensional>::N>,
+     *Self: Copy + FiniteDimensional, */
+{
 }
 
 impl<T, U, R, C> Map<U> for MatrixMN<T, R, C>
@@ -325,28 +342,27 @@ where
     }
 }
 
-// TODO: Use a (more) generic implementation.
-impl<T> MulMN<Matrix2<T>> for Matrix2<T>
-where
-    T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
-{
-    type Output = Matrix2<T>;
-
-    fn mul_mn(self, other: Matrix2<T>) -> <Self as MulMN<Matrix2<T>>>::Output {
-        self * other
-    }
-}
-
-impl<T> MulMN<Matrix3<T>> for Matrix3<T>
-where
-    T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
-{
-    type Output = Matrix3<T>;
-
-    fn mul_mn(self, other: Matrix3<T>) -> <Self as MulMN<Matrix3<T>>>::Output {
-        self * other
-    }
-}
+// TODO: See `MulMN`. The bounds on `Output` are not possible to satisfy.
+//impl<T> MulMN<Matrix2<T>> for Matrix2<T>
+//where
+//    T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
+//{
+//    type Output = Matrix2<T>;
+//
+//    fn mul_mn(self, other: Matrix2<T>) -> <Self as MulMN<Matrix2<T>>>::Output {
+//        self * other
+//    }
+//}
+//impl<T> MulMN<Matrix3<T>> for Matrix3<T>
+//where
+//    T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
+//{
+//    type Output = Matrix3<T>;
+//
+//    fn mul_mn(self, other: Matrix3<T>) -> <Self as MulMN<Matrix3<T>>>::Output {
+//        self * other
+//    }
+//}
 
 impl<T> SquareMatrix for Matrix2<T>
 where
@@ -371,6 +387,7 @@ where
     T: Real + Scalar,
     D: DimName + DimNameSub<U1>,
     DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
+    Self: Linear<Item = T>,
 {
     fn truncate(self) -> (VectorN<T, DimNameDiff<D, U1>>, T) {
         let n = self.len();
@@ -491,7 +508,7 @@ where
     D::Value: NonZero,
     DefaultAllocator: Allocator<T, D>,
     <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
-    VectorN<T, D>: FiniteDimensional<N = Self::N>,
+    VectorN<T, D>: FiniteDimensional<N = Self::N, Item = T>,
 {
     type CoordinateSpace = VectorN<T, D>;
 
@@ -577,6 +594,14 @@ where
         let array: [T; 3] = self.coords.into();
         array.into()
     }
+}
+
+impl<T, D> Linear for Point<T, D>
+where
+    T: Scalar,
+    D: DimName,
+    DefaultAllocator: Allocator<T, D>,
+{
 }
 
 impl<T, U, D> Map<U> for Point<T, D>

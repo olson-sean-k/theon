@@ -6,7 +6,7 @@ use typenum::consts::{U2, U3, U4};
 use ultraviolet::interp::Lerp;
 use ultraviolet::vec::{Vec2, Vec3, Vec4};
 
-use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Extend, Fold, Linear, Map, Truncate, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
@@ -308,6 +308,12 @@ impl Interpolate for Vec4 {
         <Self as Lerp<f32>>::lerp(&self, other, f64::from(f) as f32)
     }
 }
+
+impl Linear for Vec2 {}
+
+impl Linear for Vec3 {}
+
+impl Linear for Vec4 {}
 
 impl Map<f32> for Vec2 {
     type Output = Self;

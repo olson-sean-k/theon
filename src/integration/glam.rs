@@ -4,7 +4,7 @@ use arrayvec::ArrayVec;
 use decorum::R64;
 use typenum::consts::{U2, U3, U4};
 
-use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Extend, Fold, Linear, Map, Truncate, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
@@ -424,6 +424,14 @@ impl Interpolate for Vec4 {
         Self::lerp(self, other, f64::from(f) as f32)
     }
 }
+
+impl Linear for Vec2 {}
+
+impl Linear for Vec3 {}
+
+impl Linear for Vec3A {}
+
+impl Linear for Vec4 {}
 
 impl Map<f32> for Vec2 {
     type Output = Self;

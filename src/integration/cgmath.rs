@@ -7,7 +7,7 @@ use num::{Num, NumCast};
 use typenum::consts::{U2, U3, U4};
 
 use crate::adjunct::{
-    Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Map, Truncate, ZipMap,
+    Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Linear, Map, Truncate, ZipMap,
 };
 use crate::ops::{Cross, Dot, Interpolate};
 use crate::space::{
@@ -410,6 +410,12 @@ impl<T, U> Map<U> for Vector4<T> {
     }
 }
 
+impl<T> Linear for Vector2<T> {}
+
+impl<T> Linear for Vector3<T> {}
+
+impl<T> Linear for Vector4<T> {}
+
 impl<T> Truncate<Vector2<T>> for Vector3<T>
 where
     T: BaseNum,
@@ -736,6 +742,10 @@ where
         self.zip_map(other, |a, b| crate::lerp(a, b, f))
     }
 }
+
+impl<T> Linear for Point2<T> {}
+
+impl<T> Linear for Point3<T> {}
 
 impl<T, U> Map<U> for Point2<T> {
     type Output = Point2<U>;

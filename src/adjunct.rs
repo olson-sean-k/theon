@@ -22,13 +22,15 @@ pub trait Adjunct: Sized {
     type Item;
 }
 
-pub trait IntoItems: Adjunct {
+pub trait Linear: Adjunct {}
+
+pub trait IntoItems: Linear {
     type Output: IntoIterator<Item = Self::Item>;
 
     fn into_items(self) -> Self::Output;
 }
 
-pub trait FromItems: Adjunct {
+pub trait FromItems: Linear {
     fn from_items<I>(items: I) -> Option<Self>
     where
         I: IntoIterator<Item = Self::Item>;
@@ -49,14 +51,14 @@ pub trait Map<T = <Self as Adjunct>::Item>: Adjunct {
 // TODO: Consider renaming the `Truncate` and `Extend` traits to `TruncateMap`,
 //       `TruncateInto`, etc., because these traits must support multiple output
 //       types.
-pub trait Truncate<S>: Adjunct
+pub trait Truncate<S>: Linear
 where
     S: Adjunct<Item = Self::Item>,
 {
     fn truncate(self) -> (S, Self::Item);
 }
 
-pub trait Extend<S>: Adjunct
+pub trait Extend<S>: Linear
 where
     S: Adjunct<Item = Self::Item>,
 {
@@ -167,6 +169,14 @@ pub trait Fold: Adjunct {
 
 // TODO: Use macros to implement these traits for arrays and tuples.
 
+impl<T> Adjunct for (T, T) {
+    type Item = T;
+}
+
+impl<T> Adjunct for (T, T, T) {
+    type Item = T;
+}
+
 impl<T> Converged for (T, T)
 where
     T: Clone,
@@ -250,6 +260,10 @@ impl<T> IntoItems for (T, T, T) {
     }
 }
 
+impl<T> Linear for (T, T) {}
+
+impl<T> Linear for (T, T, T) {}
+
 impl<T, U> Map<U> for (T, T) {
     type Output = (U, U);
 
@@ -284,14 +298,6 @@ impl<T> Extend<(T, T, T)> for (T, T) {
         let (a, b) = self;
         (a, b, item)
     }
-}
-
-impl<T> Adjunct for (T, T) {
-    type Item = T;
-}
-
-impl<T> Adjunct for (T, T, T) {
-    type Item = T;
 }
 
 impl<T, U> ZipMap<U> for (T, T) {

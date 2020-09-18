@@ -8,7 +8,7 @@ use typenum::consts::{U0, U1, U2, U3};
 use typenum::type_operators::Cmp;
 use typenum::{Greater, NonZero, Unsigned};
 
-use crate::adjunct::{Adjunct, Converged, Extend, Fold, Truncate, ZipMap};
+use crate::adjunct::{Adjunct, Converged, Extend, Fold, Linear, Truncate, ZipMap};
 use crate::ops::{Dot, Project};
 use crate::AsPosition;
 
@@ -21,7 +21,7 @@ pub type Vector<S> = <S as EuclideanSpace>::CoordinateSpace;
 /// The projective space of a `EuclideanSpace`.
 pub type Projective<S> = <Vector<S> as Homogeneous>::ProjectiveSpace;
 
-pub trait FiniteDimensional {
+pub trait FiniteDimensional: Linear {
     type N: NonZero + Unsigned;
 
     fn dimensions() -> usize {
