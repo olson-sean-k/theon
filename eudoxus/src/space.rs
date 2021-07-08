@@ -1,16 +1,11 @@
 //! Vector and affine spaces.
 
-use approx::AbsDiffEq;
-use decorum::Real;
-use num::{NumCast, One, Zero};
-use std::ops::{Add, Mul, Neg, Sub};
-use typenum::consts::{U0, U1, U2, U3};
-use typenum::type_operators::Cmp;
-use typenum::{Greater, NonZero, Unsigned};
+use num_traits::{One, Zero};
+use std::ops::{Add, Div, Mul, Neg, Sub};
+use typenum::{Cmp, Greater, Unsigned, U0, U1, U2, U3, U4};
 
-use crate::adjunct::{Adjunct, Converged, Extend, Fold, Truncate, ZipMap};
-use crate::ops::{Dot, Project};
-use crate::AsPosition;
+use crate::adjunct::{Adjunct, Converged, ExtendInto, Fold, Linear, Map, TruncateInto, ZipMap};
+use crate::{AsPosition, Increment, Natural};
 
 /// The scalar of a `EuclideanSpace`.
 pub type Scalar<S> = <Vector<S> as VectorSpace>::Scalar;
@@ -21,8 +16,23 @@ pub type Vector<S> = <S as EuclideanSpace>::CoordinateSpace;
 /// The projective space of a `EuclideanSpace`.
 pub type Projective<S> = <Vector<S> as Homogeneous>::ProjectiveSpace;
 
-pub trait FiniteDimensional {
-    type N: NonZero + Unsigned;
+/// The finite dimensions of the projective space of a `EuclideanSpace`.
+///
+/// See `FiniteDimensional`.
+pub type ProjectiveDimensions<S> = <<S as FiniteDimensional>::N as Increment>::Output;
+
+trait OptionExt<T> {
+    fn expect_dimensional_component(self) -> T;
+}
+
+impl<T> OptionExt<T> for Option<T> {
+    fn expect_dimensional_component(self) -> T {
+        self.expect("dimensional component not found")
+    }
+}
+
+pub trait FiniteDimensional: Linear {
+    type N: Natural;
 
     fn dimensions() -> usize {
         Self::N::USIZE
@@ -64,7 +74,7 @@ pub trait Basis: FiniteDimensional + Sized {
     where
         Self::N: Cmp<U0, Output = Greater>,
     {
-        Self::canonical_basis_component(0).unwrap()
+        Self::canonical_basis_component(0).expect_dimensional_component()
     }
 
     /// Gets the canonical basis vector $\hat{j}$ that describes the $y$ axis.
@@ -72,7 +82,7 @@ pub trait Basis: FiniteDimensional + Sized {
     where
         Self::N: Cmp<U1, Output = Greater>,
     {
-        Self::canonical_basis_component(1).unwrap()
+        Self::canonical_basis_component(1).expect_dimensional_component()
     }
 
     /// Gets the canonical basis vector $\hat{k}$ that describes the $z$ axis.
@@ -80,7 +90,7 @@ pub trait Basis: FiniteDimensional + Sized {
     where
         Self::N: Cmp<U2, Output = Greater>,
     {
-        Self::canonical_basis_component(2).unwrap()
+        Self::canonical_basis_component(2).expect_dimensional_component()
     }
 }
 
@@ -91,13 +101,27 @@ pub trait VectorSpace:
     + Copy
     + Fold
     + PartialEq
+    + Map<<Self as VectorSpace>::Scalar, Output = Self>
     + Mul<<Self as VectorSpace>::Scalar, Output = Self>
     + Neg<Output = Self>
     + ZipMap<<Self as VectorSpace>::Scalar, Output = Self>
 {
-    type Scalar: AbsDiffEq + NumCast + Real;
+    type Scalar: Add<Output = Self::Scalar>
+        + Copy
+        + Div<Output = Self::Scalar>
+        + Mul<Output = Self::Scalar>
+        + Neg<Output = Self::Scalar>
+        + One
+        + PartialEq
+        + PartialOrd
+        + Zero;
 
-    fn scalar_component(&self, index: usize) -> Option<Self::Scalar>;
+    fn scalar_component(&self, index: usize) -> Option<Self::Scalar>
+    where
+        Self: Linear,
+    {
+        self.get(index).copied()
+    }
 
     fn from_x(x: Self::Scalar) -> Self
     where
@@ -118,6 +142,16 @@ pub trait VectorSpace:
         Self: Basis + FiniteDimensional<N = U3>,
     {
         (Self::i() * x) + (Self::j() * y) + (Self::k() * z)
+    }
+
+    fn from_xyzw(x: Self::Scalar, y: Self::Scalar, z: Self::Scalar, w: Self::Scalar) -> Self
+    where
+        Self: Basis + FiniteDimensional<N = U4>,
+    {
+        (Self::i() * x)
+            + (Self::j() * y)
+            + (Self::k() * z)
+            + (Self::canonical_basis_component(3).expect_dimensional_component() * w)
     }
 
     fn into_x(self) -> Self::Scalar
@@ -141,12 +175,19 @@ pub trait VectorSpace:
         (self.x(), self.y(), self.z())
     }
 
+    fn into_xyzw(self) -> (Self::Scalar, Self::Scalar, Self::Scalar, Self::Scalar)
+    where
+        Self: FiniteDimensional<N = U4>,
+    {
+        (self.x(), self.y(), self.z(), self.w())
+    }
+
     fn x(&self) -> Self::Scalar
     where
         Self: FiniteDimensional,
         Self::N: Cmp<U0, Output = Greater>,
     {
-        self.scalar_component(0).unwrap()
+        self.scalar_component(0).expect_dimensional_component()
     }
 
     fn y(&self) -> Self::Scalar
@@ -154,7 +195,7 @@ pub trait VectorSpace:
         Self: FiniteDimensional,
         Self::N: Cmp<U1, Output = Greater>,
     {
-        self.scalar_component(1).unwrap()
+        self.scalar_component(1).expect_dimensional_component()
     }
 
     fn z(&self) -> Self::Scalar
@@ -162,7 +203,15 @@ pub trait VectorSpace:
         Self: FiniteDimensional,
         Self::N: Cmp<U2, Output = Greater>,
     {
-        self.scalar_component(2).unwrap()
+        self.scalar_component(2).expect_dimensional_component()
+    }
+
+    fn w(&self) -> Self::Scalar
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U3, Output = Greater>,
+    {
+        self.scalar_component(3).expect_dimensional_component()
     }
 
     fn zero() -> Self {
@@ -173,14 +222,17 @@ pub trait VectorSpace:
         self.all(|x| x.is_zero())
     }
 
-    fn from_homogeneous(vector: Self::ProjectiveSpace) -> Option<Self>
+    fn from_homogeneous(projective: Self::ProjectiveSpace) -> Option<Self>
     where
         Self: Homogeneous,
-        Self::ProjectiveSpace: Truncate<Self> + VectorSpace<Scalar = Self::Scalar>,
+        Self::ProjectiveSpace: FiniteDimensional<N = ProjectiveDimensions<Self>>
+            + TruncateInto<Self>
+            + VectorSpace<Scalar = Self::Scalar>,
+        Self::N: Increment,
     {
-        let (vector, factor) = vector.truncate();
-        if factor.is_zero() {
-            Some(vector)
+        let (v, a) = projective.truncate();
+        if a.is_zero() {
+            Some(v)
         }
         else {
             None
@@ -189,66 +241,37 @@ pub trait VectorSpace:
 
     fn into_homogeneous(self) -> Self::ProjectiveSpace
     where
-        Self: Homogeneous + Extend<<Self as Homogeneous>::ProjectiveSpace>,
-        Self::ProjectiveSpace: VectorSpace<Scalar = Self::Scalar>,
+        Self: Homogeneous + ExtendInto<<Self as Homogeneous>::ProjectiveSpace>,
+        Self::ProjectiveSpace:
+            FiniteDimensional<N = ProjectiveDimensions<Self>> + VectorSpace<Scalar = Self::Scalar>,
+        Self::N: Increment,
     {
         self.extend(Zero::zero())
     }
-
-    fn mean<I>(vectors: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self>,
-    {
-        let mut vectors = vectors.into_iter();
-        if let Some(mut sum) = vectors.next() {
-            let mut n = 1usize;
-            for vector in vectors {
-                n += 1;
-                sum = sum + vector;
-            }
-            NumCast::from(n).map(move |n| sum * (Self::Scalar::one() / n))
-        }
-        else {
-            None
-        }
-    }
 }
 
-pub trait InnerSpace: Dot<Output = <Self as VectorSpace>::Scalar> + VectorSpace {
-    fn normalize(self) -> Option<Self> {
-        let magnitude = self.magnitude();
-        if magnitude != Zero::zero() {
-            Some(self * (Self::Scalar::one() / magnitude))
-        }
-        else {
-            None
-        }
+pub trait InnerSpace: VectorSpace {
+    fn dot(self, other: Self) -> Self::Scalar {
+        self.zip_map(other, |a, b| a * b).sum()
     }
 
-    fn square_magnitude(self) -> Self::Scalar {
-        Dot::dot(self, self)
-    }
-
-    fn magnitude(self) -> Self::Scalar {
-        Real::sqrt(self.square_magnitude())
-    }
-}
-
-impl<T> Project<T> for T
-where
-    T: InnerSpace,
-{
-    type Output = T;
-
-    fn project(self, other: T) -> Self::Output {
+    fn project(self, other: Self) -> Self {
         let n = other.dot(self);
         let d = self.dot(self);
         self * (n / d)
     }
+
+    // TODO: Consider removing this. Instead, document the fact that `dot`
+    //       produces the square magnitude in a metric space.
+    fn square_magnitude(self) -> Self::Scalar {
+        self.dot(self)
+    }
 }
 
 pub trait DualSpace: FiniteDimensional + VectorSpace {
-    type Dual: DualSpace + FiniteDimensional<N = Self::N> + VectorSpace<Scalar = Self::Scalar>;
+    type Dual: DualSpace<Dual = Self>
+        + FiniteDimensional<N = Self::N>
+        + VectorSpace<Scalar = Self::Scalar>;
 
     fn transpose(self) -> Self::Dual;
 }
@@ -270,9 +293,7 @@ pub trait Matrix: VectorSpace {
         Self::Row::dimensions()
     }
 
-    fn scalar_component(&self, row: usize, column: usize) -> Option<Self::Scalar> {
-        <Self as VectorSpace>::scalar_component(self, row + (column * Self::row_count()))
-    }
+    fn scalar_component(&self, row: usize, column: usize) -> Option<Self::Scalar>;
 
     fn row_component(&self, index: usize) -> Option<Self::Row>;
 
@@ -294,8 +315,10 @@ where
 pub trait AffineSpace:
     Add<<Self as AffineSpace>::Translation, Output = Self>
     + Adjunct<Item = <<Self as AffineSpace>::Translation as VectorSpace>::Scalar>
+    + Converged
     + Copy
     + Fold
+    + Map<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar, Output = Self>
     + PartialEq
     + Sub<Output = <Self as AffineSpace>::Translation>
     + ZipMap<<<Self as AffineSpace>::Translation as VectorSpace>::Scalar, Output = Self>
@@ -318,7 +341,9 @@ pub trait EuclideanSpace:
 {
     type CoordinateSpace: Basis + InnerSpace + FiniteDimensional<N = <Self as FiniteDimensional>::N>;
 
-    fn origin() -> Self;
+    fn origin() -> Self {
+        Self::converged(Scalar::<Self>::zero())
+    }
 
     fn from_coordinates(coordinates: Self::CoordinateSpace) -> Self {
         Self::origin() + coordinates
@@ -349,6 +374,13 @@ pub trait EuclideanSpace:
         Self::from_coordinates(Vector::<Self>::from_xyz(x, y, z))
     }
 
+    fn from_xyzw(x: Scalar<Self>, y: Scalar<Self>, z: Scalar<Self>, w: Scalar<Self>) -> Self
+    where
+        Self: FiniteDimensional<N = U4>,
+    {
+        Self::from_coordinates(Vector::<Self>::from_xyzw(x, y, z, w))
+    }
+
     fn into_x(self) -> Scalar<Self>
     where
         Self: FiniteDimensional<N = U1>,
@@ -370,40 +402,77 @@ pub trait EuclideanSpace:
         self.into_coordinates().into_xyz()
     }
 
+    fn into_xyzw(self) -> (Scalar<Self>, Scalar<Self>, Scalar<Self>, Scalar<Self>)
+    where
+        Self: FiniteDimensional<N = U4>,
+    {
+        self.into_coordinates().into_xyzw()
+    }
+
+    fn x(&self) -> Scalar<Self>
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U0, Output = Greater>,
+    {
+        self.get(0).copied().expect_dimensional_component()
+    }
+
+    fn y(&self) -> Scalar<Self>
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U1, Output = Greater>,
+    {
+        self.get(1).copied().expect_dimensional_component()
+    }
+
+    fn z(&self) -> Scalar<Self>
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U2, Output = Greater>,
+    {
+        self.get(2).copied().expect_dimensional_component()
+    }
+
+    fn w(&self) -> Scalar<Self>
+    where
+        Self: FiniteDimensional,
+        Self::N: Cmp<U3, Output = Greater>,
+    {
+        self.get(3).copied().expect_dimensional_component()
+    }
+
     fn from_homogeneous(projective: Projective<Self>) -> Option<Self>
     where
         Self::CoordinateSpace: Homogeneous,
-        Projective<Self>: Truncate<Self::CoordinateSpace> + VectorSpace<Scalar = Scalar<Self>>,
+        Projective<Self>: FiniteDimensional<N = ProjectiveDimensions<Self>>
+            + TruncateInto<Self::CoordinateSpace>
+            + VectorSpace<Scalar = Scalar<Self>>,
+        Self::N: Increment,
     {
-        let (vector, factor) = projective.truncate();
-        if factor.is_zero() {
+        let (v, a) = projective.truncate();
+        if a.is_zero() {
             None
         }
         else {
-            Some(Self::from_coordinates(vector * factor.recip()))
+            Some(Self::from_coordinates(v * (Scalar::<Self>::one() / a)))
         }
     }
 
     fn into_homogeneous(self) -> Projective<Self>
     where
-        Self::CoordinateSpace: Homogeneous + Extend<Projective<Self>>,
-        Projective<Self>: VectorSpace<Scalar = Scalar<Self>>,
+        Self::CoordinateSpace: Homogeneous + ExtendInto<Projective<Self>>,
+        Projective<Self>:
+            FiniteDimensional<N = ProjectiveDimensions<Self>> + VectorSpace<Scalar = Scalar<Self>>,
+        Self::N: Increment,
     {
         self.into_coordinates().extend(One::one())
     }
-
-    fn centroid<I>(points: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self>,
-    {
-        VectorSpace::mean(points.into_iter().map(|point| point.into_coordinates()))
-            .map(|mean| Self::origin() + mean)
-    }
 }
 
-// TODO: Constrain the dimensionality of the projective space. This introduces
-//       noisy type bounds, but ensures that the projective space has exactly
-//       one additional dimension (the line at infinity).
-pub trait Homogeneous: FiniteDimensional + VectorSpace {
-    type ProjectiveSpace: FiniteDimensional + VectorSpace;
+pub trait Homogeneous: FiniteDimensional + VectorSpace
+where
+    Self::N: Increment,
+{
+    type ProjectiveSpace: FiniteDimensional<N = ProjectiveDimensions<Self>>
+        + VectorSpace<Scalar = Self::Scalar>;
 }

@@ -1,23 +1,20 @@
 #![cfg(feature = "geometry-cgmath")]
 
-use approx::AbsDiffEq;
-use arrayvec::ArrayVec;
-use decorum::{Real, R64};
-use num::{Num, NumCast};
-use typenum::consts::{U2, U3, U4};
+use typenum::{U1, U2, U3, U4};
 
-use crate::adjunct::{
-    Adjunct, Converged, Extend, Fold, FromItems, IntoItems, Map, Truncate, ZipMap,
-};
-use crate::ops::{Cross, Dot, Interpolate};
+use crate::adjunct::{Adjunct, Converged, ExtendInto, Fold, Linear, Map, TruncateInto, ZipMap};
 use crate::space::{
     AffineSpace, Basis, DualSpace, EuclideanSpace, FiniteDimensional, Homogeneous, InnerSpace,
-    VectorSpace,
+    Scalar, VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
 
 #[doc(hidden)]
 pub use cgmath::*;
+
+impl<T> Adjunct for Vector1<T> {
+    type Item = T;
+}
 
 impl<T> Adjunct for Vector2<T> {
     type Item = T;
@@ -31,17 +28,35 @@ impl<T> Adjunct for Vector4<T> {
     type Item = T;
 }
 
-impl<T> Basis for Vector2<T>
+impl<T> Basis for Vector1<T>
 where
-    T: BaseNum,
+    T: BaseFloat,
 {
-    type Bases = ArrayVec<[Self; 2]>;
+    type Bases = [Self; 1];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [Self::canonical_basis_component(0).unwrap()]
+    }
+
+    fn canonical_basis_component(index: usize) -> Option<Self> {
+        match index {
+            0 => Some(Vector1::unit_x()),
+            _ => None,
+        }
+    }
+}
+
+impl<T> Basis for Vector2<T>
+where
+    T: BaseFloat,
+{
+    type Bases = [Self; 2];
+
+    fn canonical_basis() -> Self::Bases {
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
@@ -55,16 +70,16 @@ where
 
 impl<T> Basis for Vector3<T>
 where
-    T: BaseNum,
+    T: BaseFloat,
 {
-    type Bases = ArrayVec<[Self; 3]>;
+    type Bases = [Self; 3];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
             Self::canonical_basis_component(2).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
@@ -79,17 +94,17 @@ where
 
 impl<T> Basis for Vector4<T>
 where
-    T: BaseNum,
+    T: BaseFloat,
 {
-    type Bases = ArrayVec<[Self; 4]>;
+    type Bases = [Self; 4];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
             Self::canonical_basis_component(2).unwrap(),
             Self::canonical_basis_component(3).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
@@ -100,6 +115,12 @@ where
             3 => Some(Vector4::unit_w()),
             _ => None,
         }
+    }
+}
+
+impl<T> Converged for Vector1<T> {
+    fn converged(value: Self::Item) -> Self {
+        Vector1::new(value)
     }
 }
 
@@ -130,53 +151,20 @@ where
     }
 }
 
-impl<T> Cross for Vector3<T>
+impl<T> DualSpace for Vector1<T>
 where
     T: BaseFloat,
 {
-    type Output = Self;
+    type Dual = Self;
 
-    fn cross(self, other: Self) -> Self::Output {
-        Self::cross(self, other)
-    }
-}
-
-impl<T> Dot for Vector2<T>
-where
-    T: BaseFloat,
-{
-    type Output = T;
-
-    fn dot(self, other: Self) -> Self::Output {
-        <Self as cgmath::InnerSpace>::dot(self, other)
-    }
-}
-
-impl<T> Dot for Vector3<T>
-where
-    T: BaseFloat,
-{
-    type Output = T;
-
-    fn dot(self, other: Self) -> Self::Output {
-        <Self as cgmath::InnerSpace>::dot(self, other)
-    }
-}
-
-impl<T> Dot for Vector4<T>
-where
-    T: BaseFloat,
-{
-    type Output = T;
-
-    fn dot(self, other: Self) -> Self::Output {
-        <Self as cgmath::InnerSpace>::dot(self, other)
+    fn transpose(self) -> Self::Dual {
+        self
     }
 }
 
 impl<T> DualSpace for Vector2<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Dual = Self;
 
@@ -187,7 +175,7 @@ where
 
 impl<T> DualSpace for Vector3<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Dual = Self;
 
@@ -198,7 +186,7 @@ where
 
 impl<T> DualSpace for Vector4<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Dual = Self;
 
@@ -207,22 +195,26 @@ where
     }
 }
 
-impl<T> Extend<Vector3<T>> for Vector2<T>
-where
-    T: BaseNum,
-{
-    fn extend(self, z: T) -> Vector3<T> {
-        self.extend(z)
+impl<T> ExtendInto<Vector2<T>> for Vector1<T> {
+    fn extend(self, y: T) -> Vector2<T> {
+        Vector2::new(self.x, y)
     }
 }
 
-impl<T> Extend<Vector4<T>> for Vector3<T>
-where
-    T: BaseNum,
-{
-    fn extend(self, w: T) -> Vector4<T> {
-        self.extend(w)
+impl<T> ExtendInto<Vector3<T>> for Vector2<T> {
+    fn extend(self, z: T) -> Vector3<T> {
+        Vector3::new(self.x, self.y, z)
     }
+}
+
+impl<T> ExtendInto<Vector4<T>> for Vector3<T> {
+    fn extend(self, w: T) -> Vector4<T> {
+        Vector4::new(self.x, self.y, self.z, w)
+    }
+}
+
+impl<T> FiniteDimensional for Vector1<T> {
+    type N = U1;
 }
 
 impl<T> FiniteDimensional for Vector2<T> {
@@ -237,143 +229,130 @@ impl<T> FiniteDimensional for Vector4<T> {
     type N = U4;
 }
 
-impl<T> Fold for Vector2<T>
-where
-    T: Copy,
-{
+impl<T> Fold for Vector1<T> {
+    fn fold<U, F>(self, seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        f(seed, self.x)
+    }
+}
+
+impl<T> Fold for Vector2<T> {
     fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
-        for a in &[self.x, self.y] {
-            seed = f(seed, *a);
+        for a in [self.x, self.y] {
+            seed = f(seed, a);
         }
         seed
     }
 }
 
-impl<T> Fold for Vector3<T>
-where
-    T: Copy,
-{
+impl<T> Fold for Vector3<T> {
     fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
-        for a in &[self.x, self.y, self.z] {
-            seed = f(seed, *a);
+        for a in [self.x, self.y, self.z] {
+            seed = f(seed, a);
         }
         seed
     }
 }
 
-impl<T> Fold for Vector4<T>
-where
-    T: Copy,
-{
+impl<T> Fold for Vector4<T> {
     fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
-        for a in &[self.x, self.y, self.z, self.w] {
-            seed = f(seed, *a);
+        for a in [self.x, self.y, self.z, self.w] {
+            seed = f(seed, a);
         }
         seed
     }
 }
 
-impl<T> FromItems for Vector2<T> {
-    fn from_items<I>(items: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self::Item>,
-    {
-        let mut items = items.into_iter().take(2);
-        match (items.next(), items.next()) {
-            (Some(a), Some(b)) => Some(Vector2::new(a, b)),
-            _ => None,
-        }
-    }
-}
-
-impl<T> FromItems for Vector3<T> {
-    fn from_items<I>(items: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self::Item>,
-    {
-        let mut items = items.into_iter().take(3);
-        match (items.next(), items.next(), items.next()) {
-            (Some(a), Some(b), Some(c)) => Some(Vector3::new(a, b, c)),
-            _ => None,
-        }
-    }
+impl<T> Homogeneous for Vector1<T>
+where
+    T: BaseFloat,
+{
+    type ProjectiveSpace = Vector2<T>;
 }
 
 impl<T> Homogeneous for Vector2<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type ProjectiveSpace = Vector3<T>;
 }
 
 impl<T> Homogeneous for Vector3<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type ProjectiveSpace = Vector4<T>;
 }
 
-impl<T> InnerSpace for Vector2<T> where T: BaseFloat + Real {}
+impl<T> InnerSpace for Vector1<T> where T: BaseFloat {}
 
-impl<T> InnerSpace for Vector3<T> where T: BaseFloat + Real {}
+impl<T> InnerSpace for Vector2<T> where T: BaseFloat {}
 
-impl<T> InnerSpace for Vector4<T> where T: BaseFloat + Real {}
+impl<T> InnerSpace for Vector3<T> where T: BaseFloat {}
 
-impl<T> Interpolate for Vector2<T>
-where
-    T: Num + NumCast,
-{
-    type Output = Self;
+impl<T> InnerSpace for Vector4<T> where T: BaseFloat {}
 
-    fn lerp(self, other: Self, f: R64) -> Self::Output {
-        self.zip_map(other, |a, b| crate::lerp(a, b, f))
+impl<T> Linear for Vector1<T> {
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        match index {
+            0 => Some(&self.x),
+            _ => None,
+        }
     }
 }
 
-impl<T> Interpolate for Vector3<T>
-where
-    T: Num + NumCast,
-{
-    type Output = Self;
-
-    fn lerp(self, other: Self, f: R64) -> Self::Output {
-        self.zip_map(other, |a, b| crate::lerp(a, b, f))
+impl<T> Linear for Vector2<T> {
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        match index {
+            0 => Some(&self.x),
+            1 => Some(&self.y),
+            _ => None,
+        }
     }
 }
 
-impl<T> Interpolate for Vector4<T>
-where
-    T: Num + NumCast,
-{
-    type Output = Self;
-
-    fn lerp(self, other: Self, f: R64) -> Self::Output {
-        self.zip_map(other, |a, b| crate::lerp(a, b, f))
+impl<T> Linear for Vector3<T> {
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        match index {
+            0 => Some(&self.x),
+            1 => Some(&self.y),
+            2 => Some(&self.z),
+            _ => None,
+        }
     }
 }
 
-impl<T> IntoItems for Vector2<T> {
-    type Output = ArrayVec<[T; 2]>;
-
-    fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y])
+impl<T> Linear for Vector4<T> {
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        match index {
+            0 => Some(&self.x),
+            1 => Some(&self.y),
+            2 => Some(&self.z),
+            3 => Some(&self.w),
+            _ => None,
+        }
     }
 }
 
-impl<T> IntoItems for Vector3<T> {
-    type Output = ArrayVec<[T; 3]>;
+impl<T, U> Map<U> for Vector1<T> {
+    type Output = Vector1<U>;
 
-    fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y, self.z])
+    fn map<F>(self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item) -> U,
+    {
+        Vector1::new(f(self.x))
     }
 }
 
@@ -410,77 +389,132 @@ impl<T, U> Map<U> for Vector4<T> {
     }
 }
 
-impl<T> Truncate<Vector2<T>> for Vector3<T>
-where
-    T: BaseNum,
-{
-    fn truncate(self) -> (Vector2<T>, T) {
-        (self.truncate(), self.z)
+impl<T> TruncateInto<Vector1<T>> for Vector2<T> {
+    fn truncate(self) -> (Vector1<T>, T) {
+        (Vector1::new(self.x), self.y)
     }
 }
 
-impl<T> Truncate<Vector3<T>> for Vector4<T>
-where
-    T: BaseNum,
-{
+impl<T> TruncateInto<Vector2<T>> for Vector3<T> {
+    fn truncate(self) -> (Vector2<T>, T) {
+        (Vector2::new(self.x, self.y), self.z)
+    }
+}
+
+impl<T> TruncateInto<Vector3<T>> for Vector4<T> {
     fn truncate(self) -> (Vector3<T>, T) {
-        (self.truncate(), self.w)
+        (Vector3::new(self.x, self.y, self.z), self.w)
+    }
+}
+
+impl<T> VectorSpace for Vector1<T>
+where
+    T: BaseFloat,
+{
+    type Scalar = T;
+
+    fn from_x(x: Self::Scalar) -> Self {
+        Vector1::new(x)
+    }
+
+    fn into_x(self) -> Self::Scalar {
+        self.x
+    }
+
+    fn x(&self) -> Self::Scalar {
+        self.x
     }
 }
 
 impl<T> VectorSpace for Vector2<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Scalar = T;
 
-    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
-        match index {
-            0 => Some(self.x),
-            1 => Some(self.y),
-            _ => None,
-        }
+    fn from_xy(x: Self::Scalar, y: Self::Scalar) -> Self {
+        Vector2::new(x, y)
     }
 
     fn into_xy(self) -> (Self::Scalar, Self::Scalar) {
         (self.x, self.y)
     }
+
+    fn x(&self) -> Self::Scalar {
+        self.x
+    }
+
+    fn y(&self) -> Self::Scalar {
+        self.y
+    }
 }
 
 impl<T> VectorSpace for Vector3<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Scalar = T;
 
-    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
-        match index {
-            0 => Some(self.x),
-            1 => Some(self.y),
-            2 => Some(self.z),
-            _ => None,
-        }
+    fn from_xyz(x: Self::Scalar, y: Self::Scalar, z: Self::Scalar) -> Self {
+        Vector3::new(x, y, z)
     }
 
     fn into_xyz(self) -> (Self::Scalar, Self::Scalar, Self::Scalar) {
         (self.x, self.y, self.z)
     }
+
+    fn x(&self) -> Self::Scalar {
+        self.x
+    }
+
+    fn y(&self) -> Self::Scalar {
+        self.y
+    }
+
+    fn z(&self) -> Self::Scalar {
+        self.z
+    }
 }
 
 impl<T> VectorSpace for Vector4<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Scalar = T;
 
-    fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
-        match index {
-            0 => Some(self.x),
-            1 => Some(self.y),
-            2 => Some(self.z),
-            3 => Some(self.w),
-            _ => None,
-        }
+    fn from_xyzw(x: Self::Scalar, y: Self::Scalar, z: Self::Scalar, w: Self::Scalar) -> Self {
+        Vector4::new(x, y, z, w)
+    }
+
+    fn into_xyzw(self) -> (Self::Scalar, Self::Scalar, Self::Scalar, Self::Scalar) {
+        (self.x, self.y, self.z, self.w)
+    }
+
+    fn x(&self) -> Self::Scalar {
+        self.x
+    }
+
+    fn y(&self) -> Self::Scalar {
+        self.y
+    }
+
+    fn z(&self) -> Self::Scalar {
+        self.z
+    }
+
+    fn w(&self) -> Self::Scalar {
+        self.w
+    }
+}
+
+impl<T, U> ZipMap<U> for Vector1<T> {
+    type Output = Vector1<U>;
+
+    fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item, Self::Item) -> U,
+    {
+        Vector1::new(f(self.x, other.x))
     }
 }
 
@@ -522,6 +556,10 @@ impl<T, U> ZipMap<U> for Vector4<T> {
     }
 }
 
+impl<T> Adjunct for Point1<T> {
+    type Item = T;
+}
+
 impl<T> Adjunct for Point2<T> {
     type Item = T;
 }
@@ -530,24 +568,41 @@ impl<T> Adjunct for Point3<T> {
     type Item = T;
 }
 
+impl<T> AffineSpace for Point1<T>
+where
+    T: BaseFloat,
+{
+    type Translation = Vector1<T>;
+}
+
 impl<T> AffineSpace for Point2<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Translation = Vector2<T>;
 }
 
 impl<T> AffineSpace for Point3<T>
 where
-    T: AbsDiffEq + BaseNum + Real,
+    T: BaseFloat,
 {
     type Translation = Vector3<T>;
 }
 
+impl<T> AsPosition for Point1<T>
+where
+    T: BaseFloat,
+{
+    type Position = Self;
+
+    fn as_position(&self) -> &Self::Position {
+        self
+    }
+}
+
 impl<T> AsPosition for Point2<T>
 where
-    Self: EuclideanSpace,
-    T: BaseNum,
+    T: BaseFloat,
 {
     type Position = Self;
 
@@ -558,8 +613,7 @@ where
 
 impl<T> AsPosition for Point3<T>
 where
-    Self: EuclideanSpace,
-    T: BaseNum,
+    T: BaseFloat,
 {
     type Position = Self;
 
@@ -568,10 +622,18 @@ where
     }
 }
 
+impl<T> AsPositionMut for Point1<T>
+where
+    T: BaseFloat,
+{
+    fn as_position_mut(&mut self) -> &mut Self::Position {
+        self
+    }
+}
+
 impl<T> AsPositionMut for Point2<T>
 where
-    Self: EuclideanSpace,
-    T: BaseNum,
+    T: BaseFloat,
 {
     fn as_position_mut(&mut self) -> &mut Self::Position {
         self
@@ -580,11 +642,16 @@ where
 
 impl<T> AsPositionMut for Point3<T>
 where
-    Self: EuclideanSpace,
-    T: BaseNum,
+    T: BaseFloat,
 {
     fn as_position_mut(&mut self) -> &mut Self::Position {
         self
+    }
+}
+
+impl<T> Converged for Point1<T> {
+    fn converged(value: Self::Item) -> Self {
+        Point1::new(value)
     }
 }
 
@@ -606,33 +673,67 @@ where
     }
 }
 
-impl<T> Extend<Point3<T>> for Point2<T> {
+impl<T> ExtendInto<Point2<T>> for Point1<T> {
+    fn extend(self, y: T) -> Point2<T> {
+        let Point1 { x } = self;
+        Point2::new(x, y)
+    }
+}
+
+impl<T> ExtendInto<Point3<T>> for Point2<T> {
     fn extend(self, z: T) -> Point3<T> {
         let Point2 { x, y } = self;
         Point3::new(x, y, z)
     }
 }
 
+impl<T> EuclideanSpace for Point1<T>
+where
+    T: BaseFloat,
+{
+    type CoordinateSpace = Vector1<T>;
+
+    fn x(&self) -> Scalar<Self> {
+        self.x
+    }
+}
+
 impl<T> EuclideanSpace for Point2<T>
 where
-    T: BaseFloat + Real,
+    T: BaseFloat,
 {
     type CoordinateSpace = Vector2<T>;
 
-    fn origin() -> Self {
-        <Self as cgmath::EuclideanSpace>::origin()
+    fn x(&self) -> Scalar<Self> {
+        self.x
+    }
+
+    fn y(&self) -> Scalar<Self> {
+        self.y
     }
 }
 
 impl<T> EuclideanSpace for Point3<T>
 where
-    T: BaseFloat + Real,
+    T: BaseFloat,
 {
     type CoordinateSpace = Vector3<T>;
 
-    fn origin() -> Self {
-        <Self as cgmath::EuclideanSpace>::origin()
+    fn x(&self) -> Scalar<Self> {
+        self.x
     }
+
+    fn y(&self) -> Scalar<Self> {
+        self.y
+    }
+
+    fn z(&self) -> Scalar<Self> {
+        self.z
+    }
+}
+
+impl<T> FiniteDimensional for Point1<T> {
+    type N = U1;
 }
 
 impl<T> FiniteDimensional for Point2<T> {
@@ -643,97 +744,77 @@ impl<T> FiniteDimensional for Point3<T> {
     type N = U3;
 }
 
-impl<T> Fold for Point2<T>
-where
-    T: Copy,
-{
+impl<T> Fold for Point1<T> {
+    fn fold<U, F>(self, seed: U, mut f: F) -> U
+    where
+        F: FnMut(U, Self::Item) -> U,
+    {
+        f(seed, self.x)
+    }
+}
+
+impl<T> Fold for Point2<T> {
     fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
-        for a in &[self.x, self.y] {
-            seed = f(seed, *a);
+        for a in [self.x, self.y] {
+            seed = f(seed, a);
         }
         seed
     }
 }
 
-impl<T> Fold for Point3<T>
-where
-    T: Copy,
-{
+impl<T> Fold for Point3<T> {
     fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
         F: FnMut(U, Self::Item) -> U,
     {
-        for a in &[self.x, self.y, self.z] {
-            seed = f(seed, *a);
+        for a in [self.x, self.y, self.z] {
+            seed = f(seed, a);
         }
         seed
     }
 }
 
-impl<T> FromItems for Point2<T> {
-    fn from_items<I>(items: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self::Item>,
-    {
-        let mut items = items.into_iter().take(2);
-        match (items.next(), items.next()) {
-            (Some(a), Some(b)) => Some(Point2::new(a, b)),
+impl<T> Linear for Point1<T> {
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        match index {
+            0 => Some(&self.x),
             _ => None,
         }
     }
 }
 
-impl<T> FromItems for Point3<T> {
-    fn from_items<I>(items: I) -> Option<Self>
-    where
-        I: IntoIterator<Item = Self::Item>,
-    {
-        let mut items = items.into_iter().take(3);
-        match (items.next(), items.next(), items.next()) {
-            (Some(a), Some(b), Some(c)) => Some(Point3::new(a, b, c)),
+impl<T> Linear for Point2<T> {
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        match index {
+            0 => Some(&self.x),
+            1 => Some(&self.y),
             _ => None,
         }
     }
 }
 
-impl<T> Interpolate for Point2<T>
-where
-    T: Num + NumCast,
-{
-    type Output = Self;
-
-    fn lerp(self, other: Self, f: R64) -> Self::Output {
-        self.zip_map(other, |a, b| crate::lerp(a, b, f))
+impl<T> Linear for Point3<T> {
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        match index {
+            0 => Some(&self.x),
+            1 => Some(&self.y),
+            2 => Some(&self.z),
+            _ => None,
+        }
     }
 }
 
-impl<T> IntoItems for Point2<T> {
-    type Output = ArrayVec<[T; 2]>;
+impl<T, U> Map<U> for Point1<T> {
+    type Output = Point1<U>;
 
-    fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y])
-    }
-}
-
-impl<T> IntoItems for Point3<T> {
-    type Output = ArrayVec<[T; 3]>;
-
-    fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y, self.z])
-    }
-}
-
-impl<T> Interpolate for Point3<T>
-where
-    T: Num + NumCast,
-{
-    type Output = Self;
-
-    fn lerp(self, other: Self, f: R64) -> Self::Output {
-        self.zip_map(other, |a, b| crate::lerp(a, b, f))
+    fn map<F>(self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item) -> U,
+    {
+        Point1::new(f(self.x))
     }
 }
 
@@ -759,10 +840,28 @@ impl<T, U> Map<U> for Point3<T> {
     }
 }
 
-impl<T> Truncate<Point2<T>> for Point3<T> {
+impl<T> TruncateInto<Point1<T>> for Point2<T> {
+    fn truncate(self) -> (Point1<T>, T) {
+        let Point2 { x, y } = self;
+        (Point1::new(x), y)
+    }
+}
+
+impl<T> TruncateInto<Point2<T>> for Point3<T> {
     fn truncate(self) -> (Point2<T>, T) {
         let Point3 { x, y, z } = self;
         (Point2::new(x, y), z)
+    }
+}
+
+impl<T, U> ZipMap<U> for Point1<T> {
+    type Output = Point1<U>;
+
+    fn zip_map<F>(self, other: Self, mut f: F) -> Self::Output
+    where
+        F: FnMut(Self::Item, Self::Item) -> U,
+    {
+        Point1::new(f(self.x, other.x))
     }
 }
 

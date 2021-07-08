@@ -26,13 +26,13 @@ Theon provides optional implementations for commonly used crates in the Rust
 ecosystem, including [`glam`] and [`ultraviolet`]. These implementations can be
 enabled using Cargo features.
 
-| Feature                | Default | Crate           | Support   |
-|------------------------|---------|-----------------|-----------|
-| `geometry-cgmath`      | No      | [`cgmath`]      | Complete¹ |
-| `geometry-glam`        | No      | [`glam`]        | Complete¹ |
-| `geometry-mint`        | No      | [`mint`]        | Partial   |
-| `geometry-nalgebra`    | Yes     | [`nalgebra`]    | Complete¹ |
-| `geometry-ultraviolet` | No      | [`ultraviolet`] | Partial²  |
+| Feature                | Crate           | Version  | Support  |
+|------------------------|-----------------|----------|----------|
+| `geometry-cgmath`      | [`cgmath`]      | `0.18.0` | Complete |
+| `geometry-glam`        | [`glam`]        | `0.17.1` | Complete |
+| `geometry-mint`        | [`mint`]        | `0.5.6`  | Partial  |
+| `geometry-nalgebra`    | [`nalgebra`]    | `0.28.0` | Complete |
+| `geometry-ultraviolet` | [`ultraviolet`] | `0.8.1`  | Partial¹ |
 
 Integrated crates are re-exported in the `integration` module. Because a given
 version of Theon implements traits for specific versions of integrated crates,
@@ -41,12 +41,7 @@ re-exported crates provided by Theon with no direct dependency or ensure that
 the version of a supported crate resolves to the same version for which Theon
 implements its traits.
 
-\[1\]: Because Theon is still in its initial development phase, _complete_ does
-not necessarily mean that all traits and features are implemented, but instead
-that all traits and features can be feasibly supported and are implemented for
-common use cases.
-
-\[2\]: Importantly, traits and features are not yet implemented for SIMD types
+\[1\]: Importantly, traits and features are not yet implemented for SIMD types
 like `Wec3`.
 
 ## Spatial Queries
