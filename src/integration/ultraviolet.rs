@@ -1,6 +1,5 @@
 #![cfg(feature = "geometry-ultraviolet")]
 
-use arrayvec::ArrayVec;
 use decorum::R64;
 use typenum::consts::{U2, U3, U4};
 use ultraviolet::interp::Lerp;
@@ -63,13 +62,13 @@ impl AsPositionMut for Vec3 {
 }
 
 impl Basis for Vec2 {
-    type Bases = ArrayVec<[Self; 2]>;
+    type Bases = [Self; 2];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
@@ -82,14 +81,14 @@ impl Basis for Vec2 {
 }
 
 impl Basis for Vec3 {
-    type Bases = ArrayVec<[Self; 3]>;
+    type Bases = [Self; 3];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
             Self::canonical_basis_component(2).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
@@ -103,15 +102,15 @@ impl Basis for Vec3 {
 }
 
 impl Basis for Vec4 {
-    type Bases = ArrayVec<[Self; 4]>;
+    type Bases = [Self; 4];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
             Self::canonical_basis_component(2).unwrap(),
             Self::canonical_basis_component(3).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {

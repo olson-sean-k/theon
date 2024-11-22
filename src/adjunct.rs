@@ -13,7 +13,6 @@
 //! and other traits are provided for `nalgebra` types when the
 //! `geometry-nalgebra` feature is enabled.
 
-use arrayvec::ArrayVec;
 use decorum::cmp::{self, IntrinsicOrd};
 use num::{Bounded, One, Zero};
 use std::ops::{Add, Mul};
@@ -235,18 +234,18 @@ impl<T> FromItems for (T, T, T) {
 }
 
 impl<T> IntoItems for (T, T) {
-    type Output = ArrayVec<[T; 2]>;
+    type Output = [T; 2];
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.0, self.1])
+        [self.0, self.1]
     }
 }
 
 impl<T> IntoItems for (T, T, T) {
-    type Output = ArrayVec<[T; 3]>;
+    type Output = [T; 3];
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.0, self.1, self.2])
+        [self.0, self.1, self.2]
     }
 }
 

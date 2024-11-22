@@ -4,7 +4,6 @@
 //       because they require foreign traits on foreign types.
 // TODO: Implement as many traits as possible.
 
-use arrayvec::ArrayVec;
 use decorum::R64;
 use mint::{Point2, Point3, Vector2, Vector3};
 use num::{Num, NumCast, One, Zero};
@@ -27,13 +26,13 @@ impl<T> Basis for Vector2<T>
 where
     T: One + Zero,
 {
-    type Bases = ArrayVec<[Self; 2]>;
+    type Bases = [Self; 2];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
@@ -55,14 +54,14 @@ impl<T> Basis for Vector3<T>
 where
     T: One + Zero,
 {
-    type Bases = ArrayVec<[Self; 3]>;
+    type Bases = [Self; 3];
 
     fn canonical_basis() -> Self::Bases {
-        ArrayVec::from([
+        [
             Self::canonical_basis_component(0).unwrap(),
             Self::canonical_basis_component(1).unwrap(),
             Self::canonical_basis_component(2).unwrap(),
-        ])
+        ]
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
@@ -210,18 +209,18 @@ where
 }
 
 impl<T> IntoItems for Vector2<T> {
-    type Output = ArrayVec<[T; 2]>;
+    type Output = [T; 2];
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y])
+        [self.x, self.y]
     }
 }
 
 impl<T> IntoItems for Vector3<T> {
-    type Output = ArrayVec<[T; 3]>;
+    type Output = [T; 3];
 
     fn into_items(self) -> Self::Output {
-        ArrayVec::from([self.x, self.y, self.z])
+        [self.x, self.y, self.z]
     }
 }
 

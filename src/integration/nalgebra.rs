@@ -1,7 +1,6 @@
 #![cfg(feature = "geometry-nalgebra")]
 
 use approx::AbsDiffEq;
-use arrayvec::ArrayVec;
 use decorum::{Real, R64};
 use nalgebra::base::allocator::Allocator;
 use nalgebra::base::default_allocator::DefaultAllocator;
@@ -225,7 +224,7 @@ impl<T> IntoItems for Vector2<T>
 where
     T: Scalar,
 {
-    type Output = ArrayVec<[T; 2]>;
+    type Output = [T; 2];
 
     fn into_items(self) -> Self::Output {
         let array: [T; 2] = self.into();
@@ -237,7 +236,7 @@ impl<T> IntoItems for Vector3<T>
 where
     T: Scalar,
 {
-    type Output = ArrayVec<[T; 3]>;
+    type Output = [T; 3];
 
     fn into_items(self) -> Self::Output {
         let array: [T; 3] = self.into();
@@ -560,7 +559,7 @@ impl<T> IntoItems for Point2<T>
 where
     T: Scalar,
 {
-    type Output = ArrayVec<[T; 2]>;
+    type Output = [T; 2];
 
     fn into_items(self) -> Self::Output {
         let array: [T; 2] = self.coords.into();
@@ -572,7 +571,7 @@ impl<T> IntoItems for Point3<T>
 where
     T: Scalar,
 {
-    type Output = ArrayVec<[T; 3]>;
+    type Output = [T; 3];
 
     fn into_items(self) -> Self::Output {
         let array: [T; 3] = self.coords.into();
