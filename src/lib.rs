@@ -20,7 +20,7 @@ pub mod space;
 mod integration;
 
 use decorum::R64;
-use num::{self, Num, NumCast, One, Zero};
+use num::traits::{Num, NumCast, One, Zero};
 
 use crate::space::EuclideanSpace;
 

@@ -46,7 +46,10 @@ where
     let columns = columns.as_ref();
     let n = columns.len();
     convert::into_matrix(
-        MatrixLayout::F((n as i32, <U as FiniteDimensional>::N::USIZE as i32)),
+        MatrixLayout::F {
+            col: n as i32,
+            lda: <U as FiniteDimensional>::N::USIZE as i32,
+        },
         columns
             .iter()
             .map(f)

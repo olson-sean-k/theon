@@ -3,9 +3,10 @@
 //! This module provides types and traits for performing spatial queries.
 
 use approx::abs_diff_eq;
-use decorum::cmp::IntrinsicOrd;
-use decorum::Infinite;
-use num::{Bounded, Signed, Zero};
+use decorum::cmp::EmptyOrd;
+use decorum::InfinityEncoding;
+use num::traits::real::Real;
+use num::traits::{Bounded, Signed, Zero};
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Neg;
 use typenum::type_operators::Cmp;
@@ -642,13 +643,13 @@ where
     pub fn from_points<I>(points: I) -> Self
     where
         I: IntoIterator<Item = S>,
-        Scalar<S>: IntrinsicOrd,
+        Scalar<S>: EmptyOrd,
     {
         let mut min = S::origin();
         let mut max = S::origin();
         for point in points {
-            min = min.per_item_min_or_undefined(point);
-            max = max.per_item_max_or_undefined(point);
+            min = min.per_item_min_or_empty(point);
+            max = max.per_item_max_or_empty(point);
         }
         Aabb {
             origin: min,
@@ -662,16 +663,16 @@ where
 
     pub fn upper_bound(&self) -> S
     where
-        Scalar<S>: IntrinsicOrd,
+        Scalar<S>: EmptyOrd,
     {
-        self.origin.per_item_max_or_undefined(self.endpoint())
+        self.origin.per_item_max_or_empty(self.endpoint())
     }
 
     pub fn lower_bound(&self) -> S
     where
-        Scalar<S>: IntrinsicOrd,
+        Scalar<S>: EmptyOrd,
     {
-        self.origin.per_item_min_or_undefined(self.endpoint())
+        self.origin.per_item_min_or_empty(self.endpoint())
     }
 
     /// Gets the Lebesgue measure ($n$-dimensional volume) of the bounding box.
@@ -686,15 +687,10 @@ where
 
     pub fn union(&self, aabb: &Self) -> Self
     where
-        Scalar<S>: IntrinsicOrd,
+        Scalar<S>: EmptyOrd,
     {
-        let origin = self
-            .lower_bound()
-            .per_item_min_or_undefined(aabb.lower_bound());
-        let extent = self
-            .upper_bound()
-            .per_item_max_or_undefined(aabb.upper_bound())
-            - origin;
+        let origin = self.lower_bound().per_item_min_or_empty(aabb.lower_bound());
+        let extent = self.upper_bound().per_item_max_or_empty(aabb.upper_bound()) - origin;
         Aabb { origin, extent }
     }
 }
@@ -729,14 +725,14 @@ where
 impl<S> Intersection<S> for Aabb<S>
 where
     S: EuclideanSpace,
-    Scalar<S>: IntrinsicOrd + Signed,
+    Scalar<S>: EmptyOrd + Signed,
 {
     type Output = Vector<S>;
 
     fn intersection(&self, point: &S) -> Option<Self::Output> {
         let aabb = self;
-        let lower = aabb.lower_bound().per_item_max_or_undefined(*point);
-        let upper = aabb.upper_bound().per_item_min_or_undefined(*point);
+        let lower = aabb.lower_bound().per_item_max_or_empty(*point);
+        let upper = aabb.upper_bound().per_item_min_or_empty(*point);
         if lower == upper {
             Some(*point - aabb.lower_bound())
         }
@@ -751,19 +747,19 @@ impl_symmetrical_intersection!(Aabb);
 impl<S> Intersection<Aabb<S>> for Aabb<S>
 where
     S: EuclideanSpace,
-    Scalar<S>: IntrinsicOrd + Signed,
+    Scalar<S>: EmptyOrd + Signed,
 {
     type Output = Self;
 
     fn intersection(&self, other: &Aabb<S>) -> Option<Self::Output> {
         let max_lower_bound = self
             .lower_bound()
-            .per_item_max_or_undefined(other.lower_bound());
+            .per_item_max_or_empty(other.lower_bound());
         let min_upper_bound = self
             .upper_bound()
-            .per_item_min_or_undefined(other.upper_bound());
+            .per_item_min_or_empty(other.upper_bound());
         let difference = min_upper_bound - max_lower_bound;
-        if difference.all(|x| (!x.is_undefined()) && x.is_positive()) {
+        if difference.all(|x| (!x.is_empty()) && x.is_positive()) {
             Some(Aabb {
                 origin: max_lower_bound,
                 extent: difference,
@@ -779,7 +775,7 @@ where
 impl<S> Intersection<Ray<S>> for Aabb<S>
 where
     S: EuclideanSpace,
-    Scalar<S>: Bounded + Infinite + IntrinsicOrd + Signed,
+    Scalar<S>: Bounded + EmptyOrd + InfinityEncoding + Signed,
 {
     /// The minimum and maximum _times of impact_ of the intersection.
     ///
@@ -833,13 +829,9 @@ where
         let direction = *ray.direction.get();
         let origin = (aabb.origin - ray.origin).zip_map(direction, pdiv);
         let endpoint = ((aabb.endpoint()) - ray.origin).zip_map(direction, pdiv);
-        let min = origin
-            .per_item_min_or_undefined(endpoint)
-            .max_or_undefined();
-        let max = origin
-            .per_item_max_or_undefined(endpoint)
-            .min_or_undefined();
-        if max.is_negative() || min > max || min.is_undefined() || max.is_undefined() {
+        let min = origin.per_item_min_or_empty(endpoint).max_or_empty();
+        let max = origin.per_item_max_or_empty(endpoint).min_or_empty();
+        if max.is_negative() || min > max || min.is_empty() || max.is_empty() {
             None
         }
         else {
@@ -969,12 +961,15 @@ impl_symmetrical_intersection!(Plane, Ray);
 
 #[cfg(all(test, feature = "geometry-nalgebra"))]
 mod tests {
-    use decorum::N64;
+    use decorum::real::UnaryRealFunction;
+    use decorum::ExtendedReal;
     use nalgebra::{Point2, Point3};
 
     use crate::adjunct::Converged;
     use crate::query::{Aabb, Intersection, Line, LineLine, Plane, PlaneRay, Ray, Unit};
     use crate::space::{EuclideanSpace, Vector, VectorSpace};
+
+    type X64 = ExtendedReal<f64>;
 
     type E2 = Point2<f64>;
     type E3 = Point3<f64>;
@@ -1051,15 +1046,15 @@ mod tests {
     // intersection of `Aabb` and `Ray`.
     #[test]
     fn aabb_ray_intersection_nan() {
-        let aabb = Aabb::<Point2<N64>> {
+        let aabb = Aabb::<Point2<X64>> {
             origin: EuclideanSpace::origin(),
-            extent: Converged::converged(1.0.into()),
+            extent: Converged::converged(X64::ONE),
         };
-        let ray = Ray::<Point2<N64>> {
+        let ray = Ray::<Point2<X64>> {
             origin: EuclideanSpace::origin(),
             direction: Unit::x(),
         };
-        assert_eq!(Some((0.0.into(), 1.0.into())), ray.intersection(&aabb));
+        assert_eq!(Some((X64::ZERO, X64::ONE)), ray.intersection(&aabb));
     }
 
     #[test]

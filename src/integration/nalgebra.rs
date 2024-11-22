@@ -1,7 +1,7 @@
 #![cfg(feature = "geometry-nalgebra")]
 
 use approx::AbsDiffEq;
-use decorum::{Real, R64};
+use decorum::R64;
 use nalgebra::base::allocator::Allocator;
 use nalgebra::base::default_allocator::DefaultAllocator;
 use nalgebra::base::dimension::{
@@ -12,7 +12,8 @@ use nalgebra::base::{
     Matrix2, Matrix3, MatrixMN, RowVector2, RowVector3, Scalar, Vector2, Vector3, Vector4, VectorN,
 };
 use nalgebra::geometry::{Point, Point2, Point3};
-use num::{Num, NumCast, One, Zero};
+use num::traits::real::Real;
+use num::traits::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
 

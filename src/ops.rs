@@ -16,7 +16,7 @@ pub trait Interpolate<T = Self>: Sized {
     fn lerp(self, other: T, f: R64) -> Self::Output;
 
     fn midpoint(self, other: T) -> Self::Output {
-        self.lerp(other, 0.5.into())
+        self.lerp(other, R64::assert(0.5))
     }
 }
 

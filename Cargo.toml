@@ -38,11 +38,11 @@ lapack = [
 ]
 
 [dependencies]
-approx = "^0.3.0"
-decorum = "^0.3.0"
-itertools = "^0.9.0"
-num = "^0.3.0"
-typenum = "^1.10.0"
+approx = "^0.5.0"
+decorum = "^0.4.0"
+itertools = "^0.13.0"
+num = "^0.4.0"
+typenum = "^1.17.0"
 
 # Integrations.
 
@@ -68,16 +68,13 @@ optional = true
 
 # Platform-specific features.
 
-[target.'cfg(target_os = "linux")'.dependencies.ndarray]
-version = "^0.13.0"
+[target.'cfg(target_arch = "x86_64")'.dependencies.ndarray]
+version = "^0.15.0"
 optional = true
 
-# LAPACK packages are difficult to distribute. MKL appears to build reliably on
-# Linux, but does not support Windows and yields strange results on MacOS. The
-# other supported packages require a more complex build environment.
-[target.'cfg(target_os = "linux")'.dependencies.ndarray-linalg]
-version = "^0.12.0"
-features = ["intel-mkl"]
+[target.'cfg(target_arch = "x86_64")'.dependencies.ndarray-linalg]
+version = "^0.16.0"
+features = ["intel-mkl-static"]
 optional = true
 
 [dev-dependencies]

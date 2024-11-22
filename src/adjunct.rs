@@ -13,8 +13,8 @@
 //! and other traits are provided for `nalgebra` types when the
 //! `geometry-nalgebra` feature is enabled.
 
-use decorum::cmp::{self, IntrinsicOrd};
-use num::{Bounded, One, Zero};
+use decorum::cmp::{self, EmptyOrd};
+use num::traits::{Bounded, One, Zero};
 use std::ops::{Add, Mul};
 
 pub trait Adjunct: Sized {
@@ -85,20 +85,20 @@ pub trait ZipMap<T = <Self as Adjunct>::Item>: Adjunct {
         self.zip_map(other, |a, b| a * b)
     }
 
-    fn per_item_min_or_undefined(self, other: Self) -> Self::Output
+    fn per_item_min_or_empty(self, other: Self) -> Self::Output
     where
         Self: Adjunct<Item = T>,
-        T: IntrinsicOrd,
+        T: EmptyOrd,
     {
-        self.zip_map(other, cmp::min_or_undefined)
+        self.zip_map(other, cmp::min_or_empty)
     }
 
-    fn per_item_max_or_undefined(self, other: Self) -> Self::Output
+    fn per_item_max_or_empty(self, other: Self) -> Self::Output
     where
         Self: Adjunct<Item = T>,
-        T: IntrinsicOrd,
+        T: EmptyOrd,
     {
-        self.zip_map(other, cmp::max_or_undefined)
+        self.zip_map(other, cmp::max_or_empty)
     }
 }
 
@@ -121,18 +121,18 @@ pub trait Fold: Adjunct {
         self.fold(One::one(), |product, n| product * n)
     }
 
-    fn min_or_undefined(self) -> Self::Item
+    fn min_or_empty(self) -> Self::Item
     where
-        Self::Item: Bounded + IntrinsicOrd,
+        Self::Item: Bounded + EmptyOrd,
     {
-        self.fold(Bounded::max_value(), cmp::min_or_undefined)
+        self.fold(Bounded::max_value(), cmp::min_or_empty)
     }
 
-    fn max_or_undefined(self) -> Self::Item
+    fn max_or_empty(self) -> Self::Item
     where
-        Self::Item: Bounded + IntrinsicOrd,
+        Self::Item: Bounded + EmptyOrd,
     {
-        self.fold(Bounded::min_value(), cmp::max_or_undefined)
+        self.fold(Bounded::min_value(), cmp::max_or_empty)
     }
 
     fn any<F>(self, mut f: F) -> bool

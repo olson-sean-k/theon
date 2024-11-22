@@ -2,8 +2,9 @@
 
 use approx::AbsDiffEq;
 use cgmath::{BaseFloat, BaseNum, Point2, Point3, Vector2, Vector3, Vector4};
-use decorum::{Real, R64};
-use num::{Num, NumCast};
+use decorum::R64;
+use num::traits::real::Real;
+use num::traits::{Num, NumCast};
 use typenum::consts::{U2, U3, U4};
 
 use crate::adjunct::{
@@ -319,11 +320,11 @@ where
     type ProjectiveSpace = Vector4<T>;
 }
 
-impl<T> InnerSpace for Vector2<T> where T: BaseFloat + Real {}
+impl<T> InnerSpace for Vector2<T> where T: AbsDiffEq + BaseFloat + Real {}
 
-impl<T> InnerSpace for Vector3<T> where T: BaseFloat + Real {}
+impl<T> InnerSpace for Vector3<T> where T: AbsDiffEq + BaseFloat + Real {}
 
-impl<T> InnerSpace for Vector4<T> where T: BaseFloat + Real {}
+impl<T> InnerSpace for Vector4<T> where T: AbsDiffEq + BaseFloat + Real {}
 
 impl<T> Interpolate for Vector2<T>
 where
@@ -612,7 +613,7 @@ impl<T> Extend<Point3<T>> for Point2<T> {
 
 impl<T> EuclideanSpace for Point2<T>
 where
-    T: BaseFloat + Real,
+    T: AbsDiffEq + BaseFloat + Real,
 {
     type CoordinateSpace = Vector2<T>;
 
@@ -623,7 +624,7 @@ where
 
 impl<T> EuclideanSpace for Point3<T>
 where
-    T: BaseFloat + Real,
+    T: AbsDiffEq + BaseFloat + Real,
 {
     type CoordinateSpace = Vector3<T>;
 

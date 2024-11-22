@@ -76,7 +76,8 @@ To support these queries, the `lapack` feature depends on [`ndarray`] and
 `lapack` feature and computes a best-fit plane using a singular value
 decomposition.
 
-The `lapack` feature only supports Linux at this time.
+The `lapack` feature can only be used with the `x86_64` architecture on Linux,
+MacOS, and Windows.
 
 [space]: https://en.wikipedia.org/wiki/euclidean_space
 [lapack]: https://en.wikipedia.org/wiki/lapack
