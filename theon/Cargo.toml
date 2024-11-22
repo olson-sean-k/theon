@@ -1,13 +1,20 @@
 [package]
 name = "theon"
-description = "Abstraction of Euclidean spaces."
-keywords = ["geometry", "graphics", "math"]
 version = "0.0.1"
 authors = ["Sean Olson <olson.sean.k@gmail.com>"]
-edition = "2018"
-license = "MIT"
-readme = "../README.md"
+description = "Abstraction of Euclidean spaces."
 repository = "https://github.com/olson-sean-k/theon"
+readme = "../README.md"
+edition = "2021"
+rust-version = "1.56.0"
+license = "MIT"
+keywords = [
+    "geometry",
+    "graphics",
+    "math",
+    "matrix",
+    "vector",
+]
 
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
@@ -25,11 +32,13 @@ geometry-glam = ["eudoxus/geometry-glam"]
 geometry-mint = ["eudoxus/geometry-mint"]
 geometry-nalgebra = ["eudoxus/geometry-nalgebra"]
 geometry-ultraviolet = ["eudoxus/geometry-ultraviolet"]
-lapack = ["ndarray", "ndarray-linalg"]
+lapack = [
+    "dep:ndarray",
+    "dep:ndarray-linalg",
+]
 
 [dependencies]
 approx = "^0.5.0"
-arrayvec = "^0.7.0"
 decorum = "^0.3.0"
 itertools = "^0.10.0"
 num = "^0.3.0"
