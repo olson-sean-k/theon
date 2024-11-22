@@ -9,6 +9,10 @@ use nalgebra::base::dimension::{
     DimName, DimNameAdd, DimNameDiff, DimNameMax, DimNameMaximum, DimNameMin, DimNameSub,
     DimNameSum, U1,
 };
+use nalgebra::base::{
+    Matrix2, Matrix3, MatrixMN, RowVector2, RowVector3, Scalar, Vector2, Vector3, Vector4, VectorN,
+};
+use nalgebra::geometry::{Point, Point2, Point3};
 use num::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
@@ -22,9 +26,6 @@ use crate::space::{
     Matrix, SquareMatrix, VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
-
-#[doc(hidden)]
-pub use nalgebra::*;
 
 impl<T, R, C> Adjunct for MatrixMN<T, R, C>
 where

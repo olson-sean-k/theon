@@ -22,32 +22,22 @@ dimension.
 
 ## Integrations
 
-Theon provides optional implementations for commonly used crates in the Rust
-ecosystem, including [`glam`] and [`ultraviolet`]. These implementations can be
-enabled using Cargo features.
+Theon provides reverse integrations with commonly used linear algebra crates in
+the Rust ecosystem, including [`glam`] and [`ultraviolet`]. These
+implementations can be enabled using Cargo features.
 
-| Feature                | Default | Crate           | Support   |
-|------------------------|---------|-----------------|-----------|
-| `geometry-cgmath`      | No      | [`cgmath`]      | Complete¹ |
-| `geometry-glam`        | No      | [`glam`]        | Complete¹ |
-| `geometry-mint`        | No      | [`mint`]        | Partial   |
-| `geometry-nalgebra`    | Yes     | [`nalgebra`]    | Complete¹ |
-| `geometry-ultraviolet` | No      | [`ultraviolet`] | Partial²  |
+| Feature                | Default | Crate           |
+|------------------------|---------|-----------------|
+| `geometry-cgmath`      | No      | [`cgmath`]      |
+| `geometry-glam`        | No      | [`glam`]        |
+| `geometry-mint`        | No      | [`mint`]        |
+| `geometry-nalgebra`    | Yes     | [`nalgebra`]    |
+| `geometry-ultraviolet` | No      | [`ultraviolet`] |
 
-Integrated crates are re-exported in the `integration` module. Because a given
-version of Theon implements traits for specific versions of integrated crates,
-care must be taken to align these versions. Dependent crates can either use the
-re-exported crates provided by Theon with no direct dependency or ensure that
-the version of a supported crate resolves to the same version for which Theon
-implements its traits.
-
-\[1\]: Because Theon is still in its initial development phase, _complete_ does
-not necessarily mean that all traits and features are implemented, but instead
-that all traits and features can be feasibly supported and are implemented for
-common use cases.
-
-\[2\]: Importantly, traits and features are not yet implemented for SIMD types
-like `Wec3`.
+Because a given version of Theon implements traits for specific versions of
+integrated crates, care must be taken to resolve to these supported versions.
+Ideally, integrations would be implemented in these linear algebra crates, but
+Theon is still under development and may not be ready for forward integration.
 
 ## Spatial Queries
 

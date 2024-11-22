@@ -2,6 +2,7 @@
 
 use arrayvec::ArrayVec;
 use decorum::R64;
+use glam::{Vec2, Vec3, Vec3A, Vec4};
 use typenum::consts::{U2, U3, U4};
 
 use crate::adjunct::{Adjunct, Converged, Extend, Fold, Map, Truncate, ZipMap};
@@ -11,9 +12,6 @@ use crate::space::{
     VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
-
-#[doc(hidden)]
-pub use glam::*;
 
 impl Adjunct for Vec2 {
     type Item = f32;

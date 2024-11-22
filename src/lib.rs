@@ -12,11 +12,12 @@
 )]
 
 pub mod adjunct;
-pub mod integration;
 pub mod lapack;
 pub mod ops;
 pub mod query;
 pub mod space;
+
+mod integration;
 
 use decorum::R64;
 use num::{self, Num, NumCast, One, Zero};

@@ -14,9 +14,6 @@ use crate::space::{
 };
 use crate::{AsPosition, AsPositionMut};
 
-#[doc(hidden)]
-pub use ultraviolet::*;
-
 impl Adjunct for Vec2 {
     type Item = f32;
 }

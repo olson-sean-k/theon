@@ -2,6 +2,7 @@
 
 use approx::AbsDiffEq;
 use arrayvec::ArrayVec;
+use cgmath::{BaseFloat, BaseNum, Point2, Point3, Vector2, Vector3, Vector4};
 use decorum::{Real, R64};
 use num::{Num, NumCast};
 use typenum::consts::{U2, U3, U4};
@@ -15,9 +16,6 @@ use crate::space::{
     VectorSpace,
 };
 use crate::{AsPosition, AsPositionMut};
-
-#[doc(hidden)]
-pub use cgmath::*;
 
 impl<T> Adjunct for Vector2<T> {
     type Item = T;

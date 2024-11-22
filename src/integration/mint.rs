@@ -6,6 +6,7 @@
 
 use arrayvec::ArrayVec;
 use decorum::R64;
+use mint::{Point2, Point3, Vector2, Vector3};
 use num::{Num, NumCast, One, Zero};
 use std::ops::Neg;
 use typenum::{U2, U3};
@@ -13,9 +14,6 @@ use typenum::{U2, U3};
 use crate::adjunct::{Adjunct, Converged, Fold, FromItems, IntoItems, Map, ZipMap};
 use crate::ops::{Cross, Dot, Interpolate, Project};
 use crate::space::{Basis, FiniteDimensional};
-
-#[doc(hidden)]
-pub use mint::*;
 
 impl<T> Adjunct for Vector2<T> {
     type Item = T;
