@@ -19,9 +19,126 @@
 
 use num_traits::{One, Zero};
 use std::ops::{Add, Mul};
+use typenum::{Max, Min, U1, U2};
 
 use crate::space::{FiniteDimensional, ProjectiveDimensions};
-use crate::Increment;
+use crate::{Increment, Natural};
+
+pub trait Layout {
+    type Bounds: Adjunct<Item = usize> + AsRef<[usize]> + Copy + Map<usize, Output = Self::Bounds>;
+
+    const N: usize;
+    const BOUNDS: Self::Bounds;
+
+    fn is_zero() -> bool {
+        Self::BOUNDS.as_ref().iter().any(|&bound| bound == 0)
+    }
+}
+
+pub trait ShapeEq<T>: Layout
+where
+    T: Layout,
+{
+}
+
+impl<N, R, C> ShapeEq<(N,)> for (R, C)
+where
+    N: Natural,
+    R: Max<C, Output = N> + Min<C, Output = U1> + Natural,
+    C: Natural,
+{
+}
+
+impl<N, R, C> ShapeEq<(R, C)> for (N,)
+where
+    N: Natural,
+    R: Max<C, Output = N> + Min<C, Output = U1> + Natural,
+    C: Natural,
+{
+}
+
+impl<R1, C1, R2, C2> ShapeEq<(R1, C1)> for (R2, C2)
+where
+    R1: Max<C1> + Min<C1> + Natural,
+    C1: Natural,
+    R2: Max<C2, Output = <R1 as Max<C1>>::Output>
+        + Min<C2, Output = <R1 as Min<C1>>::Output>
+        + Natural,
+    C2: Natural,
+{
+}
+
+pub trait ShapeSpan: Layout {
+    type Output: Natural;
+}
+
+impl<N> ShapeSpan for (N,)
+where
+    N: Natural,
+{
+    type Output = U1;
+}
+
+impl<R, C> ShapeSpan for (R, C)
+where
+    R: Min<C> + Natural,
+    C: Natural,
+    U2: Min<<R as Min<C>>::Output>,
+    <U2 as Min<<R as Min<C>>::Output>>::Output: Natural,
+{
+    type Output = <U2 as Min<<R as Min<C>>::Output>>::Output;
+}
+
+impl<N> Layout for (N,)
+where
+    N: Natural,
+{
+    type Bounds = [usize; 1];
+
+    const N: usize = 1;
+    const BOUNDS: Self::Bounds = [N::USIZE];
+}
+
+impl<R, C> Layout for (R, C)
+where
+    R: Natural,
+    C: Natural,
+{
+    type Bounds = [usize; 2];
+
+    const N: usize = 2;
+    const BOUNDS: Self::Bounds = [R::USIZE, C::USIZE];
+}
+
+pub trait Shaped: Adjunct {
+    type Layout: Layout;
+
+    const ORDERING: <Self::Layout as Layout>::Bounds;
+
+    fn get(&self, index: <Self::Layout as Layout>::Bounds) -> Option<&Self::Item>;
+}
+
+// TODO: This work was done a long time ago, so this comment _could_ be wrong, but it really
+//       appears that this trait is meant to replace the `Linear` trait below. The "2" is probably
+//       an artifact of experimentation with shape and layout ahead of replacing `Linear`.
+pub trait Linear2: Shaped
+where
+    Self::Layout: ShapeSpan<Output = U1>,
+{
+    fn get(&self, index: usize) -> Option<&Self::Item> {
+        <Self as Shaped>::get(
+            self,
+            <Self::Layout as Layout>::BOUNDS.clone().map(|bound| {
+                if bound == 1 {
+                    0
+                }
+                else {
+                    index
+                }
+            }),
+        )
+    }
+}
 
 pub trait Adjunct: Sized {
     type Item;
