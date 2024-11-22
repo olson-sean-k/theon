@@ -93,11 +93,7 @@ impl Basis for Vec2 {
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
-        match index {
-            0 => Some(Self::unit_x()),
-            1 => Some(Self::unit_y()),
-            _ => None,
-        }
+        Self::AXES.get(index).copied()
     }
 }
 
@@ -113,12 +109,7 @@ impl Basis for Vec3 {
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
-        match index {
-            0 => Some(Self::unit_x()),
-            1 => Some(Self::unit_y()),
-            2 => Some(Self::unit_z()),
-            _ => None,
-        }
+        Self::AXES.get(index).copied()
     }
 }
 
@@ -134,12 +125,7 @@ impl Basis for Vec3A {
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
-        match index {
-            0 => Some(Self::unit_x()),
-            1 => Some(Self::unit_y()),
-            2 => Some(Self::unit_z()),
-            _ => None,
-        }
+        Self::AXES.get(index).copied()
     }
 }
 
@@ -156,13 +142,7 @@ impl Basis for Vec4 {
     }
 
     fn canonical_basis_component(index: usize) -> Option<Self> {
-        match index {
-            0 => Some(Self::unit_x()),
-            1 => Some(Self::unit_y()),
-            2 => Some(Self::unit_z()),
-            3 => Some(Self::unit_w()),
-            _ => None,
-        }
+        Self::AXES.get(index).copied()
     }
 }
 
@@ -488,14 +468,14 @@ impl Truncate<Vec2> for Vec3A {
 impl Truncate<Vec3> for Vec4 {
     fn truncate(self) -> (Vec3, Self::Item) {
         let z = self.z();
-        (self.truncate().into(), z)
+        (self.truncate(), z)
     }
 }
 
 impl Truncate<Vec3A> for Vec4 {
     fn truncate(self) -> (Vec3A, Self::Item) {
         let z = self.z();
-        (self.truncate(), z)
+        (self.truncate().into(), z)
     }
 }
 
@@ -515,7 +495,7 @@ impl VectorSpace for Vec2 {
     }
 
     fn zero() -> Self {
-        Self::zero()
+        Self::ZERO
     }
 }
 
@@ -536,7 +516,7 @@ impl VectorSpace for Vec3 {
     }
 
     fn zero() -> Self {
-        Self::zero()
+        Self::ZERO
     }
 }
 
@@ -557,7 +537,7 @@ impl VectorSpace for Vec3A {
     }
 
     fn zero() -> Self {
-        Self::zero()
+        Self::ZERO
     }
 }
 
@@ -565,17 +545,18 @@ impl VectorSpace for Vec4 {
     type Scalar = f32;
 
     fn scalar_component(&self, index: usize) -> Option<Self::Scalar> {
+        let [x, y, z, w] = self.to_array();
         match index {
-            0 => Some(self.x()),
-            1 => Some(self.y()),
-            2 => Some(self.z()),
-            3 => Some(self.w()),
+            0 => Some(x),
+            1 => Some(y),
+            2 => Some(z),
+            3 => Some(w),
             _ => None,
         }
     }
 
     fn zero() -> Self {
-        Self::zero()
+        Self::ZERO
     }
 }
 

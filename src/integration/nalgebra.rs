@@ -6,12 +6,12 @@ use nalgebra::base::allocator::Allocator;
 use nalgebra::base::default_allocator::DefaultAllocator;
 use nalgebra::base::dimension::{
     DimName, DimNameAdd, DimNameDiff, DimNameMax, DimNameMaximum, DimNameMin, DimNameSub,
-    DimNameSum, U1,
+    DimNameSum, ToTypenum, U1,
 };
 use nalgebra::base::{
-    Matrix2, Matrix3, MatrixMN, RowVector2, RowVector3, Scalar, Vector2, Vector3, Vector4, VectorN,
+    Matrix2, Matrix3, OMatrix, OVector, RowVector2, RowVector3, Scalar, Vector2, Vector3, Vector4,
 };
-use nalgebra::geometry::{Point, Point2, Point3};
+use nalgebra::geometry::{OPoint, Point2, Point3};
 use num::traits::real::Real;
 use num::traits::{Num, NumCast, One, Zero};
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
@@ -27,21 +27,21 @@ use crate::space::{
 };
 use crate::{AsPosition, AsPositionMut};
 
-impl<T, R, C> Adjunct for MatrixMN<T, R, C>
+impl<T, R, C> Adjunct for OMatrix<T, R, C>
 where
     T: Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<R, C>,
 {
     type Item = T;
 }
 
-impl<T, D> Basis for VectorN<T, D>
+impl<T, D> Basis for OVector<T, D>
 where
     T: One + Scalar + Zero,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
     Self: FiniteDimensional,
 {
     type Bases = Vec<Self>;
@@ -68,12 +68,12 @@ where
     }
 }
 
-impl<T, R, C> Converged for MatrixMN<T, R, C>
+impl<T, R, C> Converged for OMatrix<T, R, C>
 where
     T: Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<R, C>,
 {
     fn converged(value: Self::Item) -> Self {
         Self::from_element(value)
@@ -99,11 +99,11 @@ where
     }
 }
 
-impl<T, D> Dot for VectorN<T, D>
+impl<T, D> Dot for OVector<T, D>
 where
     T: AddAssign + MulAssign + Num + Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     type Output = T;
 
@@ -112,51 +112,52 @@ where
     }
 }
 
-impl<T, R, C> DualSpace for MatrixMN<T, R, C>
+impl<T, R, C> DualSpace for OMatrix<T, R, C>
 where
     T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
     R: DimName + DimNameMin<C, Output = U1>,
     C: DimName + DimNameMin<R, Output = U1>,
-    DefaultAllocator: Allocator<T, R, C> + Allocator<T, C, R>,
-    MatrixMN<T, C, R>: Copy + FiniteDimensional<N = <Self as FiniteDimensional>::N>,
+    DefaultAllocator: Allocator<R, C> + Allocator<C, R>,
+    OMatrix<T, C, R>: Copy + FiniteDimensional<N = <Self as FiniteDimensional>::N>,
     Self: Copy + FiniteDimensional,
 {
-    type Dual = MatrixMN<T, C, R>;
+    type Dual = OMatrix<T, C, R>;
 
     fn transpose(self) -> Self::Dual {
         nalgebra::Matrix::transpose(&self)
     }
 }
 
-impl<T, D> Extend<VectorN<T, DimNameSum<D, U1>>> for VectorN<T, D>
+impl<T, D> Extend<OVector<T, DimNameSum<D, U1>>> for OVector<T, D>
 where
     T: AddAssign + MulAssign + Real + Scalar,
     D: DimName + DimNameAdd<U1>,
-    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
+    DefaultAllocator: Allocator<D> + Allocator<DimNameSum<D, U1>>,
 {
-    fn extend(self, x: T) -> VectorN<T, DimNameSum<D, U1>> {
-        VectorN::<_, DimNameSum<D, _>>::from_iterator(self.into_iter().cloned().chain(Some(x)))
+    fn extend(self, x: T) -> OVector<T, DimNameSum<D, U1>> {
+        OVector::<_, DimNameSum<D, _>>::from_iterator(self.into_iter().cloned().chain(Some(x)))
     }
 }
 
-impl<T, R, C> FiniteDimensional for MatrixMN<T, R, C>
+impl<T, R, C> FiniteDimensional for OMatrix<T, R, C>
 where
     T: Scalar,
     R: DimName + DimNameMax<C> + DimNameMin<C, Output = U1>,
-    <DimNameMaximum<R, C> as DimName>::Value: NonZero,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
+    DimNameMaximum<R, C>: ToTypenum,
+    <DimNameMaximum<R, C> as ToTypenum>::Typenum: NonZero,
+    DefaultAllocator: Allocator<R, C>,
 {
-    type N = <DimNameMaximum<R, C> as DimName>::Value;
+    type N = <DimNameMaximum<R, C> as ToTypenum>::Typenum;
 }
 
-impl<T, R, C> Fold for MatrixMN<T, R, C>
+impl<T, R, C> Fold for OMatrix<T, R, C>
 where
     // TODO: Re-examine adjunct traits that take items by value.
     T: Clone + Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<R, C>,
 {
     fn fold<U, F>(self, mut seed: U, mut f: F) -> U
     where
@@ -169,12 +170,12 @@ where
     }
 }
 
-impl<T, R, C> FromItems for MatrixMN<T, R, C>
+impl<T, R, C> FromItems for OMatrix<T, R, C>
 where
     T: Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<R, C>,
 {
     fn from_items<I>(items: I) -> Option<Self>
     where
@@ -198,26 +199,26 @@ where
     type ProjectiveSpace = Vector4<T>;
 }
 
-impl<T, D> InnerSpace for VectorN<T, D>
+impl<T, D> InnerSpace for OVector<T, D>
 where
     T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
     Self: Copy,
 {
 }
 
-impl<T, R, C> Interpolate for MatrixMN<T, R, C>
+impl<T, R, C> Interpolate for OMatrix<T, R, C>
 where
     T: Num + NumCast + Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<R, C>,
 {
     type Output = Self;
 
     fn lerp(self, other: Self, f: R64) -> Self::Output {
-        MatrixMN::<T, R, C>::zip_map(&self, &other, |a, b| crate::lerp(a, b, f))
+        OMatrix::<T, R, C>::zip_map(&self, &other, |a, b| crate::lerp(a, b, f))
     }
 }
 
@@ -245,21 +246,21 @@ where
     }
 }
 
-impl<T, U, R, C> Map<U> for MatrixMN<T, R, C>
+impl<T, U, R, C> Map<U> for OMatrix<T, R, C>
 where
     T: Scalar,
     U: Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C> + Allocator<U, R, C>,
+    DefaultAllocator: Allocator<R, C>,
 {
-    type Output = MatrixMN<U, R, C>;
+    type Output = OMatrix<U, R, C>;
 
     fn map<F>(self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item) -> U,
     {
-        MatrixMN::<T, R, C>::map(&self, f)
+        OMatrix::<T, R, C>::map(&self, f)
     }
 }
 
@@ -367,29 +368,29 @@ where
     }
 }
 
-impl<T, D> Truncate<VectorN<T, DimNameDiff<D, U1>>> for VectorN<T, D>
+impl<T, D> Truncate<OVector<T, DimNameDiff<D, U1>>> for OVector<T, D>
 where
     T: Real + Scalar,
     D: DimName + DimNameSub<U1>,
-    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
+    DefaultAllocator: Allocator<D> + Allocator<DimNameDiff<D, U1>>,
 {
-    fn truncate(self) -> (VectorN<T, DimNameDiff<D, U1>>, T) {
+    fn truncate(self) -> (OVector<T, DimNameDiff<D, U1>>, T) {
         let n = self.len();
         let x = *self.get(n - 1).unwrap();
         (
-            VectorN::<_, DimNameDiff<D, _>>::from_iterator(self.into_iter().take(n - 1).cloned()),
+            OVector::<_, DimNameDiff<D, _>>::from_iterator(self.into_iter().take(n - 1).cloned()),
             x,
         )
     }
 }
 
 // TODO: This is too general. Only "linear" types should implement this.
-impl<T, R, C> VectorSpace for MatrixMN<T, R, C>
+impl<T, R, C> VectorSpace for OMatrix<T, R, C>
 where
     T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C>,
+    DefaultAllocator: Allocator<R, C>,
     Self: Copy,
 {
     type Scalar = T;
@@ -399,49 +400,49 @@ where
     }
 }
 
-impl<T, U, R, C> ZipMap<U> for MatrixMN<T, R, C>
+impl<T, U, R, C> ZipMap<U> for OMatrix<T, R, C>
 where
     T: Scalar,
     U: Scalar,
     R: DimName,
     C: DimName,
-    DefaultAllocator: Allocator<T, R, C> + Allocator<U, R, C>,
+    DefaultAllocator: Allocator<R, C>,
 {
-    type Output = MatrixMN<U, R, C>;
+    type Output = OMatrix<U, R, C>;
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item, Self::Item) -> U,
     {
-        MatrixMN::<T, R, C>::zip_map(&self, &other, f)
+        OMatrix::<T, R, C>::zip_map(&self, &other, f)
     }
 }
 
-impl<T, D> Adjunct for Point<T, D>
+impl<T, D> Adjunct for OPoint<T, D>
 where
     T: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     type Item = T;
 }
 
-impl<T, D> AffineSpace for Point<T, D>
+impl<T, D> AffineSpace for OPoint<T, D>
 where
     T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar + SubAssign,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
-    <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
+    DefaultAllocator: Allocator<D>,
+    <DefaultAllocator as Allocator<D>>::Buffer<T>: Copy,
 {
-    type Translation = VectorN<T, D>;
+    type Translation = OVector<T, D>;
 }
 
-impl<T, D> AsPosition for Point<T, D>
+impl<T, D> AsPosition for OPoint<T, D>
 where
     Self: EuclideanSpace,
     T: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     type Position = Self;
 
@@ -450,54 +451,54 @@ where
     }
 }
 
-impl<T, D> AsPositionMut for Point<T, D>
+impl<T, D> AsPositionMut for OPoint<T, D>
 where
     Self: EuclideanSpace,
     T: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     fn as_position_mut(&mut self) -> &mut Self::Position {
         self
     }
 }
 
-impl<T, D> Converged for Point<T, D>
+impl<T, D> Converged for OPoint<T, D>
 where
     T: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     fn converged(value: Self::Item) -> Self {
-        Point::from(VectorN::<T, D>::converged(value))
+        OPoint::from(OVector::<T, D>::converged(value))
     }
 }
 
-impl<T, D> Extend<Point<T, DimNameSum<D, U1>>> for Point<T, D>
+impl<T, D> Extend<OPoint<T, DimNameSum<D, U1>>> for OPoint<T, D>
 where
     T: Scalar,
     D: DimName + DimNameAdd<U1>,
-    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameSum<D, U1>>,
-    VectorN<T, D>: Adjunct<Item = T> + Extend<VectorN<T, DimNameSum<D, U1>>>,
+    DefaultAllocator: Allocator<D> + Allocator<DimNameSum<D, U1>>,
+    OVector<T, D>: Adjunct<Item = T> + Extend<OVector<T, DimNameSum<D, U1>>>,
 {
-    fn extend(self, x: T) -> Point<T, DimNameSum<D, U1>> {
+    fn extend(self, x: T) -> OPoint<T, DimNameSum<D, U1>> {
         self.coords.extend(x).into()
     }
 }
 
-impl<T, D> EuclideanSpace for Point<T, D>
+impl<T, D> EuclideanSpace for OPoint<T, D>
 where
     T: AbsDiffEq + AddAssign + MulAssign + NumCast + Real + Scalar + SubAssign,
-    D: DimName,
-    D::Value: NonZero,
-    DefaultAllocator: Allocator<T, D>,
-    <DefaultAllocator as Allocator<T, D>>::Buffer: Copy,
-    VectorN<T, D>: FiniteDimensional<N = Self::N>,
+    D: DimName + ToTypenum,
+    D::Typenum: NonZero,
+    DefaultAllocator: Allocator<D>,
+    <DefaultAllocator as Allocator<D>>::Buffer<T>: Copy,
+    OVector<T, D>: FiniteDimensional<N = Self::N>,
 {
-    type CoordinateSpace = VectorN<T, D>;
+    type CoordinateSpace = OVector<T, D>;
 
     fn origin() -> Self {
-        Point::<T, D>::origin()
+        OPoint::<T, D>::origin()
     }
 
     fn into_coordinates(self) -> Self::CoordinateSpace {
@@ -505,21 +506,21 @@ where
     }
 }
 
-impl<T, D> FiniteDimensional for Point<T, D>
+impl<T, D> FiniteDimensional for OPoint<T, D>
 where
     T: Scalar,
-    D: DimName,
-    D::Value: NonZero,
-    DefaultAllocator: Allocator<T, D>,
+    D: DimName + ToTypenum,
+    D::Typenum: NonZero,
+    DefaultAllocator: Allocator<D>,
 {
-    type N = D::Value;
+    type N = D::Typenum;
 }
 
-impl<T, D> Fold for Point<T, D>
+impl<T, D> Fold for OPoint<T, D>
 where
     T: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     fn fold<U, F>(self, seed: U, f: F) -> U
     where
@@ -529,30 +530,30 @@ where
     }
 }
 
-impl<T, D> FromItems for Point<T, D>
+impl<T, D> FromItems for OPoint<T, D>
 where
     T: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     fn from_items<I>(items: I) -> Option<Self>
     where
         I: IntoIterator<Item = Self::Item>,
     {
-        Some(Point::from(VectorN::from_iterator(items)))
+        Some(OPoint::from(OVector::from_iterator(items)))
     }
 }
 
-impl<T, D> Interpolate for Point<T, D>
+impl<T, D> Interpolate for OPoint<T, D>
 where
     T: Num + NumCast + Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D>,
+    DefaultAllocator: Allocator<D>,
 {
     type Output = Self;
 
     fn lerp(self, other: Self, f: R64) -> Self::Output {
-        Point::from(self.coords.lerp(other.coords, f))
+        OPoint::from(self.coords.lerp(other.coords, f))
     }
 }
 
@@ -580,49 +581,49 @@ where
     }
 }
 
-impl<T, U, D> Map<U> for Point<T, D>
+impl<T, U, D> Map<U> for OPoint<T, D>
 where
     T: Scalar,
     U: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D> + Allocator<U, D>,
+    DefaultAllocator: Allocator<D>,
 {
-    type Output = Point<U, D>;
+    type Output = OPoint<U, D>;
 
     fn map<F>(self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item) -> U,
     {
-        Point::from(self.coords.map(f))
+        OPoint::from(self.coords.map(f))
     }
 }
 
-impl<T, D> Truncate<Point<T, DimNameDiff<D, U1>>> for Point<T, D>
+impl<T, D> Truncate<OPoint<T, DimNameDiff<D, U1>>> for OPoint<T, D>
 where
     T: Scalar,
     D: DimName + DimNameSub<U1>,
-    DefaultAllocator: Allocator<T, D> + Allocator<T, DimNameDiff<D, U1>>,
-    VectorN<T, D>: Adjunct<Item = T> + Truncate<VectorN<T, DimNameDiff<D, U1>>>,
+    DefaultAllocator: Allocator<D> + Allocator<DimNameDiff<D, U1>>,
+    OVector<T, D>: Adjunct<Item = T> + Truncate<OVector<T, DimNameDiff<D, U1>>>,
 {
-    fn truncate(self) -> (Point<T, DimNameDiff<D, U1>>, T) {
+    fn truncate(self) -> (OPoint<T, DimNameDiff<D, U1>>, T) {
         let (vector, x) = self.coords.truncate();
         (vector.into(), x)
     }
 }
 
-impl<T, U, D> ZipMap<U> for Point<T, D>
+impl<T, U, D> ZipMap<U> for OPoint<T, D>
 where
     T: Scalar,
     U: Scalar,
     D: DimName,
-    DefaultAllocator: Allocator<T, D> + Allocator<U, D>,
+    DefaultAllocator: Allocator<D>,
 {
-    type Output = Point<U, D>;
+    type Output = OPoint<U, D>;
 
     fn zip_map<F>(self, other: Self, f: F) -> Self::Output
     where
         F: FnMut(Self::Item, Self::Item) -> U,
     {
-        Point::from(self.coords.zip_map(other.coords, f))
+        OPoint::from(self.coords.zip_map(other.coords, f))
     }
 }
