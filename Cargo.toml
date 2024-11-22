@@ -1,13 +1,18 @@
 [package]
 name = "theon"
-description = "Abstraction of Euclidean spaces."
-keywords = ["geometry", "graphics", "math"]
 version = "0.0.1"
 authors = ["Sean Olson <olson.sean.k@gmail.com>"]
-edition = "2018"
-license = "MIT"
-readme = "README.md"
+description = "Abstraction of Euclidean spaces."
 repository = "https://github.com/olson-sean-k/theon"
+readme = "README.md"
+edition = "2021"
+rust-version = "1.56.0"
+license = "MIT"
+keywords = [
+    "geometry",
+    "graphics",
+    "math",
+]
 
 [package.metadata.docs.rs]
 default-target = "x86_64-unknown-linux-gnu"
@@ -22,12 +27,15 @@ rustdoc-args = [
 
 [features]
 default = ["geometry-nalgebra"]
-geometry-cgmath = ["cgmath"]
-geometry-glam = ["glam"]
-geometry-mint = ["mint"]
-geometry-nalgebra = ["nalgebra"]
-geometry-ultraviolet = ["ultraviolet"]
-lapack = ["ndarray", "ndarray-linalg"]
+geometry-cgmath = ["dep:cgmath"]
+geometry-glam = ["dep:glam"]
+geometry-mint = ["dep:mint"]
+geometry-nalgebra = ["dep:nalgebra"]
+geometry-ultraviolet = ["dep:ultraviolet"]
+lapack = [
+    "dep:ndarray",
+    "dep:ndarray-linalg",
+]
 
 [dependencies]
 approx = "^0.3.0"
@@ -37,11 +45,29 @@ itertools = "^0.9.0"
 num = "^0.3.0"
 typenum = "^1.10.0"
 
-cgmath = { version = "^0.17.0", optional = true }
-glam = { version = "^0.9.0", optional = true }
-mint = { version = "^0.5.0", optional = true }
-nalgebra = { version = "^0.22.0", optional = true }
-ultraviolet = { version = "^0.6.0", optional = true }
+# Integrations.
+
+[dependencies.cgmath]
+version = "^0.17.0"
+optional = true
+
+[dependencies.glam]
+version = "^0.9.0"
+optional = true
+
+[dependencies.mint]
+version = "^0.5.0"
+optional = true
+
+[dependencies.nalgebra]
+version = "^0.22.0"
+optional = true
+
+[dependencies.ultraviolet]
+version = "^0.6.0"
+optional = true
+
+# Platform-specific features.
 
 [target.'cfg(target_os = "linux")'.dependencies.ndarray]
 version = "^0.13.0"
