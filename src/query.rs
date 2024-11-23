@@ -5,8 +5,10 @@
 use approx::abs_diff_eq;
 use decorum::cmp::EmptyOrd;
 use decorum::InfinityEncoding;
-use num::traits::real::Real;
-use num::traits::{Bounded, Signed, Zero};
+use num_traits::bounds::Bounded;
+use num_traits::identities::Zero;
+use num_traits::real::Real;
+use num_traits::sign::Signed;
 use std::fmt::{self, Debug, Formatter};
 use std::ops::Neg;
 use typenum::type_operators::Cmp;

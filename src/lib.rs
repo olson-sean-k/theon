@@ -21,7 +21,9 @@ pub mod space;
 mod integration;
 
 use decorum::R64;
-use num::traits::{Num, NumCast, One, Zero};
+use num_traits::cast::NumCast;
+use num_traits::identities::{One, Zero};
+use num_traits::Num;
 
 use crate::space::EuclideanSpace;
 
@@ -161,7 +163,7 @@ pub fn lerp<T>(a: T, b: T, f: R64) -> T
 where
     T: Num + NumCast,
 {
-    let f = num::clamp(f, Zero::zero(), One::one());
+    let f = num_traits::clamp(f, Zero::zero(), One::one());
     let af = <R64 as NumCast>::from(a).unwrap() * (R64::one() - f);
     let bf = <R64 as NumCast>::from(b).unwrap() * f;
     <T as NumCast>::from(af + bf).unwrap()

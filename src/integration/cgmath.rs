@@ -3,8 +3,9 @@
 use approx::AbsDiffEq;
 use cgmath::{BaseFloat, BaseNum, Point2, Point3, Vector2, Vector3, Vector4};
 use decorum::R64;
-use num::traits::real::Real;
-use num::traits::{Num, NumCast};
+use num_traits::cast::NumCast;
+use num_traits::real::Real;
+use num_traits::Num;
 use typenum::consts::{U2, U3, U4};
 
 use crate::adjunct::{

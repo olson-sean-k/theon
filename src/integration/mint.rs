@@ -6,7 +6,9 @@
 
 use decorum::R64;
 use mint::{Point2, Point3, Vector2, Vector3};
-use num::traits::{Num, NumCast, One, Zero};
+use num_traits::cast::NumCast;
+use num_traits::identities::{One, Zero};
+use num_traits::Num;
 use std::ops::Neg;
 use typenum::{U2, U3};
 

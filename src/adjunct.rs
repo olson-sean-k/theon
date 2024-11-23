@@ -12,7 +12,8 @@
 //! `nalgebra` types when the `nalgebra` feature is enabled.
 
 use decorum::cmp::{self, EmptyOrd};
-use num::traits::{Bounded, One, Zero};
+use num_traits::bounds::Bounded;
+use num_traits::identities::{One, Zero};
 use std::ops::{Add, Mul};
 
 pub trait Adjunct: Sized {

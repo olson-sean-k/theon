@@ -12,8 +12,10 @@ use nalgebra::base::{
     Matrix2, Matrix3, OMatrix, OVector, RowVector2, RowVector3, Scalar, Vector2, Vector3, Vector4,
 };
 use nalgebra::geometry::{OPoint, Point2, Point3};
-use num::traits::real::Real;
-use num::traits::{Num, NumCast, One, Zero};
+use num_traits::cast::NumCast;
+use num_traits::identities::{One, Zero};
+use num_traits::real::Real;
+use num_traits::Num;
 use std::ops::{AddAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 use typenum::NonZero;
 

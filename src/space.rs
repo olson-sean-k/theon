@@ -1,8 +1,9 @@
 //! Vector and affine spaces.
 
 use approx::AbsDiffEq;
-use num::traits::real::Real;
-use num::traits::{NumCast, One, Zero};
+use num_traits::cast::NumCast;
+use num_traits::identities::{One, Zero};
+use num_traits::real::Real;
 use std::ops::{Add, Mul, Neg, Sub};
 use typenum::consts::{U0, U1, U2, U3};
 use typenum::type_operators::Cmp;
