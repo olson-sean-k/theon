@@ -229,8 +229,7 @@ where
     type Output = [T; 2];
 
     fn into_items(self) -> Self::Output {
-        let array: [T; 2] = self.into();
-        array.into()
+        self.into()
     }
 }
 
@@ -241,8 +240,7 @@ where
     type Output = [T; 3];
 
     fn into_items(self) -> Self::Output {
-        let array: [T; 3] = self.into();
-        array.into()
+        self.into()
     }
 }
 
@@ -564,8 +562,7 @@ where
     type Output = [T; 2];
 
     fn into_items(self) -> Self::Output {
-        let array: [T; 2] = self.coords.into();
-        array.into()
+        self.coords.into()
     }
 }
 
@@ -576,8 +573,7 @@ where
     type Output = [T; 3];
 
     fn into_items(self) -> Self::Output {
-        let array: [T; 3] = self.coords.into();
-        array.into()
+        self.coords.into()
     }
 }
 
