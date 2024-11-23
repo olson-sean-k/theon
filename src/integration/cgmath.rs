@@ -1,4 +1,4 @@
-#![cfg(feature = "geometry-cgmath")]
+#![cfg(feature = "cgmath")]
 
 use approx::AbsDiffEq;
 use cgmath::{BaseFloat, BaseNum, Point2, Point3, Vector2, Vector3, Vector4};

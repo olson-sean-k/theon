@@ -1,4 +1,4 @@
-#![cfg(feature = "geometry-glam")]
+#![cfg(feature = "glam")]
 
 use decorum::R64;
 use glam::{Vec2, Vec3, Vec3A, Vec4};

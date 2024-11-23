@@ -26,18 +26,19 @@ Theon provides reverse integrations with commonly used linear algebra crates in
 the Rust ecosystem, including [`glam`] and [`ultraviolet`]. These
 implementations can be enabled using Cargo features.
 
-| Feature                | Default | Crate           |
-|------------------------|---------|-----------------|
-| `geometry-cgmath`      | No      | [`cgmath`]      |
-| `geometry-glam`        | No      | [`glam`]        |
-| `geometry-mint`        | No      | [`mint`]        |
-| `geometry-nalgebra`    | Yes     | [`nalgebra`]    |
-| `geometry-ultraviolet` | No      | [`ultraviolet`] |
+| Feature       | Default | Crate           |
+|---------------|---------|-----------------|
+| `cgmath`      | No      | [`cgmath`]      |
+| `glam`        | No      | [`glam`]        |
+| `mint`        | No      | [`mint`]        |
+| `nalgebra`    | Yes     | [`nalgebra`]    |
+| `ultraviolet` | No      | [`ultraviolet`] |
 
 Because a given version of Theon implements traits for specific versions of
-integrated crates, care must be taken to resolve to these supported versions.
-Ideally, integrations would be implemented in these linear algebra crates, but
-Theon is still under development and may not be ready for forward integration.
+integrated crates, **care must be taken to resolve to these supported
+versions**. Ideally, integrations would be implemented in these linear algebra
+crates, but Theon is still under development and may not be ready for forward
+integration.
 
 ## Spatial Queries
 

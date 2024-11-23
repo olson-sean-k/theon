@@ -1,4 +1,4 @@
-#![cfg(feature = "geometry-nalgebra")]
+#![cfg(feature = "nalgebra")]
 
 use approx::AbsDiffEq;
 use decorum::R64;

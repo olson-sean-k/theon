@@ -9,7 +9,7 @@
 //!
 //! Implementations for adjunct traits are provided for integrated foreign types when enabling
 //! geometry features. For example, implementations of `Adjunct` and other traits are provided for
-//! `nalgebra` types when the `geometry-nalgebra` feature is enabled.
+//! `nalgebra` types when the `nalgebra` feature is enabled.
 
 use decorum::cmp::{self, EmptyOrd};
 use num::traits::{Bounded, One, Zero};

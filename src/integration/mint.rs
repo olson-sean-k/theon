@@ -1,4 +1,4 @@
-#![cfg(feature = "geometry-mint")]
+#![cfg(feature = "mint")]
 
 // TODO: It is not possible to implement vector space traits for `mint` types, because they require
 //       foreign traits on foreign types.

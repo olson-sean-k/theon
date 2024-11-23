@@ -26,16 +26,18 @@ rustdoc-args = [
 ]
 
 [features]
-default = ["geometry-nalgebra"]
-geometry-cgmath = ["dep:cgmath"]
-geometry-glam = ["dep:glam"]
-geometry-mint = ["dep:mint"]
-geometry-nalgebra = ["dep:nalgebra"]
-geometry-ultraviolet = ["dep:ultraviolet"]
+default = ["nalgebra"]
 lapack = [
     "dep:ndarray",
     "dep:ndarray-linalg",
 ]
+
+# Integrations.
+cgmath = ["dep:cgmath"]
+glam = ["dep:glam"]
+mint = ["dep:mint"]
+nalgebra = ["dep:nalgebra"]
+ultraviolet = ["dep:ultraviolet"]
 
 [dependencies]
 approx = "^0.5.0"

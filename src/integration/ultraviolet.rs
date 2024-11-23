@@ -1,4 +1,4 @@
-#![cfg(feature = "geometry-ultraviolet")]
+#![cfg(feature = "ultraviolet")]
 
 use decorum::R64;
 use typenum::consts::{U2, U3, U4};
