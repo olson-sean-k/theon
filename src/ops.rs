@@ -35,14 +35,13 @@ pub trait Cross<T = Self> {
 pub trait MulMN<T = Self>: Matrix
 where
     T: Matrix<Scalar = Self::Scalar>,
-    // The `VectorSpace<Scalar = Self::Scalar>` and `FiniteDimensional` bounds
-    // are redundant, but are needed by the compiler.
+    // The `VectorSpace<Scalar = Self::Scalar>` and `FiniteDimensional` bounds are redundant, but
+    // are needed by the compiler.
     <T as Matrix>::Column: VectorSpace<Scalar = Self::Scalar>,
     Self::Row: DualSpace<Dual = <T as Matrix>::Column>
         + FiniteDimensional<N = <T::Column as FiniteDimensional>::N>,
 {
-    // TODO: This implementation requires `FromItems`, which could be
-    //       cumbersome to implement.
+    // TODO: This implementation requires `FromItems`, which could be cumbersome to implement.
     type Output: FromItems + Matrix<Scalar = Self::Scalar>;
 
     fn mul_mn(self, other: T) -> <Self as MulMN<T>>::Output {

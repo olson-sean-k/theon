@@ -35,8 +35,7 @@ where
 
 /// Maps columnar data into a two-dimensional array.
 ///
-/// Produces a two-dimensional array that forms a matrix from each input
-/// column.
+/// Produces a two-dimensional array that forms a matrix from each input column.
 fn map_into_array<I, T, U, F>(columns: I, f: F) -> Option<Array<U::Item, Ix2>>
 where
     I: AsRef<[T]>,

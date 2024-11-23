@@ -1,7 +1,8 @@
-//! **Theon** abstracts Euclidean spaces and geometric queries with support for
-//! popular linear algebra and spatial crates in the Rust ecosystem.
+//! **Theon** abstracts Euclidean spaces and geometric queries with support for popular linear
+//! algebra and spatial crates in the Rust ecosystem.
 
 // TODO: Require the `geometry-nalgebra` feature for doc tests.
+//
 //       See https://github.com/rust-lang/rust/issues/43781
 
 #![doc(
@@ -34,8 +35,8 @@ pub type Position<T> = <T as AsPosition>::Position;
 
 /// Immutable positional data.
 ///
-/// This trait exposes positional data for geometric types along with its
-/// mutable variant `AsPositionMut`.
+/// This trait exposes positional data for geometric types along with its mutable variant
+/// `AsPositionMut`.
 ///
 /// # Examples
 ///
@@ -69,8 +70,8 @@ pub trait AsPosition {
 
 /// Mutable positional data.
 ///
-/// This trait exposes positional data for geometric types along with its
-/// immutable variant `AsPosition`.
+/// This trait exposes positional data for geometric types along with its immutable variant
+/// `AsPosition`.
 ///
 /// # Examples
 ///

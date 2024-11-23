@@ -1,7 +1,7 @@
 #![cfg(feature = "geometry-mint")]
 
-// TODO: It is not possible to implement vector space traits for `mint` types,
-//       because they require foreign traits on foreign types.
+// TODO: It is not possible to implement vector space traits for `mint` types, because they require
+//       foreign traits on foreign types.
 // TODO: Implement as many traits as possible.
 
 use decorum::R64;

@@ -33,17 +33,16 @@ pub trait FiniteDimensional {
 pub trait Basis: FiniteDimensional + Sized {
     type Bases: IntoIterator<Item = Self>;
 
-    /// Gets a type that can be converted into an iterator over the _canonical_
-    /// or _standard_ basis vectors of the space.
+    /// Gets a type that can be converted into an iterator over the _canonical_ or _standard_ basis
+    /// vectors of the space.
     ///
-    /// Such basis vectors must only have one component set to the
-    /// multiplicative identity and all other components set to the additive
-    /// identity (one and zero in $\Reals$, respectively). Moreover, the set of
-    /// basis vectors must contain ordered and unique elements and be of size
+    /// Such basis vectors must only have one component set to the multiplicative identity and all
+    /// other components set to the additive identity (one and zero in $\Reals$, respectively).
+    /// Moreover, the set of basis vectors must contain ordered and unique elements and be of size
     /// equal to the dimensionality of the space.
     ///
-    /// For example, the set of canonical basis vectors for the real coordinate
-    /// space $\Reals^3$ is:
+    /// For example, the set of canonical basis vectors for the real coordinate space $\Reals^3$
+    /// is:
     ///
     /// $$
     /// \\{\hat{i},\hat{j},\hat{k}\\}=
@@ -401,9 +400,9 @@ pub trait EuclideanSpace:
     }
 }
 
-// TODO: Constrain the dimensionality of the projective space. This introduces
-//       noisy type bounds, but ensures that the projective space has exactly
-//       one additional dimension (the line at infinity).
+// TODO: Constrain the dimensionality of the projective space. This introduces noisy type bounds,
+//       but ensures that the projective space has exactly one additional dimension (the line at
+//       infinity).
 pub trait Homogeneous: FiniteDimensional + VectorSpace {
     type ProjectiveSpace: FiniteDimensional + VectorSpace;
 }

@@ -18,14 +18,13 @@ use crate::space::{
     Basis, EuclideanSpace, FiniteDimensional, InnerSpace, Scalar, Vector, VectorSpace,
 };
 
-// Intersections are implemented for types with a lesser lexographical order.
-// For example, `Intersection` is implemented for `Aabb` before `Plane`, with
-// `Plane` having a trivial symmetric implementation.
+// Intersections are implemented for types with a lesser lexographical order. For example,
+// `Intersection` is implemented for `Aabb` before `Plane`, with `Plane` having a trivial symmetric
+// implementation.
 /// Intersection of geometric objects.
 ///
-/// Determines if a pair of objects intersects and produces data describing the
-/// intersection. Each set of objects produces its own intersection data as the
-/// `Output` type.
+/// Determines if a pair of objects intersects and produces data describing the intersection. Each
+/// set of objects produces its own intersection data as the `Output` type.
 ///
 /// A symmetrical implementation is provided for heterogeneous pairs:
 ///
@@ -135,8 +134,7 @@ where
 
     /// Creates a `Unit` from a non-zero magnitude vector.
     ///
-    /// The given vector is normalized. If the vector's magnitude is zero, then
-    /// `None` is returned.
+    /// The given vector is normalized. If the vector's magnitude is zero, then `None` is returned.
     ///
     /// # Examples
     ///
@@ -200,8 +198,7 @@ where
     }
 
     pub fn reverse(self) -> Self {
-        // TODO: This assumes that the `Neg` implementation does not affect
-        //       magnitude.
+        // TODO: This assumes that the `Neg` implementation does not affect magnitude.
         let Unit { inner, .. } = self;
         Self::from_inner_unchecked(-inner)
     }
@@ -240,13 +237,12 @@ where
 
 /// Line.
 ///
-/// Describes a line containing an _origin_ point and a _direction_. Lines
-/// extend infinitely from their origin along their direction $\hat{u}$. Unlike
-/// `Ray`, the direction component of `Line` extends in both the positive and
-/// negative.
+/// Describes a line containing an _origin_ point and a _direction_. Lines extend infinitely from
+/// their origin along their direction $\hat{u}$. Unlike `Ray`, the direction component of `Line`
+/// extends in both the positive and negative.
 ///
-/// This representation is typically known as the _vector form_ $P_0 +
-/// t\hat{u}$ where $t$ is some non-zero _time of impact_.
+/// This representation is typically known as the _vector form_ $P_0 + t\hat{u}$ where $t$ is some
+/// non-zero _time of impact_.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Line<S>
 where
@@ -301,8 +297,7 @@ where
     }
 }
 
-// TODO: Provide higher dimensional intercepts, such as the xy-intercept in
-//       three dimensions.
+// TODO: Provide higher dimensional intercepts, such as the xy-intercept in three dimensions.
 impl<S> Line<S>
 where
     S: EuclideanSpace + FiniteDimensional<N = U2>,
@@ -366,10 +361,9 @@ pub enum LineLine<S>
 where
     S: EuclideanSpace,
 {
-    // Lines and rays typically produce times of impact for point intersections,
-    // but this implementation computes the point. While this is a bit
-    // inconsistent, it avoids needing to know from which line the time of
-    // impact applies.
+    // Lines and rays typically produce times of impact for point intersections, but this
+    // implementation computes the point. While this is a bit inconsistent, it avoids needing to
+    // know from which line the time of impact applies.
     Point(S),
     Line(Line<S>),
 }
@@ -406,9 +400,9 @@ where
     }
 }
 
-// TODO: Though higher dimensional intersections are probably less useful,
-//       consider a more general implementation. This could use projection into
-//       two dimensions followed by confirmation in the higher dimension.
+// TODO: Though higher dimensional intersections are probably less useful, consider a more general
+//       implementation. This could use projection into two dimensions followed by confirmation in
+//       the higher dimension.
 /// Intersection of lines in two dimensions.
 impl<S> Intersection<Line<S>> for Line<S>
 where
@@ -418,8 +412,7 @@ where
 
     fn intersection(&self, other: &Line<S>) -> Option<Self::Output> {
         let (x1, y1) = if (self.origin - other.origin).is_zero() {
-            // Detect like origins and avoid zeroes in the numerator by
-            // translating the origin.
+            // Detect like origins and avoid zeroes in the numerator by translating the origin.
             (self.origin + *self.direction.get()).into_xy()
         }
         else {
@@ -493,20 +486,17 @@ where
     S: EuclideanSpace + FiniteDimensional,
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
 {
-    /// The _time of impact_ of a point intersection or the line if it lies
-    /// within the plane.
+    /// The _time of impact_ of a point intersection or the line if it lies within the plane.
     ///
-    /// The time of impact $t$ describes the distance from the line's origin
-    /// point at which the intersection occurs.
+    /// The time of impact $t$ describes the distance from the line's origin point at which the
+    /// intersection occurs.
     type Output = LinePlane<S>;
 
-    /// Determines if a line intersects a plane at a point or lies within the
-    /// plane. Computes the _time of impact_ of a `Line` for a point
-    /// intersection.
+    /// Determines if a line intersects a plane at a point or lies within the plane. Computes the
+    /// _time of impact_ of a `Line` for a point intersection.
     ///
-    /// Given a line formed from an origin $P_0$ and a unit direction
-    /// $\hat{u}$, the point of intersection with the plane is $P_0 +
-    /// t\hat{u}$.
+    /// Given a line formed from an origin $P_0$ and a unit direction $\hat{u}$, the point of
+    /// intersection with the plane is $P_0 + t\hat{u}$.
     fn intersection(&self, plane: &Plane<S>) -> Option<Self::Output> {
         let line = self;
         let direction = *line.direction.get();
@@ -534,10 +524,9 @@ impl_symmetrical_intersection!(Line, Plane);
 
 /// Ray or half-line.
 ///
-/// Describes a decomposed line with an _origin_ or _initial point_ and a
-/// _direction_. Rays extend infinitely from their origin. The origin $P_0$ and
-/// the point $P_0 + \hat{u}$ (where $\hat{u}$ is the direction of the ray)
-/// form a half-line originating from $P_0$.
+/// Describes a decomposed line with an _origin_ or _initial point_ and a _direction_. Rays extend
+/// infinitely from their origin. The origin $P_0$ and the point $P_0 + \hat{u}$ (where $\hat{u}$
+/// is the direction of the ray) form a half-line originating from $P_0$.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Ray<S>
 where
@@ -560,8 +549,7 @@ where
 
     /// Reverses the direction of the ray.
     ///
-    /// Reversing a ray yields its _opposite_, with the same origin and the
-    /// opposing half-line.
+    /// Reversing a ray yields its _opposite_, with the same origin and the opposing half-line.
     pub fn reverse(self) -> Self {
         let Ray { origin, direction } = self;
         Ray {
@@ -610,9 +598,8 @@ where
 
 /// Axis-aligned bounding box.
 ///
-/// Represents an $n$-dimensional volume along each basis vector of a Euclidean
-/// space. The bounding box is defined by the region between its _origin_ and
-/// _endpoint_.
+/// Represents an $n$-dimensional volume along each basis vector of a Euclidean space. The bounding
+/// box is defined by the region between its _origin_ and _endpoint_.
 #[derive(Clone, Copy, PartialEq)]
 pub struct Aabb<S>
 where
@@ -620,14 +607,13 @@ where
 {
     /// The _origin_ of the bounding box.
     ///
-    /// The origin does **not** necessarily represent the lower or upper bound
-    /// of the `Aabb`. See `lower_bound` and `upper_bound`.
+    /// The origin does **not** necessarily represent the lower or upper bound of the `Aabb`. See
+    /// `lower_bound` and `upper_bound`.
     pub origin: S,
     /// The _extent_ of the bounding box.
     ///
-    /// The extent describes the endpoint as a translation from the origin. The
-    /// endpoint $P_E$ is formed by $P_0 + \vec{v}$, where $P_0$ is the origin
-    /// and $\vec{v}$ is the extent.
+    /// The extent describes the endpoint as a translation from the origin. The endpoint $P_E$ is
+    /// formed by $P_0 + \vec{v}$, where $P_0$ is the origin and $\vec{v}$ is the extent.
     pub extent: Vector<S>,
 }
 
@@ -637,9 +623,8 @@ where
 {
     /// Creates an `Aabb` from a set of points.
     ///
-    /// The bounding box is formed from the lower and upper bounds of the
-    /// points. If the set of points is empty, then the `Aabb` will sit at the
-    /// origin with zero volume.
+    /// The bounding box is formed from the lower and upper bounds of the points. If the set of
+    /// points is empty, then the `Aabb` will sit at the origin with zero volume.
     pub fn from_points<I>(points: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -677,8 +662,8 @@ where
 
     /// Gets the Lebesgue measure ($n$-dimensional volume) of the bounding box.
     ///
-    /// This value is analogous to _length_, _area_, and _volume_ in one, two,
-    /// and three dimensions, respectively.
+    /// This value is analogous to _length_, _area_, and _volume_ in one, two, and three
+    /// dimensions, respectively.
     pub fn volume(&self) -> Scalar<S> {
         self.origin
             .zip_map(self.endpoint(), |a, b| (a - b).abs())
@@ -779,15 +764,15 @@ where
 {
     /// The minimum and maximum _times of impact_ of the intersection.
     ///
-    /// The times of impact $t_{min}$ and $t_{max}$ describe the distance along
-    /// the half-line from the ray's origin at which the intersection occurs.
+    /// The times of impact $t_{min}$ and $t_{max}$ describe the distance along the half-line from
+    /// the ray's origin at which the intersection occurs.
     type Output = (Scalar<S>, Scalar<S>);
 
-    /// Determines the minimum and maximum _times of impact_ of a `Ray`
-    /// intersection with an `Aabb`.
+    /// Determines the minimum and maximum _times of impact_ of a `Ray` intersection with an
+    /// `Aabb`.
     ///
-    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
-    /// the nearest point of intersection is $P_0 + t_{min}\hat{u}$.
+    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$, the nearest point of
+    /// intersection is $P_0 + t_{min}\hat{u}$.
     ///
     /// # Examples
     ///
@@ -814,9 +799,8 @@ where
     /// let (min, _) = ray.intersection(&aabb).unwrap();
     /// let point = ray.origin + (ray.direction.get() * min);
     fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
-        // Avoid computing `NaN`s. Note that multiplying by the inverse (instead
-        // of dividing) avoids dividing zero by zero, but does not avoid
-        // multiplying zero by infinity.
+        // Avoid computing `NaN`s. Note that multiplying by the inverse (instead of dividing)
+        // avoids dividing zero by zero, but does not avoid multiplying zero by infinity.
         let pdiv = |a: Scalar<S>, b: Scalar<S>| {
             if abs_diff_eq!(a, Zero::zero()) {
                 a
@@ -927,19 +911,17 @@ where
     <S as FiniteDimensional>::N: Cmp<U2, Output = Greater>,
     Scalar<S>: Signed,
 {
-    /// The _time of impact_ of a point intersection or the ray if it lies
-    /// within the plane.
+    /// The _time of impact_ of a point intersection or the ray if it lies within the plane.
     ///
-    /// The time of impact $t$ describes the distance along the half-line from
-    /// the ray's origin at which the intersection occurs.
+    /// The time of impact $t$ describes the distance along the half-line from the ray's origin at
+    /// which the intersection occurs.
     type Output = PlaneRay<S>;
 
-    /// Determines if a ray intersects a plane at a point or lies within the
-    /// plane. Computes the _time of impact_ of a `Ray` for a point
-    /// intersection.
+    /// Determines if a ray intersects a plane at a point or lies within the plane. Computes the
+    /// _time of impact_ of a `Ray` for a point intersection.
     ///
-    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$,
-    /// the point of intersection with the plane is $P_0 + t\hat{u}$.
+    /// Given a ray formed by an origin $P_0$ and a unit direction $\hat{u}$, the point of
+    /// intersection with the plane is $P_0 + t\hat{u}$.
     fn intersection(&self, ray: &Ray<S>) -> Option<Self::Output> {
         let plane = self;
         ray.into_line()
@@ -1042,8 +1024,8 @@ mod tests {
         assert_eq!(None, ray.reverse().intersection(&aabb));
     }
 
-    // Ensure that certain values do not produce `NaN`s when querying the
-    // intersection of `Aabb` and `Ray`.
+    // Ensure that certain values do not produce `NaN`s when querying the intersection of `Aabb`
+    // and `Ray`.
     #[test]
     fn aabb_ray_intersection_nan() {
         let aabb = Aabb::<Point2<X64>> {

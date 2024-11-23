@@ -1,17 +1,15 @@
 //! Static groups of homogeneous data.
 //!
-//! This module provides APIs for types that expose a rectangular and ordered
-//! set of homogeneous data. These types are typically array-like, but these
-//! APIs are not limited to arrays. Any type that provides ordered elements of
-//! the same type may be capable of supporting these APIs.
+//! This module provides APIs for types that expose a rectangular and ordered set of homogeneous
+//! data. These types are typically array-like, but these APIs are not limited to arrays. Any type
+//! that provides ordered elements of the same type may be capable of supporting these APIs.
 //!
-//! A type that implements these traits and operations is known as an _adjunct_.
-//! See the `Adjunct` trait for more.
+//! A type that implements these traits and operations is known as an _adjunct_. See the `Adjunct`
+//! trait for more.
 //!
-//! Implementations for adjunct traits are provided for integrated foreign types
-//! when enabling geometry features. For example, implementations of `Adjunct`
-//! and other traits are provided for `nalgebra` types when the
-//! `geometry-nalgebra` feature is enabled.
+//! Implementations for adjunct traits are provided for integrated foreign types when enabling
+//! geometry features. For example, implementations of `Adjunct` and other traits are provided for
+//! `nalgebra` types when the `geometry-nalgebra` feature is enabled.
 
 use decorum::cmp::{self, EmptyOrd};
 use num::traits::{Bounded, One, Zero};
@@ -45,9 +43,8 @@ pub trait Map<T = <Self as Adjunct>::Item>: Adjunct {
         F: FnMut(Self::Item) -> T;
 }
 
-// TODO: Consider renaming the `Truncate` and `Extend` traits to `TruncateMap`,
-//       `TruncateInto`, etc., because these traits must support multiple output
-//       types.
+// TODO: Consider renaming the `Truncate` and `Extend` traits to `TruncateMap`, `TruncateInto`,
+//       etc., because these traits must support multiple output types.
 pub trait Truncate<S>: Adjunct
 where
     S: Adjunct<Item = Self::Item>,
