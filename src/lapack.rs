@@ -101,6 +101,7 @@ mod tests {
     use approx::assert_abs_diff_eq;
     use nalgebra::Point3;
 
+    use crate::adjunct::Map;
     use crate::query::Plane;
     use crate::space::{EuclideanSpace, Vector};
 
@@ -114,7 +115,11 @@ mod tests {
             EuclideanSpace::from_xyz(0.0, 0.0, 0.0),
         ])
         .unwrap();
-        assert_abs_diff_eq!(Vector::<E3>::z(), plane.normal.get().clone());
+        assert_abs_diff_eq!(
+            Vector::<E3>::z(),
+            // The axial direction of the normal is ambiguous.
+            plane.normal.get().clone().map(f64::abs),
+        );
     }
 
     #[test]
@@ -128,6 +133,10 @@ mod tests {
             EuclideanSpace::from_xyz(2.0, 3.0, 0.0),
         ])
         .unwrap();
-        assert_abs_diff_eq!(Vector::<E3>::z(), plane.normal.get().clone());
+        assert_abs_diff_eq!(
+            Vector::<E3>::z(),
+            // The axial direction of the normal is ambiguous.
+            plane.normal.get().clone().map(f64::abs),
+        );
     }
 }

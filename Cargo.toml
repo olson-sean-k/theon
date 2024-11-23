@@ -9,9 +9,13 @@ edition = "2021"
 rust-version = "1.56.0"
 license = "MIT"
 keywords = [
+    "euclidean",
     "geometry",
+    "linear",
+]
+categories = [
     "graphics",
-    "math",
+    "mathematics",
 ]
 
 [package.metadata.docs.rs]
