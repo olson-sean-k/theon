@@ -125,7 +125,7 @@ pub trait AsPositionMut: AsPosition {
     }
 }
 
-impl<'a, T> AsPosition for &'a T
+impl<T> AsPosition for &'_ T
 where
     T: AsPosition,
     T::Position: EuclideanSpace,
@@ -137,7 +137,7 @@ where
     }
 }
 
-impl<'a, T> AsPosition for &'a mut T
+impl<T> AsPosition for &'_ mut T
 where
     T: AsPosition,
     T::Position: EuclideanSpace,
@@ -149,7 +149,7 @@ where
     }
 }
 
-impl<'a, T> AsPositionMut for &'a mut T
+impl<T> AsPositionMut for &'_ mut T
 where
     T: AsPositionMut,
 {
