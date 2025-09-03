@@ -30,13 +30,14 @@ rustdoc-args = [
 ]
 
 [features]
-default = ["nalgebra"]
+default = []
 lapack = [
     "dep:ndarray",
     "dep:ndarray-linalg",
 ]
 
 # Integrations.
+
 cgmath = ["dep:cgmath"]
 glam = ["dep:glam"]
 mint = ["dep:mint"]

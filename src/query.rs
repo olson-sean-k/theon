@@ -943,7 +943,7 @@ where
 }
 impl_symmetrical_intersection!(Plane, Ray);
 
-#[cfg(all(test, feature = "nalgebra"))]
+#[cfg(test)]
 mod tests {
     use decorum::real::UnaryRealFunction;
     use decorum::ExtendedReal;

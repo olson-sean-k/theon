@@ -20,26 +20,6 @@ implemented for many types. APIs are designed for computations in lower
 dimensional Euclidean spaces, but traits and types are generic with respect to
 dimension.
 
-## Integrations
-
-Theon provides reverse integrations with commonly used linear algebra crates in
-the Rust ecosystem, including [`glam`] and [`ultraviolet`]. These
-implementations can be enabled using Cargo features.
-
-| Feature       | Default | Crate           |
-|---------------|---------|-----------------|
-| `cgmath`      | No      | [`cgmath`]      |
-| `glam`        | No      | [`glam`]        |
-| `mint`        | No      | [`mint`]        |
-| `nalgebra`    | Yes     | [`nalgebra`]    |
-| `ultraviolet` | No      | [`ultraviolet`] |
-
-Because a given version of Theon implements traits for specific versions of
-integrated crates, **care must be taken to resolve to these supported
-versions**. Ideally, integrations would be implemented in these linear algebra
-crates, but Theon is still under development and may not be ready for forward
-integration.
-
 ## Spatial Queries
 
 Geometric queries can be performed using any types that implement the
@@ -67,7 +47,56 @@ assert_eq!(None, ray.reverse().intersection(&aabb));
 
 In the above example, it is possible to replace the `E2` type definition with
 types from [`cgmath`], [`glam`], or any other type that implements
-`EuclideanSpace`, etc.
+`EuclideanSpace`, etc. See below.
+
+## Integrations
+
+Theon provides reverse integrations with commonly used linear algebra crates in
+the Rust ecosystem, including [`glam`] and [`ultraviolet`]. These
+implementations can be enabled using feature flags (none are enabled by
+default).
+
+| Feature       | Crate           |
+|---------------|-----------------|
+| `cgmath`      | [`cgmath`]      |
+| `glam`        | [`glam`]        |
+| `mint`        | [`mint`]        |
+| `nalgebra`    | [`nalgebra`]    |
+| `ultraviolet` | [`ultraviolet`] |
+
+Because a given version of Theon implements traits for specific versions of
+integrated crates, **care must be taken to resolve to these supported
+versions**. Ideally, integrations would be implemented in these linear algebra
+crates, but Theon is still under development and may not be ready for forward
+integration.
+
+In libaries or middleware crates, these features can be forwarded so that users
+can activate support for a particular implementation as needed. This can be done
+in the crate manifest.
+
+```toml
+[package]
+name = "example"
+
+[features]
+default = []
+
+# Forward features to Theon.
+
+cgmath = ["theon/cgmath"]
+glam = ["theon/glam"]
+mint = ["theon/mint"]
+nalgebra = ["theon/nalgebra"]
+ultraviolet = ["theon/ultraviolet"]
+
+[dependencies]
+theon = "^0.1.0"
+```
+
+Note that [`mint`] is also an interoperability layer, though it takes a
+different approach from this crate and is designed to bridge between various
+mathematics crates via conversions. Theon provides limited support for using its
+data types directly.
 
 ## LAPACK
 

@@ -96,7 +96,7 @@ where
     }
 }
 
-#[cfg(all(test, feature = "nalgebra"))]
+#[cfg(test)]
 mod tests {
     use approx::assert_abs_diff_eq;
     use nalgebra::Point3;

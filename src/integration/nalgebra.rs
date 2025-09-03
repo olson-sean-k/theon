@@ -1,4 +1,10 @@
-#![cfg(feature = "nalgebra")]
+// TODO: `doctest` is not used when building, so the `nalgebra` implementation is not available in
+//       documentation tests. This means that `cargo test --doc` (and therefore `cargo test`) fail
+//       unless the `nalgebra` feature is explicitly enabled. Note though that `cargo test --lib`
+//       activates this implementation as expected.
+//
+//       See https://github.com/rust-lang/rust/issues/67295
+#![cfg(any(doctest, test, feature = "nalgebra"))]
 
 use approx::AbsDiffEq;
 use decorum::R64;
