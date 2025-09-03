@@ -90,7 +90,7 @@ nalgebra = ["theon/nalgebra"]
 ultraviolet = ["theon/ultraviolet"]
 
 [dependencies]
-theon = "^0.1.0"
+theon = "^0.2.0"
 ```
 
 Note that [`mint`] is also an interoperability layer, though it takes a

@@ -1,6 +1,6 @@
 [package]
 name = "theon"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Sean Olson <olson.sean.k@gmail.com>"]
 description = "Abstraction of Euclidean spaces."
 repository = "https://github.com/olson-sean-k/theon"
